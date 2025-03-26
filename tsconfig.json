@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "esModuleInterop": true,
+    "noUnusedLocals": true,
+    "noImplicitAny": true,
+    "declarationDir": "dist/types",
+    "declaration": true,
+    "target": "es2015",
+    "module": "es2015",
+    "strict": true,
+    "moduleResolution": "Node",
+    "typeRoots": ["./node_modules/@types", "./src/types", "./node_modules/draw2d-types"]
+  },
+  "include": [
+    "src/**/*",
+    "web/**/*",
+    "node_modules/draw2d-types/draw2d.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ],
+
+}

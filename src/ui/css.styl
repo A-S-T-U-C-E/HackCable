@@ -1,0 +1,92 @@
+
+.hackCable-root
+  height 100%
+  width 100%
+  display flex
+  flex-wrap nowrap
+
+  p, h1, h2, h3, h4, select
+    font-family Rubik
+    color #c9c9c9
+
+  h3
+    font-weight 400
+    font-size .9em
+    text-align center
+    word-wrap break-word
+
+  .hackCable-sideBar
+    height 100%
+    width 250px;
+    background-color #424B5A
+    display: flex;
+    flex-direction column
+
+    .hackCable-catalog-actions
+      width 100%
+      background: #30343F
+      text-align center
+
+      select
+        margin 5px
+        padding 3px
+        width 80%
+        max-width 150px
+        background-color #22242c
+        border-radius 3px
+        border none
+        color white
+
+    .hackCable-catalog-list
+      overflow-y scroll
+      overflow-x hidden
+      height 100%
+      width 100%
+      padding 5px 5px 0 5px
+      box-sizing: border-box
+      scrollbar-width thin
+
+      .hackCable-catalog-element
+        text-align center
+        display block
+        overflow hidden
+        border-radius 5px
+        background: #30343F
+        padding 10px
+        margin-bottom 5px
+        h3
+          margin 0 0 10px 0
+
+  .hackCable-editor
+    background-color white
+    width 100%
+    overflow scroll
+    scrollbar-width thin
+    position relative
+
+    #hackCable-canvas
+      width 1500px
+      height 1000px
+      position relative
+
+      .hackCable-canvas-overlay-container
+        height 100%
+        width 100%
+        position absolute
+        overflow hidden
+        transform-origin: left top;
+
+        background-color rgba(0, 0, 0, 0)
+        background-position 0 0, 0 0;
+        background-repeat repeat, repeat
+        background-attachment scroll, scroll
+        background-image linear-gradient(to right, rgb(240, 240, 240) 1px, transparent 1px), linear-gradient(rgb(240, 240, 240) 1px, rgb(255, 255, 255) 1px)
+        background-clip border-box, border-box
+        background-size 20px 20px;
+
+        *
+          position absolute
+          transform-origin left top
+
+
+
