@@ -64,26 +64,26 @@ export class Catalog {
             const div = document.createElement('div');
             div.setAttribute("class", "hackCable-catalog-element")
             div.setAttribute("title", e.description)
-            div.setAttribute("draggable", "true")
-            div.setAttribute("dragstart", "dragstart_handler(event: DragEvent);")
-            div.setAttribute("dragover", "dragover_handler(event: DragEvent);")
-            div.setAttribute("dragend", "drop_handler(event: DragEvent);")
             div.innerHTML = "<h3>" + e.name + "</h3>";
             this.catalog?.appendChild(div);
 
-            setTimeout(() => {
-                const svg = e.wokwiComponent.shadowRoot?.querySelector("svg");
-                if (svg) {
-                    svg.setAttribute("style", "max-width: 100%; height: auto")
-                    svg.setAttribute("id", e.description)
-                    svg.addEventListener('click', () => {
-                        const componentInfo = wokwiComponentByClass[e.wokwiComponent.constructor.name];
-                        const element = new ComponentFigure(componentInfo);
-                        // Add the component to the canvas at a default position
-                        this.hackCable.editor.canvas.add(element.setX(100).setY(100));
-                    })
-                }
-            })
+            // Rendre le composant Wokwi lui-même draggable
+            const wokwiElement = e.wokwiComponent;
+            wokwiElement.setAttribute("draggable", "true");
+            wokwiElement.setAttribute("data-component-id", String(e.componentId));
+            
+            // Gestion du drag and drop sur le composant Wokwi
+            wokwiElement.addEventListener('dragstart', (event) => {
+                event.dataTransfer?.setData("text/plain", String(e.componentId));
+            });
+
+            // Double clic sur le composant Wokwi
+            wokwiElement.addEventListener('dblclick', () => {
+                const componentInfo = wokwiComponentByClass[e.wokwiComponent.constructor.name];
+                const element = new ComponentFigure(componentInfo);
+                this.hackCable.editor.canvas.add(element.setX(100).setY(100));
+            });
+
             div.appendChild(e.wokwiComponent);
         })
     }

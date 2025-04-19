@@ -35,6 +35,11 @@ export class Canvas extends draw2d.Canvas {
 
         this.setZoom(DEFAULT_ZOOM)
 
+        // Add drag and drop event listeners to the canvas
+        const htmlElement = this.html[0] || this.html;
+        htmlElement.addEventListener('dragover', this.dragover_handler.bind(this));
+        htmlElement.addEventListener('drop', this.drop_handler.bind(this));
+
         // Add test figures
         /*let board = new ComponentFigure(wokwiComponentByClass[ArduinoUnoElement.name]);
         this.add(board.setX(200).setY(150))
@@ -68,7 +73,9 @@ export class Canvas extends draw2d.Canvas {
     }
 
     // while the object is being dragged
-    public dragover_handler(_event: DragEvent) {
+    public dragover_handler(event: DragEvent) {
+        event.preventDefault(); // This is crucial to allow dropping
+        event.dataTransfer!.dropEffect = "copy";
     }
 
     // when the draggable object is dropped onto a droppable object
@@ -78,11 +85,11 @@ export class Canvas extends draw2d.Canvas {
         const componentId = parseInt(item_data);
         if (!isNaN(componentId)) {
             const figure = new ComponentFigure(wokwiComponentById[componentId]);
-            const rect = this.html.getBoundingClientRect();
+            const htmlElement = this.html[0] || this.html;
+            const rect = htmlElement.getBoundingClientRect();
             const x = event.clientX - rect.left;
             const y = event.clientY - rect.top;
             this.add(figure.setX(x).setY(y));
         }
-
     }
 }
