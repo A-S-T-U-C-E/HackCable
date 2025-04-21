@@ -95,7 +95,7 @@ if (resizerCode && sideBar && hackCableDiv) {
         const newWidth = startWidth + (e.clientX - startX);
         
         // Limiter la taille minimale et maximale
-        if (newWidth >= 20) {
+        if (newWidth >= 50) {
             sideBar.style.width = `${newWidth}px`;
         }
         

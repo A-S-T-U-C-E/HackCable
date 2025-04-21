@@ -4,18 +4,17 @@ import * as avr8js from 'avr8js';
 import { LEDElement } from "@wokwi/elements";
 import { Catalog } from "./panels/catalog";
 import { EmulatorManager } from "./emulator/emulator-manager";
+import { Editor } from "./editor/editor";
 
 export { AVRRunner } from "./emulator/avr-runner";
 export { EmulatorManager } from './emulator/emulator-manager';
 import * as compiler from './emulator/compiler';
-import { Editor } from "./editor/editor";
 //import { MouseEvent } from "react";
 export type CompileResult = compiler.CompileResult;
 
 // Draw2D deps
 require('webpack-jquery-ui');
 require('webpack-jquery-ui/draggable');
-
 
 export class HackCable {
     private readonly led: LEDElement | undefined;
@@ -36,6 +35,49 @@ export class HackCable {
         this._catalog = new Catalog(this)
         this._emulatorManager = new EmulatorManager(this);
         this._editor = new Editor();
+        
+        // Implémentation du redimensionnement interne
+        this.setupResizer();
+    }
+
+    private setupResizer() {
+        const resizerCanvas = document.querySelector('.resizerCanvas') as HTMLElement;
+        const sideBar = document.querySelector('.hackCable-sideBar') as HTMLElement;
+        const editor = document.querySelector('.hackCable-editor') as HTMLElement;
+
+        if (resizerCanvas && sideBar && editor) {
+            let isResizing = false;
+            let startX = 0;
+            let startWidth = 0;
+
+            resizerCanvas.addEventListener('mousedown', (e) => {
+                isResizing = true;
+                startX = e.clientX;
+                startWidth = sideBar.offsetWidth;
+                
+                // Ajouter une classe pour désactiver la sélection de texte pendant le redimensionnement
+                document.body.classList.add('resizing');
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isResizing) return;
+                
+                const newWidth = startWidth + (e.clientX - startX);
+                
+                // Limiter la taille minimale
+                if (newWidth >= 100) {
+                    sideBar.style.width = `${newWidth}px`;
+                }
+                
+                // Empêcher la sélection pendant le redimensionnement
+                e.preventDefault();
+            });
+
+            document.addEventListener('mouseup', () => {
+                isResizing = false;
+                document.body.classList.remove('resizing');
+            });
+        }
     }
 
     public get emulatorManager() {
