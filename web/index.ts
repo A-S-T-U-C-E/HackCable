@@ -70,6 +70,45 @@ if (save && restore) {
     });
 }
 
+// Implémentation du redimensionnement
+const resizerCode = document.getElementById('resizerCode');
+const sideBar = document.querySelector('.sideBar') as HTMLElement;
+const hackCableDiv = document.getElementById('hackCable');
+
+if (resizerCode && sideBar && hackCableDiv) {
+    let isResizing = false;
+    let startX = 0;
+    let startWidth = 0;
+
+    resizerCode.addEventListener('mousedown', (e) => {
+        isResizing = true;
+        startX = e.clientX;
+        startWidth = sideBar.offsetWidth;
+        
+        // Ajouter une classe pour désactiver la sélection de texte pendant le redimensionnement
+        document.body.classList.add('resizing');
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (!isResizing) return;
+        
+        const newWidth = startWidth + (e.clientX - startX);
+        
+        // Limiter la taille minimale et maximale
+        if (newWidth >= 20) {
+            sideBar.style.width = `${newWidth}px`;
+        }
+        
+        // Empêcher la sélection pendant le redimensionnement
+        e.preventDefault();
+    });
+
+    document.addEventListener('mouseup', () => {
+        isResizing = false;
+        document.body.classList.remove('resizing');
+    });
+}
+
 /*const code = `void setup() {
   // put your setup code here, to run once:
     pinMode(1, OUTPUT);

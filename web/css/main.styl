@@ -10,6 +10,10 @@ body
     padding 0
     min-height 100vh
     position relative
+    
+    &.resizing
+        user-select none
+        cursor ew-resize
 
 header
     position absolute
@@ -30,13 +34,13 @@ main
 
     .sideBar
         background-color #30343F
-        max-width 500px
-        min-width 40%
+        min-width 50px
         height 100%
         border-right 1px solid black
         padding 10px
         flex-direction column
         overflow scroll
+        flex-shrink 0
 
         .buttonBar
             display flex
@@ -53,7 +57,20 @@ main
             border-radius 5px
             width 100%
             resize vertical
-            min-height 50%
+            min-height 100px
+            height 150px
+    
+    #resizerCode
+        width 5px
+        height 100%
+        background-color #222
+        cursor ew-resize
+        flex-shrink 0
+    
+    #hackCable
+        flex-grow 1
+        height 100%
+        overflow auto
 
 
 footer
