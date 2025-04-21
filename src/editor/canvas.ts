@@ -2,11 +2,12 @@ import draw2d from "draw2d";
 import { connectionsPolicy } from "./connections-policies";
 //import {CoordinatePortLocator} from "./coordinate-port-locator";
 import { ComponentFigure } from "./component-figure";
-import { wokwiComponentById } from "../panels/component";
+import { wokwiComponentByClass, wokwiComponentById } from "../panels/component";
 //import { ArduinoUnoElement, Dht22Element, NeoPixelElement } from "@wokwi/elements";
 import { css } from "../utils/dom";
+import { ArduinoUnoElement } from "@wokwi/elements";
 
-const DEFAULT_ZOOM = .6;
+const DEFAULT_ZOOM = 1;
 
 export class Canvas extends draw2d.Canvas {
 
@@ -41,12 +42,8 @@ export class Canvas extends draw2d.Canvas {
         htmlElement.addEventListener('drop', this.drop_handler.bind(this));
 
         // Add test figures
-        /*let board = new ComponentFigure(wokwiComponentByClass[ArduinoUnoElement.name]);
+        let board = new ComponentFigure(wokwiComponentByClass[ArduinoUnoElement.name]);
         this.add(board.setX(200).setY(150))
-        let pixel = new ComponentFigure(wokwiComponentByClass[NeoPixelElement.name]);
-        this.add(pixel.setX(200).setY(50))
-        let dht22 = new ComponentFigure(wokwiComponentByClass[Dht22Element.name]);
-        this.add(dht22.setX(250).setY(10))*/
 
     }
     private onZoomChange() {
@@ -85,10 +82,11 @@ export class Canvas extends draw2d.Canvas {
         const componentId = parseInt(item_data);
         if (!isNaN(componentId)) {
             const figure = new ComponentFigure(wokwiComponentById[componentId]);
-            const htmlElement = this.html[0] || this.html;
-            const rect = htmlElement.getBoundingClientRect();
-            const x = event.clientX - rect.left;
-            const y = event.clientY - rect.top;
+            const htmlElement = document.querySelector('.hackCable-editor');
+            const rect = htmlElement!.getBoundingClientRect();
+            //fix zoom problem
+            const x = (event.clientX - rect.left) * this.getZoom();
+            const y = (event.clientY - rect.top) * this.getZoom();
             this.add(figure.setX(x).setY(y));
         }
     }
