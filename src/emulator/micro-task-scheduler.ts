@@ -2,7 +2,7 @@ export type IMicroTaskCallback = () => void;
 
 export class MicroTaskScheduler {
     private readonly channel = new MessageChannel();
-    private executionQueue: Array<IMicroTaskCallback> = [];
+    private readonly executionQueue: Array<IMicroTaskCallback> = [];
     private _stopped = true;
 
     start() {
@@ -30,7 +30,7 @@ export class MicroTaskScheduler {
         }
     }
 
-    private handleMessage = () => {
+    private readonly handleMessage = () => {
         const executeJob = this.executionQueue.shift();
         if (executeJob !== undefined) {
             executeJob();

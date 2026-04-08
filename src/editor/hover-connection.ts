@@ -35,7 +35,7 @@ export default class HoverConnection extends Connection {
      * @param _draggedFigure
      * @returns {HoverConnection}
      */
-    delegateTarget(_draggedFigure: any): HoverConnection {
+    delegateTarget(_draggedFigure: any): this {
         return this;
     }
 }

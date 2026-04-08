@@ -12,9 +12,7 @@ import * as compiler from './emulator/compiler';
 //import { MouseEvent } from "react";
 export type CompileResult = compiler.CompileResult;
 
-// Draw2D deps
-require('webpack-jquery-ui');
-require('webpack-jquery-ui/draggable');
+import './jquery-ui-draggable';
 
 export class HackCable {
     private readonly led: LEDElement | undefined;

@@ -1,9 +1,7 @@
 import draw2d from "draw2d";
 import { connectionsPolicy } from "./connections-policies";
-//import {CoordinatePortLocator} from "./coordinate-port-locator";
 import { ComponentFigure } from "./component-figure";
 import { wokwiComponentByClass, wokwiComponentById } from "../panels/component";
-//import { ArduinoUnoElement, Dht22Element, NeoPixelElement } from "@wokwi/elements";
 import { css } from "../utils/dom";
 import { ArduinoUnoElement } from "@wokwi/elements";
 
@@ -32,12 +30,11 @@ export class Canvas extends draw2d.Canvas {
         // Listeners
         this.on("select", (_emitter: any, event: any) => this.onSelectionChange(event.figure));
         this.on("zoom", () => this.onZoomChange());
-        /*this.on("figure:add", () => {});*/
 
         this.setZoom(DEFAULT_ZOOM)
 
         // Add drag and drop event listeners to the canvas
-        const htmlElement = this.html[0] || this.html;
+        const htmlElement = this.html[0] ?? this.html;
         htmlElement.addEventListener('dragover', this.dragover_handler.bind(this));
         htmlElement.addEventListener('drop', this.drop_handler.bind(this));
 
