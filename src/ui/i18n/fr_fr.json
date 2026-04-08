@@ -1,0 +1,53 @@
+{
+  "wokwiComponents": {
+    "arduinoUno": { "description": "Carte Arduino Uno" },
+    "led": { "description": "Diode électroluminescente" },
+    "rgbLed": { "description": "Diode électroluminescente à couleur contrôlable" },
+    "ledBar": { "description": "Barre de 10 diodes électroluminescentes" },
+    "neoPixel": { "description": "Diode électroluminescente" },
+    "sevenSegment": { "description": "Peut afficher un chiffre ou une lettre" },
+    "ledRing": { "description": "Anneau de LEDs" },
+    "lcd1602": { "description": "Peut afficher du texte (jusqu'à 32 caractères sur 2 lignes)" },
+    "lcd2004": { "description": "Peut afficher du texte (jusqu'à 80 caractères sur 4 lignes)" },
+    "buzzer": { "description": "Haut-parleur" },
+    "pushbutton": { "description": "Bouton poussoir" },
+    "potentiometer": { "description": "Résistance variable" },
+    "slideSwitch": { "description": "Interrupteur" },
+    "analogJoystick": { "description": "Joystick" },
+    "slidePotentiometer": { "description": "Résistance variable" },
+    "dipSwitch8": { "description": "Barre de 8 interrupteurs" },
+    "dht22": { "description": "Capteur de température et d'humidité" },
+    "hcsr04": { "description": "Détecteur de proximité" },
+    "ntcTemperature": { "description": "Capteur de température" },
+    "smallSound": { "description": "Détecteur de son faible" },
+    "bigSound": { "description": "Détecteur de son fort" },
+    "servo": { "description": "Moteur de précision (angle de rotation contrôlable)" },
+    "ky040": { "description": "Résistance variable" },
+    "photoresistor": { "description": "Capteur de lumière" },
+    "resistor": { "description": "Résistance" },
+    "ds1307": { "description": "Horloge temps réel" }
+  },
+  "web": {
+    "compile": "Compiler",
+    "execute": "Exécuter",
+    "stop": "Stop",
+    "pause": "Pause",
+    "save": "Sauvegarder",
+    "restore": "Charger",
+    "undo": "Annuler",
+    "redo": "Rétablir",
+    "labelCode": "Code :",
+    "labelHex": "Code compilé :",
+    "langEn": "English",
+    "langFr": "Français"
+  },
+  "catalog": {
+    "filterAll": "Tout afficher",
+    "typeLed": "LED",
+    "typeMotor": "Moteur",
+    "typeTransmitter": "Émetteur",
+    "typeButton": "Bouton",
+    "typeSensor": "Capteur",
+    "typeOther": "Autre"
+  }
+}

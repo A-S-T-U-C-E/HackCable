@@ -1,16 +1,17 @@
+import i18next from "i18next";
 import { ComponentFigure } from "../editor/component-figure";
 import { ComponentElement, ComponentType, wokwiComponents, wokwiComponentByClass } from "./component";
 
 export class Catalog {
 
-    readonly elements: ComponentElement[] = []
+    elements: ComponentElement[] = []
     private readonly catalog;
     private readonly sorter: HTMLSelectElement | undefined;
     private readonly hackCable: any;
     constructor(hackCable: any) {
         this.hackCable = hackCable;
 
-        this.elements = wokwiComponents.filter((c) => c.type != ComponentType.CARD).map((c) => {
+        this.elements = wokwiComponents().filter((c) => c.type != ComponentType.CARD).map((c) => {
             return new ComponentElement(c);
         });
 
@@ -27,24 +28,39 @@ export class Catalog {
     }
 
 
+    private fillSorterOptions(): void {
+        if (!this.sorter) return;
+        const prevValue = this.sorter.value;
+        const t = (k: string) => i18next.t(k, { ns: "common" });
+        this.sorter.innerHTML =
+            `<option value="-1">${t("catalog.filterAll")}</option>` +
+            `<option value="${ComponentType.LED}">${t("catalog.typeLed")}</option>` +
+            `<option value="${ComponentType.MOTOR}">${t("catalog.typeMotor")}</option>` +
+            `<option value="${ComponentType.TRANSMITTER}">${t("catalog.typeTransmitter")}</option>` +
+            `<option value="${ComponentType.BUTTON}">${t("catalog.typeButton")}</option>` +
+            `<option value="${ComponentType.SENSOR}">${t("catalog.typeSensor")}</option>` +
+            `<option value="${ComponentType.OTHER}">${t("catalog.typeOther")}</option>`;
+        const hasPrev = [...this.sorter.options].some((o) => o.value === prevValue);
+        if (hasPrev) this.sorter.value = prevValue;
+    }
+
     build() {
-
-        // Actions
         if (this.sorter) {
-            this.sorter.innerHTML = "<option value=\"-1\">Tout afficher</option>\n" +
-                "<option value=" + ComponentType.LED + ">LED</option>\n" +
-                "<option value=" + ComponentType.MOTOR + ">Moteur</option>\n" +
-                "<option value=" + ComponentType.TRANSMITTER + ">Émmeteur</option>\n" +
-                "<option value=" + ComponentType.BUTTON + ">Bouton</option>\n" +
-                "<option value=" + ComponentType.SENSOR + ">Capteur</option>\n" +
-                "<option value=" + ComponentType.OTHER + ">Autre</option>\n";
-
-            this.sorter.addEventListener("change", (e) => {
-                console.log(e)
-                this.updateCatalogList()
-            })
+            this.fillSorterOptions();
+            this.sorter.addEventListener("change", () => {
+                this.updateCatalogList();
+            });
         }
-        this.updateCatalogList()
+        this.updateCatalogList();
+    }
+
+    /** Après changement de langue i18n (sans recharger la page). */
+    rebuildFromLocale(): void {
+        this.elements = wokwiComponents().filter((c) => c.type != ComponentType.CARD).map((c) => {
+            return new ComponentElement(c);
+        });
+        this.fillSorterOptions();
+        this.updateCatalogList();
     }
 
     updateCatalogList() {

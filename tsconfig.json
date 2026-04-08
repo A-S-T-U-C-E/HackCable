@@ -13,6 +13,7 @@
     "module": "es2015",
     "strict": true,
     "moduleResolution": "Node",
+    "resolveJsonModule": true,
     "typeRoots": ["./node_modules/@types", "./src/types", "./node_modules/draw2d-types"]
   },
   "include": [

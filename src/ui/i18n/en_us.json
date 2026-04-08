@@ -1,0 +1,53 @@
+{
+  "wokwiComponents": {
+    "arduinoUno": { "description": "Arduino Uno board" },
+    "led": { "description": "Light-emitting diode" },
+    "rgbLed": { "description": "Light-emitting diode with controllable color" },
+    "ledBar": { "description": "Bar of 10 light-emitting diodes" },
+    "neoPixel": { "description": "Light-emitting diode" },
+    "sevenSegment": { "description": "Can display a digit or a letter" },
+    "ledRing": { "description": "LED ring" },
+    "lcd1602": { "description": "Can display text (up to 32 characters on 2 lines)" },
+    "lcd2004": { "description": "Can display text (up to 80 characters on 4 lines)" },
+    "buzzer": { "description": "Speaker" },
+    "pushbutton": { "description": "Push button" },
+    "potentiometer": { "description": "Variable resistor" },
+    "slideSwitch": { "description": "Switch" },
+    "analogJoystick": { "description": "Joystick" },
+    "slidePotentiometer": { "description": "Variable resistor" },
+    "dipSwitch8": { "description": "8-switch DIP bar" },
+    "dht22": { "description": "Temperature and humidity sensor" },
+    "hcsr04": { "description": "Proximity sensor" },
+    "ntcTemperature": { "description": "Temperature sensor" },
+    "smallSound": { "description": "Low sound level sensor" },
+    "bigSound": { "description": "High sound level sensor" },
+    "servo": { "description": "Precision motor (controllable rotation angle)" },
+    "ky040": { "description": "Variable resistor (rotary encoder)" },
+    "photoresistor": { "description": "Light sensor" },
+    "resistor": { "description": "Resistor" },
+    "ds1307": { "description": "Real-time clock" }
+  },
+  "web": {
+    "compile": "Compile",
+    "execute": "Run",
+    "stop": "Stop",
+    "pause": "Pause",
+    "save": "Save",
+    "restore": "Load",
+    "undo": "Undo",
+    "redo": "Redo",
+    "labelCode": "Code:",
+    "labelHex": "Compiled code:",
+    "langEn": "English",
+    "langFr": "French"
+  },
+  "catalog": {
+    "filterAll": "Show all",
+    "typeLed": "LED",
+    "typeMotor": "Motor",
+    "typeTransmitter": "Transmitter",
+    "typeButton": "Button",
+    "typeSensor": "Sensor",
+    "typeOther": "Other"
+  }
+}

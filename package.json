@@ -61,6 +61,7 @@
     "canvg": "^4.0.3",
     "class": "^0.1.4",
     "draw2d": "^1.0.38",
+    "i18next": "^26.0.4",
     "intel-hex": "^0.2.0",
     "jquery": "^4.0.0",
     "jquery-autosize": "^1.18.18",

@@ -9,8 +9,12 @@ import { Editor } from "./editor/editor";
 export { AVRRunner } from "./emulator/avr-runner";
 export { EmulatorManager } from './emulator/emulator-manager';
 import * as compiler from './emulator/compiler';
+import i18next, { TFunction } from "i18next";
+import { refreshWokwiComponentMaps } from "./panels/component";
 //import { MouseEvent } from "react";
 export type CompileResult = compiler.CompileResult;
+
+export { initHackCableI18n } from "./ui/i18n/i18n-loader";
 
 import './jquery-ui-draggable';
 
@@ -21,7 +25,15 @@ export class HackCable {
     private readonly _catalog: Catalog;
     private readonly _editor: Editor;
 
-    constructor(mountDiv: HTMLElement) {
+    constructor(mountDiv: HTMLElement, language: string = "fr_fr") {
+        if (!i18next.isInitialized) {
+            throw new Error(
+                "HackCable: appelez d'abord await initHackCableI18n(lang) (voir web/index.ts)."
+            );
+        }
+        void i18next.changeLanguage(language);
+        refreshWokwiComponentMaps();
+
         console.log("Mounting HackCable...")
 
         // @ts-ignore
@@ -36,6 +48,19 @@ export class HackCable {
         
         // Implémentation du redimensionnement interne
         this.setupResizer();
+    }
+
+    public changeLanguage(language: string): Promise<TFunction> {
+        return i18next.changeLanguage(language).then(() => {
+            refreshWokwiComponentMaps();
+            this._catalog.rebuildFromLocale();
+            document.documentElement.lang = language.startsWith("en") ? "en" : "fr";
+            return i18next.t.bind(i18next);
+        });
+    }
+
+    public getLanguage(): string {
+        return i18next.language;
     }
 
     private setupResizer() {
