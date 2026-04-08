@@ -20,14 +20,14 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ClementGre/HackCable.git"
+    "url": "git+https://github.com/A-S-T-U-C-E/HackCable.git"
   },
   "author": "Clément Grennerat",
   "license": "BSD-3-Clause",
   "bugs": {
-    "url": "https://github.com/ClementGre/HackCable/issues"
+    "url": "https://github.com/A-S-T-U-C-E/HackCable/issues"
   },
-  "homepage": "https://github.com/ClementGre/HackCable#readme",
+  "homepage": "https://github.com/A-S-T-U-C-E/HackCable#readme",
   "keywords": [],
   "devDependencies": {
     "@babel/core": "^7.29.0",

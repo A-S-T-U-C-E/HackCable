@@ -1,40 +1,49 @@
 # HackCable
-Arduino and ESP32 simulator (Wire components + emulate code)
-Test the library here [https://clementgre.github.io/HackCable/](https://clementgre.github.io/HackCable/)
 
-## Goals
+Simulateur Arduino et ESP32 (câblage des composants + exécution du code).
 
-- Offer a graphical interface to wire electronic component to board.
-  - Using [Wokwi Elements](https://github.com/wokwi/wokwi-elements) for components definition/display 
-  - and [Wokwi Boards](https://github.com/wokwi/wokwi-boards) for ESP32 board definition/display.
-  - Using [Draw2D](http://www.draw2d.org) for the wiring system.
-- Allow emulating code on these boards
-  - Using [AVR8JS](https://github.com/wokwi/avr8js) for emulating the code on Arduino.
-  
-### Project structure
+**Dépôt de ce fork :** [github.com/A-S-T-U-C-E/HackCable](https://github.com/A-S-T-U-C-E/HackCable)  
+**Démo en ligne :** [a-s-t-u-c-e.github.io/HackCable/dist/web/](https://a-s-t-u-c-e.github.io/HackCable/dist/web/)
 
-HackCable is coded in TypeScript, using Webpack + Babel.
+## Origine (projet amont)
 
-The code is using only one npm configuration, but there is two webpack configuration files, and two main folders:
-- ``src`` is the code of the library itself
-- ``web`` is the website that allow to test the library, and to make an example of use. The ``:web`` tasks allow to use this part of the code, associated with the webpack config : ``webpack.config.web.js``.
+Ce dépôt est un **fork** de **[HackCable](https://github.com/ClementGre/HackCable)** par **Clément Grennerat** ([@ClementGre](https://github.com/ClementGre)).  
+Les idées, l’architecture d’origine et la licence du projet amont restent la référence ; ce fork y ajoute des évolutions et maintenance dans l’organisation [A-S-T-U-C-E](https://github.com/A-S-T-U-C-E).
 
-# Tasks
+- Amont / upstream : <https://github.com/ClementGre/HackCable>  
+- Démo du projet d’origine : <https://clementgre.github.io/HackCable/>
 
-TypeScript Type checking and generating
+## Objectifs
 
-``type-check``
+- Fournir une interface graphique pour câbler des composants sur une carte.
+  - [Wokwi Elements](https://github.com/wokwi/wokwi-elements) pour la définition / l’affichage des composants
+  - [Wokwi Boards](https://github.com/wokwi/wokwi-boards) pour la définition / l’affichage des cartes ESP32
+  - [Draw2D](http://www.draw2d.org) pour le système de câblage
+- Permettre d’émuler le code sur ces cartes
+  - [AVR8JS](https://github.com/wokwi/avr8js) pour l’émulation sur Arduino
 
-``type-check:watch``
+### Structure du projet
 
-``build:types``
+HackCable est écrit en TypeScript, avec Webpack et Babel.
 
-Build the library itself
+Une seule configuration npm, deux configurations Webpack et deux dossiers principaux :
 
-``build:src``
+- `src` : code de la bibliothèque
+- `web` : site de test et d’exemple d’utilisation (tâches `:web` avec `webpack.config.web.js`)
 
-Build or start the live server of the web page that use the library
+## Tâches npm
 
-``build:web``
+Vérification / génération TypeScript :
 
-``serve:web``
+- `type-check`
+- `type-check:watch`
+- `build:types`
+
+Build de la bibliothèque :
+
+- `build:src`
+
+Build ou serveur de dev pour la page web :
+
+- `build:web`
+- `serve:web`
