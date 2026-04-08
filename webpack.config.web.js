@@ -2,7 +2,13 @@ const path = require('path');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
-const webpack = require('webpack')
+const webpack = require('webpack');
+
+/** Base des URL des assets (JS/CSS). Pour GitHub Pages projet, définir WEB_PUBLIC_PATH=/NomDuDepot/ */
+const webPublicPath =
+    process.env.WEB_PUBLIC_PATH != null && process.env.WEB_PUBLIC_PATH !== ''
+        ? process.env.WEB_PUBLIC_PATH
+        : '/';
 
 module.exports = {
     entry: ["@babel/polyfill", path.resolve(__dirname, 'web') + "/index.ts"],
@@ -20,7 +26,8 @@ module.exports = {
     output: {
         filename: 'bundle.js',
         path: path.resolve(__dirname, 'dist/web'),
-        clean: true
+        clean: true,
+        publicPath: webPublicPath,
     },
     resolve: {
         extensions: ['.ts', '.js', '.json', '.css'],
