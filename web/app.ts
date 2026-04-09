@@ -1,10 +1,30 @@
 import i18next from "i18next";
+import type { EditorSaveData } from "../src/editor/editor";
 import {
     CompileResult,
     EmulatorManager,
     HackCable,
     initHackCableI18n,
 } from "../src/main";
+
+function isEditorSaveData(x: unknown): x is EditorSaveData {
+    if (x === null || typeof x !== "object") return false;
+    const o = x as Record<string, unknown>;
+    return Array.isArray(o.figures) && Array.isArray(o.connections);
+}
+
+function downloadJsonFile(filename: string, data: unknown): void {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.rel = "noopener";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+}
 
 export function applyWebDemoUiI18n(): void {
     const t = (k: string) => i18next.t(k, { ns: "common" });
@@ -18,6 +38,7 @@ export function applyWebDemoUiI18n(): void {
     setBtn("pause", "web.pause");
     setBtn("save", "web.save");
     setBtn("restore", "web.restore");
+    setBtn("restore-local", "web.restoreLocal");
     setBtn("undo", "web.undo");
     setBtn("redo", "web.redo");
     setBtn("language-en", "web.langEn");
@@ -109,22 +130,85 @@ export async function mountWebDemoApp(): Promise<() => void> {
 
     const save = document.getElementById("save");
     const restore = document.getElementById("restore");
-    if (save && restore) {
+    const restoreLocal = document.getElementById("restore-local");
+    const restoreFileInput = document.createElement("input");
+    restoreFileInput.type = "file";
+    restoreFileInput.accept = ".json,application/json";
+    restoreFileInput.hidden = true;
+    document.body.appendChild(restoreFileInput);
+
+    const tWarn = (key: string) => i18next.t(key, { ns: "common" });
+
+    if (save) {
         save.addEventListener(
             "click",
             () => {
                 const data = hackCable.editor.getEditorSaveData();
-                console.log("Saving data:", data);
-                localStorage.setItem("savedEditor", JSON.stringify(data));
+                const json = JSON.stringify(data);
+                localStorage.setItem("savedEditor", json);
+                const day = new Date().toISOString().slice(0, 10);
+                downloadJsonFile(`hackcable-editor-${day}.json`, data);
             },
             { signal }
         );
+    }
+
+    if (restore) {
         restore.addEventListener(
             "click",
             () => {
-                const data = JSON.parse(<string>localStorage.getItem("savedEditor"));
-                console.log("Loading data:", data);
-                hackCable.editor.loadEditorSaveData(data);
+                restoreFileInput.value = "";
+                restoreFileInput.click();
+            },
+            { signal }
+        );
+    }
+
+    restoreFileInput.addEventListener(
+        "change",
+        () => {
+            const file = restoreFileInput.files?.[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+                try {
+                    const text = typeof reader.result === "string" ? reader.result : "";
+                    const parsed: unknown = JSON.parse(text);
+                    if (!isEditorSaveData(parsed)) {
+                        alert(tWarn("web.loadInvalidShape"));
+                        return;
+                    }
+                    localStorage.setItem("savedEditor", JSON.stringify(parsed));
+                    hackCable.editor.loadEditorSaveData(parsed);
+                } catch {
+                    alert(tWarn("web.loadInvalidJson"));
+                }
+            };
+            reader.onerror = () => alert(tWarn("web.loadFileError"));
+            reader.readAsText(file, "UTF-8");
+        },
+        { signal }
+    );
+
+    if (restoreLocal) {
+        restoreLocal.addEventListener(
+            "click",
+            () => {
+                const raw = localStorage.getItem("savedEditor");
+                if (raw == null || raw === "") {
+                    alert(tWarn("web.noLocalSave"));
+                    return;
+                }
+                try {
+                    const parsed: unknown = JSON.parse(raw);
+                    if (!isEditorSaveData(parsed)) {
+                        alert(tWarn("web.loadInvalidShape"));
+                        return;
+                    }
+                    hackCable.editor.loadEditorSaveData(parsed);
+                } catch {
+                    alert(tWarn("web.loadInvalidJson"));
+                }
             },
             { signal }
         );
@@ -193,5 +277,8 @@ export async function mountWebDemoApp(): Promise<() => void> {
         document.addEventListener("mouseup", onUp, { signal });
     }
 
-    return () => ac.abort();
+    return () => {
+        ac.abort();
+        restoreFileInput.remove();
+    };
 }

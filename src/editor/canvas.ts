@@ -22,6 +22,8 @@ export class Canvas extends draw2d.Canvas {
 
         // Edit policies
         this.installEditPolicy(new draw2d.policy.canvas.PanningSelectionPolicy())
+        // Zoom molette + Shift (natif draw2d ; sans Shift le conteneur défile normalement)
+        this.installEditPolicy(new draw2d.policy.canvas.WheelZoomPolicy())
         this.installEditPolicy(new draw2d.policy.canvas.SnapToGeometryEditPolicy())
         this.installEditPolicy(new draw2d.policy.canvas.SnapToInBetweenEditPolicy())
         this.installEditPolicy(new draw2d.policy.canvas.SnapToCenterEditPolicy())
