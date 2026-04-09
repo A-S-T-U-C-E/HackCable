@@ -34,6 +34,9 @@ export class Editor{
             let figure = new ComponentFigure(wokwiComponentById[figureData.componentId]);
             figure.setId(figureData.figureId) // So the connections can find this figure
             this._canvas.add(figure.setX(figureData.x).setY(figureData.y))
+            if (typeof figureData.rotation === "number" && figureData.rotation !== 0) {
+                figure.setRotationAngle(figureData.rotation)
+            }
         })
         // Puis les connexions (Connection + VertexRouter + add sur le canvas)
         data.connections.forEach((connectionData) => {

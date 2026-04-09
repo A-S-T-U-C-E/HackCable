@@ -25,13 +25,12 @@ export class HackCable {
     private readonly _catalog: Catalog;
     private readonly _editor: Editor;
 
-    constructor(mountDiv: HTMLElement, language: string = "fr_fr") {
+    constructor(mountDiv: HTMLElement, _language: string = "fr_fr") {
         if (!i18next.isInitialized) {
             throw new Error(
                 "HackCable: appelez d'abord await initHackCableI18n(lang) (voir web/index.ts)."
             );
         }
-        void i18next.changeLanguage(language);
         refreshWokwiComponentMaps();
 
         console.log("Mounting HackCable...")

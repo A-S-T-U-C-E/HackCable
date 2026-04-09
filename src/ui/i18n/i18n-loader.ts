@@ -11,15 +11,21 @@ export async function initHackCableI18n(language: string, debug: boolean): Promi
         await i18next.changeLanguage(language);
         return;
     }
+    const fr = frFr as Record<string, unknown>;
+    const en = enUs as Record<string, unknown>;
     await i18next.init({
         lng: language,
+        supportedLngs: ["fr_fr", "en_us"],
         fallbackLng: ["fr_fr", "en_us"],
         defaultNS: "common",
         ns: ["common"],
         debug,
+        // Alias si le navigateur / i18next normalise en fr-FR / en-US
         resources: {
-            fr_fr: { common: frFr as Record<string, unknown> },
-            en_us: { common: enUs as Record<string, unknown> },
+            fr_fr: { common: fr },
+            en_us: { common: en },
+            "fr-FR": { common: fr },
+            "en-US": { common: en },
         },
         interpolation: { escapeValue: false },
     });

@@ -1,4 +1,5 @@
 import draw2d from "draw2d";
+import { setupDraw2dContextMenu } from "./canvas-context-menu";
 import { connectionsPolicy } from "./connections-policies";
 import { ComponentFigure } from "./component-figure";
 import { wokwiComponentByClass, wokwiComponentById } from "../panels/component";
@@ -39,6 +40,8 @@ export class Canvas extends draw2d.Canvas {
         const htmlElement = this.html[0] ?? this.html;
         htmlElement.addEventListener('dragover', this.dragover_handler.bind(this));
         htmlElement.addEventListener('drop', this.drop_handler.bind(this));
+
+        setupDraw2dContextMenu(this);
 
         // Add test figures
         let board = new ComponentFigure(wokwiComponentByClass[ArduinoUnoElement.name]);

@@ -5,7 +5,7 @@ import {CoordinatePortLocator} from "./coordinate-port-locator";
 import {css, unitToPx} from "../utils/dom";
 import {Port} from "draw2d-types";
 
-export declare type FigureData = {componentId: number, figureId: string, x: number, y: number}
+export declare type FigureData = {componentId: number, figureId: string, x: number, y: number, rotation?: number}
 export declare type WiringData = {svgPath: string, fromFigure: string, fromPortName: string, targetFigure: string, targetPortName: string}
 
 export class ComponentFigure extends draw2d.shape.basic.Rectangle{
@@ -42,13 +42,14 @@ export class ComponentFigure extends draw2d.shape.basic.Rectangle{
                 let svg = this.overlay.shadowRoot?.querySelector("svg")
                 this.setWidth(unitToPx(svg.getAttribute('width')))
                 this.setHeight(unitToPx(svg.getAttribute('height')))
+                this.syncOverlayLayout()
             })
         })
         this.on("removed", (_emitter: any, _event: any) => {
             this.overlay.remove()
         })
         this.on("move", (_emitter: any, event: any) => {
-            css(this.overlay, {top: event.y, left: event.x})
+            this.syncOverlayLayout(event.x, event.y)
         })
         this.on("click", (_emitter: any, _event: any) => {
             this.toFront()
@@ -72,12 +73,34 @@ export class ComponentFigure extends draw2d.shape.basic.Rectangle{
         })
     }
 
+    /** Aligne l’overlay DOM (Wokwi) sur la position et la rotation draw2d. */
+    public syncOverlayLayout(canvasX?: number, canvasY?: number): void {
+        const top = canvasY ?? this.getY()
+        const left = canvasX ?? this.getX()
+        const angle = Number(this.getRotationAngle()) || 0
+        css(this.overlay, {
+            top,
+            left,
+            transform: `rotate(${angle}deg)`,
+            transformOrigin: "center center",
+        })
+    }
+
+    public rotateByDegrees(delta: number): void {
+        const cur = Number(this.getRotationAngle()) || 0
+        const next = ((cur + delta) % 360 + 360) % 360
+        this.setRotationAngle(next)
+        this.syncOverlayLayout()
+    }
+
     public getFigureData(): FigureData{
+        const angle = Number(this.getRotationAngle()) || 0
         return {
             componentId: this.component.id,
             figureId: this.getId(),
             x: this.getX(),
             y: this.getY(),
+            ...(angle !== 0 ? {rotation: angle} : {}),
         }
     }
     public getWiringData(): WiringData[]{
