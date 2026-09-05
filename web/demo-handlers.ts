@@ -22,17 +22,31 @@ function syncDemoUrl(hackCable: HackCable): void {
     });
 }
 
+function getButtonLabelEl(button: HTMLElement): HTMLElement | null {
+    return button.querySelector(".hackCable-btn-label");
+}
+
+function setButtonLabelText(button: HTMLElement, text: string): void {
+    const label = getButtonLabelEl(button);
+    if (label) label.textContent = text;
+    else button.textContent = text;
+    button.title = text;
+    button.setAttribute("aria-label", text);
+}
+
 export function setupCatalogUpdate(hackCable: HackCable, signal: AbortSignal): void {
     const updateButton = document.getElementById("update-catalog");
     if (!updateButton) return;
 
     updateButton.addEventListener("click", () => {
         void (async () => {
-            const previousLabel = updateButton.textContent;
+            const labelEl = getButtonLabelEl(updateButton);
+            const previousLabel = labelEl?.textContent ?? updateButton.textContent ?? "";
             updateButton.setAttribute("disabled", "true");
+            updateButton.classList.add("is-syncing");
             try {
                 const result = await hackCable.updateFritzingCatalog((progress) => {
-                    updateButton.textContent = formatSyncProgress(progress);
+                    setButtonLabelText(updateButton, formatSyncProgress(progress));
                 });
                 const t = (k: string, vars?: Record<string, unknown>) => i18next.t(k, { ns: "common", ...vars });
                 if (result.upToDate) {
@@ -49,8 +63,9 @@ export function setupCatalogUpdate(hackCable: HackCable, signal: AbortSignal): v
                 const detail = error instanceof Error ? error.message : String(error);
                 alert(`${i18next.t("web.updateFailed", { ns: "common" })}:\n\n${detail}`);
             } finally {
+                updateButton.classList.remove("is-syncing");
                 updateButton.removeAttribute("disabled");
-                updateButton.textContent = previousLabel;
+                setButtonLabelText(updateButton, previousLabel);
                 applyWebDemoUiI18n();
             }
         })();
@@ -189,12 +204,20 @@ export function setupUndoRedo(editor: Editor, signal: AbortSignal): void {
     canvas.on("connect", onCanvasChange);
     canvas.on("disconnect", onCanvasChange);
 
+    const stack = canvas.getCommandStack() as {
+        addEventListener?: (listener: unknown) => void;
+        removeEventListener?: (listener: unknown) => void;
+    };
+    const onStackEvent = () => refreshUndoRedoButtons(editor);
+    stack.addEventListener?.(onStackEvent);
+
     signal.addEventListener("abort", () => {
         canvas.off("figure:add", onCanvasChange);
         canvas.off("figure:remove", onCanvasChange);
         canvas.off("figure:move", onCanvasChange);
         canvas.off("connect", onCanvasChange);
         canvas.off("disconnect", onCanvasChange);
+        stack.removeEventListener?.(onStackEvent);
     });
 
     refreshUndoRedoButtons(editor);

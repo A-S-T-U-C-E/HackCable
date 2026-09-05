@@ -2,6 +2,7 @@
  * @file Menu contextuel (clic droit) sur le canvas draw2d.
  */
 import draw2d from "draw2d";
+import { deleteFigureWithUndo } from "./canvas-commands";
 import { ComponentFigure } from "./component-figure";
 import { tr } from "../ui/i18n/translate";
 
@@ -72,7 +73,7 @@ export function setupDraw2dContextMenu(canvas: any): () => void {
 
         if (onComponent) {
             addItem(tr("web.ctxDelete"), () => {
-                canvas.remove(onComponent);
+                deleteFigureWithUndo(onComponent);
             });
             addItem(tr("web.ctxToFront"), () => {
                 onComponent.toFront();
@@ -85,7 +86,7 @@ export function setupDraw2dContextMenu(canvas: any): () => void {
             });
         } else if (removable?.kind === "connection") {
             addItem(tr("web.ctxDeleteConnection"), () => {
-                canvas.remove(removable.target);
+                deleteFigureWithUndo(removable.target);
             });
         }
 

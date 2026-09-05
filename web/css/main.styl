@@ -14,6 +14,7 @@
     --hc-btn-bg #424B5A
     --hc-btn-bg-hover #556075
     --hc-btn-fg #e8e8e8
+    --hc-btn-icon-size 1.15em
 
 p, h1, h2, h3, h4, label, button, select, input
     font-family var(--hc-ui-font)
@@ -28,6 +29,8 @@ html
     text-align var(--hc-ui-text-align)
 
     &[data-a11y-labels="icons"]
+        --hc-btn-icon-size 1.55em
+
         .hackCable-btn-label
             position absolute
             width 1px
@@ -40,11 +43,42 @@ html
             border 0
 
         .hackCable-app-toolbar button
-            min-width 28px
+            min-width 36px
+            min-height 36px
+            padding 6px 10px
+
+            // Progression sync : afficher le texte sans détruire l’icône
+            &.is-syncing .hackCable-btn-label
+                position static
+                width auto
+                height auto
+                margin 0
+                overflow visible
+                clip auto
+                white-space normal
+
+            &.is-syncing
+                min-width auto
+                padding 6px 12px
+
+        .hackCable-app-language
+            .hackCable-app-language-label
+                // déjà .hackCable-btn-label → masqué
+                display none
+
+            select
+                min-width 7.5rem
+
+        .hackCable-app-minimap-toggle
+            min-height 36px
             padding 4px 8px
 
     &[data-a11y-labels="text"]
         .hackCable-btn-icon
+            display none
+
+        .hackCable-minimap-icon,
+        .hackCable-language-icon
             display none
 
 body
@@ -110,7 +144,18 @@ header.hackCable-app-header
 
             .hackCable-btn-icon
                 flex 0 0 auto
+                display inline-flex
+                align-items center
+                justify-content center
                 line-height 1
+                font-size var(--hc-btn-icon-size)
+                width 1.25em
+                height 1.25em
+
+            .hackCable-btn-svg
+                display block
+                width 1.25em
+                height 1.25em
 
             .hackCable-btn-label
                 line-height inherit
@@ -147,7 +192,20 @@ header.hackCable-app-header
                     outline var(--hc-focus-outline-width) solid var(--hc-accent)
                     outline-offset var(--hc-focus-outline-offset)
 
-            span
+            .hackCable-btn-icon
+                display inline-flex
+                align-items center
+                justify-content center
+                width 1.25em
+                height 1.25em
+                font-size var(--hc-btn-icon-size)
+                color var(--hc-btn-fg)
+
+            .hackCable-btn-svg
+                width 1.25em
+                height 1.25em
+
+            span#show-minimap-label
                 font-size var(--hc-ui-font-size)
                 line-height var(--hc-ui-line-height)
 
@@ -157,6 +215,20 @@ header.hackCable-app-header
             gap 6px
             min-height 24px
             color var(--hc-btn-fg)
+
+            .hackCable-language-icon
+                display inline-flex
+                align-items center
+                justify-content center
+                width 1.25em
+                height 1.25em
+                font-size var(--hc-btn-icon-size)
+                color var(--hc-btn-fg)
+                flex 0 0 auto
+
+            .hackCable-btn-svg
+                width 1.25em
+                height 1.25em
 
             .hackCable-app-language-label
                 font-size var(--hc-ui-font-size)

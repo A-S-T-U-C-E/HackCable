@@ -2,6 +2,7 @@
  * @file Panneau catalogue : navigation par catégories (flyout type µcBlockly) et liste de composants.
  */
 import { ComponentFigure } from "../editor/component-figure";
+import { addFigureWithUndo } from "../editor/canvas-commands";
 import { snapPointToCanvasGrid } from "../editor/canvas-scale";
 import type { Editor } from "../editor/editor";
 import { tr } from "../ui/i18n/translate";
@@ -422,7 +423,7 @@ export class Catalog {
             if (!componentInfo) return;
             const figure = new ComponentFigure(componentInfo);
             const { x, y } = snapPointToCanvasGrid(100, 100);
-            this.hackCable.editor.canvas.add(figure.setX(x).setY(y));
+            addFigureWithUndo(this.hackCable.editor.canvas, figure, x, y);
             this.collapseFlyout();
         });
 

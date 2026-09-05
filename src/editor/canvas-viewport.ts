@@ -60,14 +60,14 @@ export function getViewportState(canvas: Canvas): ViewportState {
 
 export function getCanvasLogicalBounds(canvas: Canvas): ContentBounds {
     const dim = canvas.getDimension();
-    const zoom = canvas.getZoom();
     const width = typeof dim?.getWidth === "function" ? dim.getWidth() : Number(dim?.w ?? dim?.width ?? CANVAS_WORLD_WIDTH);
     const height = typeof dim?.getHeight === "function" ? dim.getHeight() : Number(dim?.h ?? dim?.height ?? CANVAS_WORLD_HEIGHT);
+    // WheelZoomPolicy : monde logique = taille initiale (viewBox fixe), pas × zoom.
     return {
         x: 0,
         y: 0,
-        width: Math.max(1, width * zoom),
-        height: Math.max(1, height * zoom),
+        width: Math.max(1, width),
+        height: Math.max(1, height),
     };
 }
 

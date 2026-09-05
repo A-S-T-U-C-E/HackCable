@@ -3,6 +3,8 @@
  */
 import draw2d from "draw2d";
 import { setupDraw2dContextMenu } from "./canvas-context-menu";
+import { addFigureWithUndo } from "./canvas-commands";
+import { patchDraw2dCommandStack } from "./draw2d-patches";
 import { hackCablePanningPolicy } from "./canvas-panning-policy";
 import { setupViewportAltHorizontalScroll, getEditorViewport } from "./canvas-viewport";
 import { setupCanvasMinimap } from "./canvas-minimap";
@@ -12,7 +14,7 @@ import { connectionsPolicy } from "./connections-policies";
 import { ComponentFigure, syncFigurePortHitTargets } from "./component-figure";
 import { getComponentById } from "../panels/component";
 import { css } from "../utils/dom";
-import { snapPointToCanvasGrid } from "./canvas-scale";
+import { CANVAS_WORLD_HEIGHT, CANVAS_WORLD_WIDTH, snapPointToCanvasGrid } from "./canvas-scale";
 import {
     zoomInCanvas,
     zoomOutCanvas,
@@ -31,6 +33,7 @@ export class Canvas extends draw2d.Canvas {
     private disposeLayoutSync: (() => void) | null = null;
 
     constructor(divId: string) {
+        patchDraw2dCommandStack();
         super(divId);
 
         // Overlay HTML sous le SVG draw2d : visuel seulement (pointer-events: none).
@@ -126,11 +129,50 @@ export class Canvas extends draw2d.Canvas {
         }
     }
 
+    /**
+     * Le scrollArea est un ancêtre (.hackCable-editor-viewport), pas le canvas lui-même.
+     * La formule draw2d (offset(canvas) + scroll) compte alors le pan deux fois et
+     * casse getBestFigure / pastilles après un déplacement du viewport.
+     */
+    public fromDocumentToCanvasCoordinate(x: number, y: number) {
+        const viewport = getEditorViewport();
+        if (!viewport) {
+            return super.fromDocumentToCanvasCoordinate(x, y);
+        }
+        const rect = viewport.getBoundingClientRect();
+        const zoom = this.getZoom();
+        return new draw2d.geo.Point(
+            (x - rect.left + viewport.scrollLeft) * zoom,
+            (y - rect.top + viewport.scrollTop) * zoom,
+        );
+    }
+
+    public fromCanvasToDocumentCoordinate(x: number, y: number) {
+        const viewport = getEditorViewport();
+        if (!viewport) {
+            return super.fromCanvasToDocumentCoordinate(x, y);
+        }
+        const rect = viewport.getBoundingClientRect();
+        const zoom = this.getZoom();
+        return new draw2d.geo.Point(
+            x / zoom - viewport.scrollLeft + rect.left,
+            y / zoom - viewport.scrollTop + rect.top,
+        );
+    }
+
     private onZoomChange() {
         const zoom = Math.max(0.01, this.getZoom());
-        // draw2d : viewBox = initialSize × zoom. L'overlay HTML (composants) est en coords
-        // « zoom 1 » puis scale(1/zoom) pour coller au SVG. Largeur/hauteur × zoom pour
-        // que le quadrillage couvre tout le viewBox sans laisser de zone morte.
+        // WheelZoomPolicy : viewBox fixe, SVG = initial/zoom. Aligner le div canvas
+        // pour que la zone scrollable couvre bien le dessin.
+        const initialW = Number(this.initialWidth) || CANVAS_WORLD_WIDTH;
+        const initialH = Number(this.initialHeight) || CANVAS_WORLD_HEIGHT;
+        const cssW = initialW / zoom;
+        const cssH = initialH / zoom;
+        const canvasEl = this.html?.[0] ?? this.html;
+        if (canvasEl instanceof HTMLElement) {
+            css(canvasEl, { width: `${cssW}px`, height: `${cssH}px` });
+        }
+        // Overlay en coords logiques, scale(1/zoom) pour coller au SVG redimensionné.
         css(this.overlayContainer, {
             transform: `scale(${1 / zoom})`,
             width: `${zoom * 100}%`,
@@ -139,7 +181,6 @@ export class Canvas extends draw2d.Canvas {
         if (this.overlayContainer instanceof HTMLElement) {
             this.overlayContainer.style.pointerEvents = "none";
         }
-        // Corona des ports en unités logiques ∝ zoom, pour garder une cible ~18 px écran.
         this.syncAllPortHitTargets();
     }
     private onSelectionChange(selected: any) {
@@ -183,7 +224,7 @@ export class Canvas extends draw2d.Canvas {
             const rawX = (event.clientX - rect.left + viewport.scrollLeft) * this.getZoom();
             const rawY = (event.clientY - rect.top + viewport.scrollTop) * this.getZoom();
             const { x, y } = snapPointToCanvasGrid(rawX, rawY);
-            this.add(figure.setX(x).setY(y));
+            addFigureWithUndo(this, figure, x, y);
         }
     }
 }

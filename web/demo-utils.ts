@@ -39,9 +39,12 @@ export function applyWebDemoUiI18n(): void {
     const setBtn = (id: string, key: string) => {
         const el = document.getElementById(id);
         if (!el) return;
+        const text = t(key);
         const label = el.querySelector(".hackCable-btn-label");
-        if (label) label.textContent = t(key);
-        else el.textContent = t(key);
+        if (label) label.textContent = text;
+        else el.textContent = text;
+        el.title = text;
+        el.setAttribute("aria-label", text);
     };
 
     setBtn("update-catalog", "web.updateCatalog");
