@@ -272,18 +272,66 @@ export class ComponentFigure extends draw2d.shape.basic.Rectangle {
         return this.hybridPorts.data.find((port: Port) => port.getLocator().portId === name);
     }
 
+    /**
+     * draw2d garde un AABB non tourné pour getBoundingBox ; le SVG / overlay
+     * tournent autour du centre (+ scale 90/270). Sans ceci, les clics ratent
+     * le composant et la policy de pan croit que le workspace est vide.
+     */
+    public hitTest(x: number, y: number, corona?: number): boolean {
+        const angle = ((Number(this.getRotationAngle()) || 0) % 360 + 360) % 360;
+        if (angle === 0) {
+            return super.hitTest(x, y, corona);
+        }
+
+        const w = this.getWidth();
+        const h = this.getHeight();
+        if (w <= 0 || h <= 0) return false;
+
+        const cx = this.getAbsoluteX() + w / 2;
+        const cy = this.getAbsoluteY() + h / 2;
+        let lx = x - cx;
+        let ly = y - cy;
+
+        // Inverse du scale draw2d appliqué après rotation à 90/270.
+        if (angle === 90 || angle === 270) {
+            const ratio = h / w;
+            if (ratio > 0 && Number.isFinite(ratio)) {
+                lx /= ratio;
+                ly *= ratio;
+            }
+        }
+
+        const rad = (-angle * Math.PI) / 180;
+        const cos = Math.cos(rad);
+        const sin = Math.sin(rad);
+        const rx = lx * cos - ly * sin;
+        const ry = lx * sin + ly * cos;
+        const pad = typeof corona === "number" ? corona : 0;
+
+        return Math.abs(rx) <= w / 2 + pad && Math.abs(ry) <= h / 2 + pad;
+    }
+
     public syncOverlayLayout(canvasX?: number, canvasY?: number): void {
         const top = canvasY ?? this.getY();
         const left = canvasX ?? this.getX();
-        const angle = Number(this.getRotationAngle()) || 0;
+        const angle = ((Number(this.getRotationAngle()) || 0) % 360 + 360) % 360;
+        const w = this.getWidth();
+        const h = this.getHeight();
+
+        // Même convention que draw2d.Rectangle.applyTransformation / PortLocator.
+        let transform = angle === 0 ? "none" : `rotate(${angle}deg)`;
+        if (angle === 90 || angle === 270) {
+            const ratio = h / Math.max(w, 0.0001);
+            transform = `rotate(${angle}deg) scale(${ratio}, ${1 / ratio})`;
+        }
 
         css(this.overlay, {
             top,
             left,
-            width: this.getWidth(),
-            height: this.getHeight(),
-            transform: `rotate(${angle}deg)`,
-            transformOrigin: "top left",
+            width: w,
+            height: h,
+            transform,
+            transformOrigin: "center center",
         });
     }
 
@@ -291,7 +339,11 @@ export class ComponentFigure extends draw2d.shape.basic.Rectangle {
         const cur = Number(this.getRotationAngle()) || 0;
         const next = ((cur + delta) % 360 + 360) % 360;
         this.setRotationAngle(next);
+        this.relocatePorts();
         this.syncOverlayLayout();
+        const canvas = this.getCanvas?.();
+        const zoom = canvas && typeof canvas.getZoom === "function" ? canvas.getZoom() : 1;
+        syncFigurePortHitTargets(this, zoom);
     }
 
     public getFigureData(): FigureData {

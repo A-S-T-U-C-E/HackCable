@@ -4,6 +4,12 @@
 import draw2d from "draw2d";
 import { deleteFigureWithUndo } from "./canvas-commands";
 import { ComponentFigure } from "./component-figure";
+import {
+    canRemoveConnectionSegment,
+    hitConnectionSegment,
+    removeConnectionSegment,
+    splitConnectionSegment,
+} from "./connection-router";
 import { tr } from "../ui/i18n/translate";
 
 type Removable = { kind: "component"; target: ComponentFigure } | { kind: "connection"; target: unknown };
@@ -53,18 +59,27 @@ export function setupDraw2dContextMenu(canvas: any): () => void {
         if (open && e.key === "Escape") hide();
     };
 
-    const renderAndShow = (clientX: number, clientY: number, figure: unknown) => {
+    const renderAndShow = (
+        clientX: number,
+        clientY: number,
+        figure: unknown,
+        canvasX: number,
+        canvasY: number,
+    ) => {
         const removable = resolveRemovable(figure);
         const onComponent = removable?.kind === "component" ? removable.target : null;
+        const onConnection = removable?.kind === "connection" ? removable.target : null;
 
         menu.innerHTML = "";
 
-        const addItem = (label: string, action: () => void) => {
+        const addItem = (label: string, action: () => void, disabled = false) => {
             const btn = document.createElement("button");
             btn.type = "button";
             btn.className = "hackCable-ctx-menu-item";
             btn.textContent = label;
+            btn.disabled = disabled;
             btn.addEventListener("click", () => {
+                if (disabled) return;
                 action();
                 hide();
             });
@@ -84,10 +99,35 @@ export function setupDraw2dContextMenu(canvas: any): () => void {
             addItem(tr("web.ctxRotateCcw"), () => {
                 onComponent.rotateByDegrees(-90);
             });
-        } else if (removable?.kind === "connection") {
+        } else if (onConnection) {
+            const conn = onConnection as Parameters<typeof hitConnectionSegment>[0] &
+                Parameters<typeof canRemoveConnectionSegment>[0] & {
+                    getCanvas?: () => { setCurrentSelection?: (f: unknown) => void };
+                };
+            const segment = hitConnectionSegment(conn, canvasX, canvasY);
+
             addItem(tr("web.ctxDeleteConnection"), () => {
-                deleteFigureWithUndo(removable.target);
+                deleteFigureWithUndo(onConnection);
             });
+
+            if (segment) {
+                addItem(tr("web.ctxAddSegment"), () => {
+                    splitConnectionSegment(onConnection, segment.index, canvasX, canvasY);
+                    const host = conn.getCanvas?.();
+                    host?.setCurrentSelection?.(null);
+                    host?.setCurrentSelection?.(onConnection);
+                });
+                addItem(
+                    tr("web.ctxRemoveSegment"),
+                    () => {
+                        removeConnectionSegment(onConnection, segment.index);
+                        const host = conn.getCanvas?.();
+                        host?.setCurrentSelection?.(null);
+                        host?.setCurrentSelection?.(onConnection);
+                    },
+                    !canRemoveConnectionSegment(conn, segment.index),
+                );
+            }
         }
 
         addItem(tr("web.ctxZoomReset"), () => {
@@ -120,7 +160,7 @@ export function setupDraw2dContextMenu(canvas: any): () => void {
         const docPt = canvas.fromCanvasToDocumentCoordinate(payload.x, payload.y);
         const px = typeof docPt.getX === "function" ? docPt.getX() : (docPt as { x: number }).x;
         const py = typeof docPt.getY === "function" ? docPt.getY() : (docPt as { y: number }).y;
-        renderAndShow(px, py, payload.figure);
+        renderAndShow(px, py, payload.figure, payload.x, payload.y);
     };
 
     canvas.on("contextmenu", onDraw2dContextMenu);

@@ -30,31 +30,31 @@ export function patchDraw2dCommandStack(): void {
     patched = true;
 
     const Collection = draw2d.command.CommandCollection;
-    if (!Collection?.prototype) return;
+    if (Collection?.prototype) {
+        const proto = Collection.prototype as CommandCollectionInstance & {
+            execute: (this: CommandCollectionInstance) => void;
+            redo: (this: CommandCollectionInstance) => void;
+        };
 
-    const proto = Collection.prototype as CommandCollectionInstance & {
-        execute: (this: CommandCollectionInstance) => void;
-        redo: (this: CommandCollectionInstance) => void;
-    };
+        const dropNopCommands = (collection: CommandCollectionInstance) => {
+            collection.commands.grep((cmd) => {
+                if (typeof cmd.canExecute !== "function") return true;
+                return cmd.canExecute() !== false;
+            });
+        };
 
-    const dropNopCommands = (collection: CommandCollectionInstance) => {
-        collection.commands.grep((cmd) => {
-            if (typeof cmd.canExecute !== "function") return true;
-            return cmd.canExecute() !== false;
-        });
-    };
+        const originalExecute = proto.execute;
+        proto.execute = function (this: CommandCollectionInstance) {
+            dropNopCommands(this);
+            originalExecute.call(this);
+        };
 
-    const originalExecute = proto.execute;
-    proto.execute = function (this: CommandCollectionInstance) {
-        dropNopCommands(this);
-        originalExecute.call(this);
-    };
-
-    const originalRedo = proto.redo;
-    proto.redo = function (this: CommandCollectionInstance) {
-        dropNopCommands(this);
-        originalRedo.call(this);
-    };
+        const originalRedo = proto.redo;
+        proto.redo = function (this: CommandCollectionInstance) {
+            dropNopCommands(this);
+            originalRedo.call(this);
+        };
+    }
 
     const MoveVertex = draw2d.command.CommandMoveVertex;
     if (MoveVertex?.prototype) {
@@ -66,6 +66,34 @@ export function patchDraw2dCommandStack(): void {
         mvProto.redo = function (this: { newPoint: { x: number; y: number } | null }) {
             if (this.newPoint == null) return;
             originalMvRedo.call(this);
+        };
+    }
+
+    // InteractiveManhattanConnectionRouter.route contient un `debugger` si oldVertices manque.
+    const Interactive = draw2d.layout.connection.InteractiveManhattanConnectionRouter;
+    if (Interactive?.prototype?.route) {
+        const routeProto = Interactive.prototype as {
+            route: (conn: unknown, hints: { oldVertices?: { getSize: () => number } }) => void;
+        };
+        const originalRoute = routeProto.route;
+        routeProto.route = function (
+            this: unknown,
+            conn: unknown,
+            routingHints: { oldVertices?: { getSize: () => number } },
+        ) {
+            const hints = routingHints ?? {};
+            if (!hints.oldVertices) {
+                hints.oldVertices = new draw2d.util.ArrayList();
+            }
+            return originalRoute.call(this, conn, hints);
+        };
+    }
+
+    // Menu jquery-contextMenu de draw2d (andSelf / double menu) : on utilise le menu HackCable.
+    const Ortho = draw2d.policy.line.OrthogonalSelectionFeedbackPolicy;
+    if (Ortho?.prototype) {
+        Ortho.prototype.onRightMouseDown = function onRightMouseDown() {
+            // no-op — segments gérés via canvas-context-menu.ts
         };
     }
 }

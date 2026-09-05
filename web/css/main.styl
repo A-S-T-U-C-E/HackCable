@@ -404,3 +404,67 @@ footer
             &.hackCable-a11y-close
                 background var(--hc-accent)
                 color #fff
+
+.hackCable-load-merge-backdrop
+    position fixed
+    inset 0
+    z-index 210000
+    background rgba(20, 22, 28, 0.55)
+    display flex
+    align-items center
+    justify-content center
+    padding 16px
+
+.hackCable-load-merge-dialog
+    width unquote("min(420px, calc(100vw - 32px))")
+    box-sizing border-box
+    padding 18px 20px
+    border-radius 8px
+    background #30343F
+    border 1px solid #1a1d24
+    box-shadow 0 10px 28px rgba(0, 0, 0, 0.4)
+    color #e8e8e8
+    font-family var(--hc-ui-font)
+    font-size var(--hc-ui-font-size)
+    line-height var(--hc-ui-line-height)
+
+    h2
+        margin 0 0 8px
+        font-size 1.15em
+        font-weight 600
+        color #fff
+
+    p
+        margin 0 0 16px
+        color #c8cdd6
+
+.hackCable-load-merge-actions
+    display flex
+    flex-wrap wrap
+    gap 8px
+    justify-content flex-end
+
+.hackCable-load-merge-btn
+    border none
+    border-radius 4px
+    padding 7px 14px
+    min-height 32px
+    background var(--hc-btn-bg)
+    color var(--hc-btn-fg)
+    font-family var(--hc-ui-font)
+    font-size var(--hc-ui-font-size)
+    cursor pointer
+
+    &:hover
+        background var(--hc-btn-bg-hover)
+
+    &:focus-visible
+        outline var(--hc-focus-outline-width) solid var(--hc-accent)
+        outline-offset var(--hc-focus-outline-offset)
+
+    &--primary
+        background var(--hc-accent)
+        color #fff
+
+        &:hover
+            background var(--hc-accent-strong, #2c70ff)

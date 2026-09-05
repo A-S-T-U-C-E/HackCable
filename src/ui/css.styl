@@ -431,7 +431,7 @@
 
         *
           position absolute
-          transform-origin left top
+          transform-origin center center
           pointer-events none !important
 
 // Menu contextuel (clic droit) — rendu dans document.body
@@ -466,6 +466,13 @@
 
     &:hover
       background #424B5A
+
+    &:disabled
+      opacity 0.45
+      cursor not-allowed
+
+      &:hover
+        background transparent
 
     &:focus-visible
       outline none

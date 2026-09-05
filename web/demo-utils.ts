@@ -17,7 +17,9 @@ export function isEditorSaveData(x: unknown): x is EditorSaveData {
 }
 
 export function downloadJsonFile(filename: string, data: unknown): void {
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
+        type: "application/json;charset=utf-8",
+    });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -27,6 +29,12 @@ export function downloadJsonFile(filename: string, data: unknown): void {
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
+}
+
+/** Nom de fichier de sauvegarde avec extension .hackcable. */
+export function buildHackCableSaveFilename(date = new Date()): string {
+    const day = date.toISOString().slice(0, 10);
+    return `hackcable-${day}.hackcable`;
 }
 
 export function resolveUiLanguage(): HackCableLanguage {

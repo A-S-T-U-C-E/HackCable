@@ -2,10 +2,11 @@
  * @file Politique de création de connexions (tirage depuis un port uniquement).
  */
 import draw2d from "draw2d";
+import { createWiringConnection } from "./connection-router";
 
 class VertexDragConnectionPolicy extends draw2d.policy.connection.DragConnectionCreatePolicy {
     createConnection() {
-        return new draw2d.Connection({ router: new draw2d.layout.connection.VertexRouter() });
+        return createWiringConnection();
     }
 }
 

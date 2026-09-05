@@ -9,7 +9,8 @@ import {
     normalizeHackCableLanguage,
     type HackCableLanguage,
 } from "../src/ui/i18n/languages";
-import { applyWebDemoUiI18n, downloadJsonFile, formatSyncProgress, isEditorSaveData, resolveUiLanguage } from "./demo-utils";
+import { applyWebDemoUiI18n, buildHackCableSaveFilename, downloadJsonFile, formatSyncProgress, isEditorSaveData, resolveUiLanguage } from "./demo-utils";
+import { askLoadMergeChoice } from "./load-merge-dialog";
 import { readA11ySettings } from "./a11y-settings";
 import { writeUrlDemoOptions } from "./url-options";
 
@@ -77,7 +78,7 @@ export function setupSaveRestore(editor: Editor, signal: AbortSignal): HTMLInput
     const restore = document.getElementById("restore");
     const restoreFileInput = document.createElement("input");
     restoreFileInput.type = "file";
-    restoreFileInput.accept = ".json,application/json";
+    restoreFileInput.accept = ".hackcable,.json,application/json";
     restoreFileInput.hidden = true;
     document.body.appendChild(restoreFileInput);
 
@@ -85,8 +86,7 @@ export function setupSaveRestore(editor: Editor, signal: AbortSignal): HTMLInput
 
     save?.addEventListener("click", () => {
         const data = editor.getEditorSaveData();
-        const day = new Date().toISOString().slice(0, 10);
-        downloadJsonFile(`hackcable-editor-${day}.json`, data);
+        downloadJsonFile(buildHackCableSaveFilename(), data);
     }, { signal });
 
     restore?.addEventListener("click", () => {
@@ -99,17 +99,27 @@ export function setupSaveRestore(editor: Editor, signal: AbortSignal): HTMLInput
         if (!file) return;
         const reader = new FileReader();
         reader.onload = () => {
-            try {
-                const text = typeof reader.result === "string" ? reader.result : "";
-                const parsed: unknown = JSON.parse(text);
-                if (!isEditorSaveData(parsed)) {
-                    alert(tWarn("web.loadInvalidShape"));
-                    return;
+            void (async () => {
+                try {
+                    const text = typeof reader.result === "string" ? reader.result : "";
+                    const parsed: unknown = JSON.parse(text);
+                    if (!isEditorSaveData(parsed)) {
+                        alert(tWarn("web.loadInvalidShape"));
+                        return;
+                    }
+
+                    if (editor.isWorkspaceEmpty()) {
+                        editor.loadEditorSaveData(parsed, "replace");
+                        return;
+                    }
+
+                    const choice = await askLoadMergeChoice();
+                    if (choice === "cancel") return;
+                    editor.loadEditorSaveData(parsed, choice);
+                } catch {
+                    alert(tWarn("web.loadInvalidJson"));
                 }
-                editor.loadEditorSaveData(parsed);
-            } catch {
-                alert(tWarn("web.loadInvalidJson"));
-            }
+            })();
         };
         reader.onerror = () => alert(tWarn("web.loadFileError"));
         reader.readAsText(file, "UTF-8");

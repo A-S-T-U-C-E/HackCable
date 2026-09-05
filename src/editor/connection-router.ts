@@ -1,0 +1,225 @@
+/**
+ * @file Routeur Manhattan interactif + ponts aux croisements (segment handling draw2d).
+ * @see https://freegroup.github.io/draw2d/#/examples/connection_segment_handling
+ */
+import draw2d from "draw2d";
+
+type Point2 = { x: number; y: number };
+type IntersectionPoint = Point2 & {
+    justTouching?: boolean;
+    other?: { getId?: () => string };
+};
+
+type WiringConnection = {
+    getId: () => string;
+    getCanvas: () => {
+        getIntersection?: (line: unknown) => {
+            each: (fn: (i: number, p: IntersectionPoint) => void) => void;
+        };
+        calculateConnectionIntersection?: () => void;
+    } | null;
+    getVertices: () => {
+        getSize: () => number;
+        get: (i: number) => Point2;
+    };
+    svgPathString: string;
+    _routingMetaData?: { routedByUserInteraction?: boolean };
+};
+
+const BRIDGE_HALF = 7;
+const BRIDGE_HUMP = 6;
+
+/** Policy draw2d pour split/remove de segments orthogonaux. */
+const segmentPolicy = new draw2d.policy.line.OrthogonalSelectionFeedbackPolicy();
+
+function collectIntersections(
+    canvas: NonNullable<ReturnType<WiringConnection["getCanvas"]>>,
+    conn: WiringConnection,
+): IntersectionPoint[] {
+    if (typeof canvas.calculateConnectionIntersection === "function") {
+        canvas.calculateConnectionIntersection();
+    }
+    const list = canvas.getIntersection?.(conn);
+    const points: IntersectionPoint[] = [];
+    list?.each((_i, p) => points.push(p));
+    return points;
+}
+
+function dist2(a: Point2, b: Point2): number {
+    const dx = a.x - b.x;
+    const dy = a.y - b.y;
+    return dx * dx + dy * dy;
+}
+
+function shouldDrawBridgeOnSegment(
+    conn: WiringConnection,
+    segmentStart: Point2,
+    segmentEnd: Point2,
+    interP: IntersectionPoint,
+): boolean {
+    const otherId = interP.other && typeof interP.other.getId === "function"
+        ? String(interP.other.getId())
+        : "";
+    const selfId = String(conn.getId());
+    if (otherId) return selfId <= otherId;
+
+    const dx = segmentEnd.x - segmentStart.x;
+    const dy = segmentEnd.y - segmentStart.y;
+    return Math.abs(dx) >= Math.abs(dy);
+}
+
+function appendOrientedBridge(
+    path: Array<string | number>,
+    from: Point2,
+    to: Point2,
+    inter: Point2,
+): void {
+    const dx = to.x - from.x;
+    const dy = to.y - from.y;
+    const len = Math.hypot(dx, dy);
+    if (len < 1) return;
+
+    const ux = dx / len;
+    const uy = dy / len;
+    const nx = -uy;
+    const ny = ux;
+
+    const half = Math.min(BRIDGE_HALF, len / 3);
+    const beforeX = inter.x - ux * half;
+    const beforeY = inter.y - uy * half;
+    const afterX = inter.x + ux * half;
+    const afterY = inter.y + uy * half;
+    const peakX = inter.x + nx * BRIDGE_HUMP;
+    const peakY = inter.y + ny * BRIDGE_HUMP;
+
+    path.push(" L", (beforeX | 0) + 0.5, " ", (beforeY | 0) + 0.5);
+    path.push(
+        " Q",
+        (peakX | 0) + 0.5,
+        " ",
+        (peakY | 0) + 0.5,
+        " ",
+        (afterX | 0) + 0.5,
+        " ",
+        (afterY | 0) + 0.5,
+    );
+}
+
+function paintConnectionWithBridges(conn: WiringConnection, fallback: () => void): void {
+    const canvas = conn.getCanvas?.();
+    if (!canvas || typeof canvas.getIntersection !== "function") {
+        fallback();
+        return;
+    }
+
+    const intersections = collectIntersections(canvas, conn);
+    const ps = conn.getVertices();
+    if (!ps || ps.getSize() === 0) {
+        conn.svgPathString = "";
+        return;
+    }
+
+    const first = ps.get(0);
+    const path: Array<string | number> = ["M", (first.x | 0) + 0.5, " ", (first.y | 0) + 0.5];
+    let oldP = first;
+
+    for (let i = 1; i < ps.getSize(); i++) {
+        const p = ps.get(i);
+        const onSegment = intersections
+            .filter((interP) => {
+                if (interP.justTouching) return false;
+                if (!draw2d.shape.basic.Line.hit(1, oldP.x, oldP.y, p.x, p.y, interP.x, interP.y)) {
+                    return false;
+                }
+                return shouldDrawBridgeOnSegment(conn, oldP, p, interP);
+            })
+            .sort((a, b) => dist2(oldP, a) - dist2(oldP, b));
+
+        for (const interP of onSegment) {
+            appendOrientedBridge(path, oldP, p, interP);
+        }
+
+        path.push(" L", (p.x | 0) + 0.5, " ", (p.y | 0) + 0.5);
+        oldP = p;
+    }
+
+    conn.svgPathString = path.join("");
+}
+
+/**
+ * InteractiveManhattan (segments orthogonaux éditables) + bridges.
+ * Install OrthogonalSelectionFeedbackPolicy via onInstall du parent.
+ */
+export const BridgedInteractiveManhattanRouter =
+    draw2d.layout.connection.InteractiveManhattanConnectionRouter.extend({
+        NAME: "hackCable.BridgedInteractiveManhattanRouter",
+
+        _paint(conn: WiringConnection) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            paintConnectionWithBridges(conn, () => (this as any)._super(conn));
+        },
+    });
+
+/** Marque une connexion comme routée manuellement (conserve les sommets au reload). */
+export function markConnectionUserRouted(conn: {
+    _routingMetaData?: { routedByUserInteraction?: boolean; fromDir?: number; toDir?: number };
+}): void {
+    if (!conn._routingMetaData) {
+        conn._routingMetaData = { routedByUserInteraction: true, fromDir: -1, toDir: -1 };
+    } else {
+        conn._routingMetaData.routedByUserInteraction = true;
+    }
+}
+
+export type ConnectionSegmentHit = {
+    index: number;
+    start: Point2;
+    end: Point2;
+};
+
+/** Segment sous le point canvas, ou null. */
+export function hitConnectionSegment(
+    conn: { hitSegment?: (x: number, y: number) => ConnectionSegmentHit | null },
+    x: number,
+    y: number,
+): ConnectionSegmentHit | null {
+    if (typeof conn.hitSegment !== "function") return null;
+    return conn.hitSegment(x, y) ?? null;
+}
+
+/** Peut-on supprimer le segment (règles InteractiveManhattan) ? */
+export function canRemoveConnectionSegment(
+    conn: { getRouter?: () => { canRemoveSegmentAt?: (c: unknown, index: number) => boolean } },
+    segmentIndex: number,
+): boolean {
+    const router = conn.getRouter?.();
+    if (!router || typeof router.canRemoveSegmentAt !== "function") return false;
+    return router.canRemoveSegmentAt(conn, segmentIndex) === true;
+}
+
+/** Ajoute un coude orthogonal sur le segment (comme l’exemple draw2d). */
+export function splitConnectionSegment(
+    conn: unknown,
+    segmentIndex: number,
+    x: number,
+    y: number,
+): void {
+    segmentPolicy.splitSegment(conn, segmentIndex, x, y);
+    markConnectionUserRouted(conn as WiringConnection);
+}
+
+/** Supprime un segment orthogonal. */
+export function removeConnectionSegment(conn: unknown, segmentIndex: number): void {
+    segmentPolicy.removeSegment(conn, segmentIndex);
+    markConnectionUserRouted(conn as WiringConnection);
+}
+
+/** Crée une connexion câblage Manhattan interactive + ponts. */
+export function createWiringConnection(): InstanceType<typeof draw2d.Connection> {
+    return new draw2d.Connection({
+        router: new BridgedInteractiveManhattanRouter(),
+        stroke: 2,
+        color: "#2c70ff",
+        radius: 3,
+    });
+}
