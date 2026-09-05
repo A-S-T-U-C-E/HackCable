@@ -1,3 +1,8 @@
+/**
+ * @file Utilitaires DOM (styles inline, conversion d'unités SVG).
+ */
+import { CANVAS_PX_PER_MM } from "../editor/canvas-scale";
+
 export function css(element: HTMLElement, style: any) {
 
     Object.keys(style).forEach((key: any) => {
@@ -8,10 +13,13 @@ export function css(element: HTMLElement, style: any) {
         }
     });
 }
-export function unitToPx(value: string): number {
-    if (value.endsWith('mm')) {
-        return parseInt(value.replace('mm', ''), 10) * 3.8
-    } else {
-        return parseInt(value.replace('mm', ''), 10)
-    }
+export function unitToPx(value: string | null | undefined, fallback = 100): number {
+    if (!value) return fallback;
+    const trimmed = value.trim();
+    const mm = trimmed.match(/^([\d.]+)\s*mm$/i);
+    if (mm) return parseFloat(mm[1]) * CANVAS_PX_PER_MM;
+    const px = trimmed.match(/^([\d.]+)\s*px$/i);
+    if (px) return parseFloat(px[1]);
+    const num = parseFloat(trimmed);
+    return Number.isFinite(num) ? num : fallback;
 }

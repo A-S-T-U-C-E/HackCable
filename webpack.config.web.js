@@ -1,7 +1,5 @@
 const path = require('path');
-const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const CopyWebpackPlugin = require('copy-webpack-plugin');
+const HtmlWebpackPlugin = require('html-webpack-plugin');const CopyWebpackPlugin = require('copy-webpack-plugin');
 const webpack = require('webpack');
 
 /** Base des URL des assets (JS/CSS). Pour GitHub Pages projet, définir WEB_PUBLIC_PATH=/NomDuDepot/ */
@@ -40,6 +38,7 @@ module.exports = {
         // (setting 'htmlMenuitem')". The UMD dist file exports the function directly.
         alias: {
             jquery: path.resolve(__dirname, 'node_modules/jquery/dist/jquery.js'),
+            'draw2d-types': false,
         },
     },
     module: {
@@ -75,7 +74,6 @@ module.exports = {
         ]
     },
     plugins: [
-        new ForkTsCheckerWebpackPlugin(),
         new HtmlWebpackPlugin({ // Auto-inject JS into HTML + copy HTML
             template: "./web/index.html",
             filename: "./index.html"

@@ -1,11 +1,20 @@
 .hackCable-root
-  height 100%
+  flex 1 1 0
+  min-height 0
+  min-width 0
   width 100%
   display flex
+  flex-direction row
   flex-wrap nowrap
+  overflow hidden
+  align-items stretch
+  font-family var(--hc-ui-font, Rubik, sans-serif)
+  font-size var(--hc-ui-font-size, 13px)
+  line-height var(--hc-ui-line-height, 1.35)
+  text-align var(--hc-ui-text-align, start)
 
   p, h1, h2, h3, h4, select
-    font-family Rubik
+    font-family var(--hc-ui-font, Rubik, sans-serif)
     color #c9c9c9
 
   h3
@@ -14,38 +23,195 @@
     text-align center
     word-wrap break-word
 
+  .hackCable-sideBar.is-catalog-collapsed + .resizerCanvas
+    display none
+
   .hackCable-sideBar
+    flex 0 0 auto
+    align-self stretch
     height 100%
-    width 250px
-    min-width 100px
+    max-height 100%
+    min-height 0
+    width 320px
+    min-width 220px
     background-color #424B5A
-    display: flex
-    flex-direction column
+    display flex
+    flex-direction row
     flex-shrink 0
+    overflow hidden
+    transition width .18s ease
 
-    .hackCable-catalog-actions
-      width 100%
-      background: #30343F
-      text-align center
+    &.is-catalog-collapsed
+      width 132px
+      min-width 132px
 
-      select
-        margin 5px
-        padding 3px
-        width 80%
-        max-width 150px
-        background-color #22242c
-        border-radius 3px
+      .hackCable-catalog-nav
+        border-right none
+
+      .hackCable-catalog-list
+        flex 0 0 0
+        width 0
+        min-width 0
+        padding 0
+        margin 0
+        overflow hidden
+        opacity 0
+        visibility hidden
+        pointer-events none
         border none
-        color white
+
+    &.is-catalog-expanded
+      min-width 248px
+
+      .hackCable-catalog-list
+        flex 1 1 0
+        opacity 1
+        visibility visible
+        pointer-events auto
+
+    .hackCable-catalog-nav
+      flex 0 0 auto
+      align-self stretch
+      width 132px
+      min-width 132px
+      height 100%
+      box-sizing border-box
+      padding 0
+      background #30343F
+      border-right 1px solid #1a1d24
+      overflow hidden
+      display flex
+      flex-direction column
+
+      .hackCable-catalog-nav-list
+        display flex
+        flex-direction column
+        gap 4px
+        margin 0
+        padding 6px 4px
+        list-style none
+        flex 1
+        min-height 0
+        overflow-y auto
+        overflow-x hidden
+        overscroll-behavior contain
+        scrollbar-width thin
+
+      .hackCable-catalog-nav-btn
+        width 100%
+        min-height 44px
+        padding 10px 6px
+        border 1px solid transparent
+        border-radius 4px
+        background #424B5A
+        color #f2f4f8
+        font-family var(--hc-ui-font, Rubik, sans-serif)
+        font-size var(--hc-ui-font-size, 13px)
+        font-weight 600
+        line-height var(--hc-ui-line-height, 1.35)
+        letter-spacing 0.01em
+        text-align center
+        white-space normal
+        overflow-wrap normal
+        word-break keep-all
+        hyphens none
+        cursor pointer
+        flex-shrink 0
+
+        &:hover
+          background #556075
+          color #ffffff
+
+        &:focus-visible
+          outline var(--hc-focus-outline-width, 2px) solid var(--hc-accent, #2c70ff)
+          outline-offset var(--hc-focus-outline-offset, 1px)
+
+        &.is-active,
+        &[aria-current="true"]
+          background #556075
+          color #ffffff
+          border-color var(--hc-accent, #2c70ff)
+          box-shadow inset 3px 0 0 var(--hc-accent, #2c70ff)
+
+      .hackCable-catalog-auto-collapse
+        flex 0 0 auto
+        padding 6px 4px 8px
+        border-top 1px solid #1a1d24
+        background #30343F
+
+        .hackCable-catalog-auto-collapse-btn
+          width 100%
+          min-height 44px
+          padding 8px 6px
+          border 1px solid transparent
+          border-radius 4px
+          background #424B5A
+          color #f2f4f8
+          font-family var(--hc-ui-font, Rubik, sans-serif)
+          font-size var(--hc-ui-font-size, 13px)
+          font-weight 600
+          line-height var(--hc-ui-line-height, 1.35)
+          text-align center
+          white-space normal
+          overflow-wrap normal
+          word-break keep-all
+          hyphens none
+          cursor pointer
+
+          &:hover
+            background #556075
+            color #ffffff
+
+          &:focus-visible
+            outline var(--hc-focus-outline-width, 2px) solid var(--hc-accent, #2c70ff)
+            outline-offset 1px
+
+          &[aria-pressed="true"]
+            background #556075
+            color #ffffff
+            border-color var(--hc-accent, #2c70ff)
+            box-shadow inset 0 -3px 0 var(--hc-accent, #2c70ff)
+
+          &[aria-pressed="false"]
+            color #c5ccd8
 
     .hackCable-catalog-list
-      overflow-y scroll
+      flex 1 1 0
+      min-height 0
+      min-width 0
+      overflow-y auto
       overflow-x hidden
-      height 100%
-      width 100%
-      padding 5px 5px 0 5px
-      box-sizing: border-box
+      overscroll-behavior contain
+      padding 5px 8px 0 8px
+      box-sizing border-box
       scrollbar-width thin
+      transition opacity .15s ease
+      font-family var(--hc-ui-font, Rubik, sans-serif)
+      font-size var(--hc-ui-font-size, 13px)
+      line-height var(--hc-ui-line-height, 1.35)
+
+      .hackCable-catalog-section
+        scroll-margin-top 4px
+        margin-bottom 12px
+
+        .hackCable-catalog-section-title
+          margin 8px 0 6px 0
+          padding 8px 10px
+          font-family var(--hc-ui-font, Rubik, sans-serif)
+          font-size var(--hc-ui-font-size, 13px)
+          font-weight 600
+          line-height var(--hc-ui-line-height, 1.35)
+          text-transform uppercase
+          letter-spacing .03em
+          color #d8dee8
+          background #30343F
+          border-radius 4px
+          text-align left
+
+        .hackCable-catalog-section-grid
+          display flex
+          flex-direction column
+          gap 5px
 
       .hackCable-catalog-element
         text-align center
@@ -55,8 +221,56 @@
         background: #30343F
         padding 10px
         margin-bottom 5px
+        border 1px solid transparent
+        transition border-color .12s ease, box-shadow .12s ease
+
+        &:hover,
+        &:focus-within
+          border-color var(--hc-accent-muted, rgba(44, 112, 255, 0.45))
+          box-shadow 0 0 0 1px var(--hc-accent-soft, rgba(44, 112, 255, 0.18))
+
         h3
           margin 0 0 10px 0
+          font-family var(--hc-ui-font, Rubik, sans-serif)
+          font-size 0.95em
+          line-height var(--hc-ui-line-height, 1.35)
+
+        .hackCable-fritzing-preview,
+        .hackCable-catalog-preview
+          max-width 100%
+          height auto
+          display block
+          margin 0 auto
+          object-fit contain
+
+        .hackCable-fritzing-preview.is-missing
+          min-height 48px
+          background #252932
+          border 1px dashed #5a6270
+          border-radius 4px
+          position relative
+
+          &::after
+            content "?"
+            position absolute
+            inset 0
+            display flex
+            align-items center
+            justify-content center
+            font-family Rubik, sans-serif
+            font-size 1.4em
+            color #7a8494
+
+  .hackCable-fritzing-overlay
+    position absolute
+    pointer-events none
+    box-sizing border-box
+    overflow hidden
+
+    svg
+      display block
+      width 100%
+      height 100%
 
   .resizerCanvas
     width 5px
@@ -64,38 +278,161 @@
     background-color #222
     cursor ew-resize
     flex-shrink 0
+    transition background-color .15s ease
+
+    &:hover,
+    &:focus-visible
+      background-color var(--hc-accent, #2c70ff)
+
+    &:focus-visible
+      outline var(--hc-focus-outline-width, 2px) solid var(--hc-accent, #2c70ff)
+      outline-offset 1px
 
   .hackCable-editor
     background-color white
-    width 100%
-    overflow scroll
+    flex 1 1 0
+    min-width 0
+    min-height 0
+    height 100%
+    align-self stretch
+    overflow hidden
     scrollbar-width thin
     position relative
-    flex-grow 1
+
+    .hackCable-editor-viewport
+      width 100%
+      height 100%
+      overflow scroll
+      scrollbar-width thin
+
+    .hackCable-canvas-minimap
+      position absolute
+      left 16px
+      bottom 16px
+      z-index 20
+      pointer-events auto
+      box-sizing border-box
+      padding 8px
+      border-radius 8px
+      background rgba(48, 52, 63, 0.92)
+      border 2px solid #6a7385
+      box-shadow 0 4px 14px rgba(0, 0, 0, 0.25)
+      cursor grab
+      user-select none
+      touch-action none
+
+      &:hover
+        border-color var(--hc-accent-muted, rgba(44, 112, 255, 0.45))
+
+      &:focus-visible
+        outline var(--hc-focus-outline-width, 2px) solid var(--hc-accent, #2c70ff)
+        outline-offset var(--hc-focus-outline-offset, 2px)
+
+      &.is-moving
+        cursor grabbing
+        border-color var(--hc-accent, #2c70ff)
+        box-shadow 0 6px 18px rgba(0, 0, 0, 0.4)
+
+      .hackCable-canvas-minimap-surface
+        display block
+        width 168px
+        height 126px
+        border-radius 4px
+        cursor crosshair
+        background #f0f0f0
+
+    .hackCable-canvas-zoom
+      position absolute
+      right 16px
+      bottom 16px
+      z-index 20
+      pointer-events auto
+      display flex
+      flex-direction column
+      gap 4px
+      padding 4px
+      border-radius 8px
+      background rgba(48, 52, 63, 0.92)
+      border 1px solid #1a1d24
+      box-shadow 0 4px 14px rgba(0, 0, 0, 0.25)
+
+      .hackCable-canvas-zoom-btn
+        width 36px
+        height 36px
+        border none
+        border-radius 6px
+        background #424B5A
+        color #e8e8e8
+        cursor pointer
+        padding 0
+        font-family var(--hc-ui-font, Rubik, sans-serif)
+        line-height 1
+
+        &:hover
+          background #556075
+
+        &:focus-visible
+          outline var(--hc-focus-outline-width, 2px) solid var(--hc-accent, #2c70ff)
+          outline-offset var(--hc-focus-outline-offset, 2px)
+
+        .hackCable-canvas-zoom-glyph
+          display inline-block
+          font-size 18px
+          font-weight 600
+
+        &[data-zoom-action="reset"] .hackCable-canvas-zoom-glyph
+          font-size 11px
+          font-weight 500
+
+        &[data-zoom-action="fit"] .hackCable-canvas-zoom-glyph
+          font-size 20px
 
     #hackCable-canvas
       width 1500px
       height 1000px
       position relative
 
+      > svg
+        position absolute
+        top 0
+        left 0
+        z-index 2
+        pointer-events none
+
+        .draw2d_HybridPort
+          pointer-events all
+          cursor crosshair
+
+        .draw2d_Connection
+          pointer-events visibleStroke
+          cursor pointer
+
       .hackCable-canvas-overlay-container
         height 100%
         width 100%
         position absolute
+        top 0
+        left 0
+        z-index 1
         overflow hidden
-        transform-origin: left top;
+        pointer-events none !important
+        transform-origin left top
 
         background-color rgba(0, 0, 0, 0)
-        background-position 0 0, 0 0;
+        background-position 0 0, 0 0
         background-repeat repeat, repeat
         background-attachment scroll, scroll
         background-image linear-gradient(to right, rgb(240, 240, 240) 1px, transparent 1px), linear-gradient(rgb(240, 240, 240) 1px, rgb(255, 255, 255) 1px)
         background-clip border-box, border-box
-        background-size 20px 20px;
+        background-size 25px 25px
+
+        > *
+          pointer-events none !important
 
         *
           position absolute
           transform-origin left top
+          pointer-events none !important
 
 // Menu contextuel (clic droit) — rendu dans document.body
 .hackCable-ctx-menu
@@ -108,7 +445,9 @@
   border 1px solid #1a1d24
   border-radius 6px
   box-shadow 0 6px 20px rgba(0, 0, 0, 0.35)
-  font-family Rubik, sans-serif
+  font-family var(--hc-ui-font, Rubik, sans-serif)
+  font-size var(--hc-ui-font-size, 13px)
+  line-height var(--hc-ui-line-height, 1.35)
 
   .hackCable-ctx-menu-item
     display block
@@ -116,11 +455,20 @@
     box-sizing border-box
     text-align left
     border none
+    border-left 3px solid transparent
     background transparent
     color #e8e8e8
-    font-size 13px
+    font-size inherit
+    font-family inherit
+    line-height inherit
     padding 8px 14px
     cursor pointer
 
     &:hover
       background #424B5A
+
+    &:focus-visible
+      outline none
+      background #424B5A
+      border-left-color var(--hc-accent, #2c70ff)
+      box-shadow inset 0 0 0 2px var(--hc-accent-soft, rgba(44, 112, 255, 0.18))

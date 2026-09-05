@@ -1,12 +1,11 @@
+/**
+ * @file Menu contextuel (clic droit) sur le canvas draw2d.
+ */
 import draw2d from "draw2d";
-import i18next from "i18next";
 import { ComponentFigure } from "./component-figure";
+import { tr } from "../ui/i18n/translate";
 
-function t(key: string): string {
-    return i18next.t(key, { ns: "common" });
-}
-
-type Removable = { kind: "component" | "connection"; target: any };
+type Removable = { kind: "component"; target: ComponentFigure } | { kind: "connection"; target: unknown };
 
 function resolveRemovable(figure: unknown): Removable | null {
     if (!figure) return null;
@@ -24,7 +23,7 @@ function resolveRemovable(figure: unknown): Removable | null {
 }
 
 /**
- * Menu contextuel (clic droit) branché sur l’événement draw2d `contextmenu`.
+ * Branche le menu contextuel sur l'événement draw2d `contextmenu`.
  * @param canvas Instance draw2d.Canvas (typage large à cause du module `draw2d`).
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -45,7 +44,6 @@ export function setupDraw2dContextMenu(canvas: any): () => void {
 
     const onDocPointerDown = (e: MouseEvent) => {
         if (!open) return;
-        // Le même clic droit qui ouvre le menu remonte en capture : ne pas fermer.
         if (e.button === 2) return;
         if (!menu.contains(e.target as Node)) hide();
     };
@@ -73,26 +71,30 @@ export function setupDraw2dContextMenu(canvas: any): () => void {
         };
 
         if (onComponent) {
-            addItem(t("web.ctxDelete"), () => {
+            addItem(tr("web.ctxDelete"), () => {
                 canvas.remove(onComponent);
             });
-            addItem(t("web.ctxToFront"), () => {
+            addItem(tr("web.ctxToFront"), () => {
                 onComponent.toFront();
             });
-            addItem(t("web.ctxRotateCw"), () => {
+            addItem(tr("web.ctxRotateCw"), () => {
                 onComponent.rotateByDegrees(90);
             });
-            addItem(t("web.ctxRotateCcw"), () => {
+            addItem(tr("web.ctxRotateCcw"), () => {
                 onComponent.rotateByDegrees(-90);
             });
         } else if (removable?.kind === "connection") {
-            addItem(t("web.ctxDeleteConnection"), () => {
+            addItem(tr("web.ctxDeleteConnection"), () => {
                 canvas.remove(removable.target);
             });
         }
 
-        addItem(t("web.ctxZoomReset"), () => {
-            canvas.setZoom(1);
+        addItem(tr("web.ctxZoomReset"), () => {
+            canvas.zoomReset();
+        });
+
+        addItem(tr("canvas.zoomToFit"), () => {
+            canvas.zoomToFit();
         });
 
         menu.hidden = false;
@@ -124,7 +126,6 @@ export function setupDraw2dContextMenu(canvas: any): () => void {
     document.addEventListener("mousedown", onDocPointerDown, true);
     document.addEventListener("keydown", onKeyDown, true);
 
-    // Empêche le menu contextuel natif du navigateur (qui se superposait au nôtre).
     const blockNativeContextMenu = (e: Event) => {
         e.preventDefault();
     };

@@ -2,19 +2,15 @@
     
 </head>
 
-<div class="hackCable-sideBar">
-    <div class="hackCable-catalog-actions">
-        <label>
-            <select class="hackCable-catalog-sorter">
-            </select>
-        </label>
-    </div>
-    <div class="hackCable-catalog-list">
-    </div>
+<div class="hackCable-sideBar is-catalog-collapsed">
+    <nav class="hackCable-catalog-nav" aria-label="Catalog categories"></nav>
+    <div id="hackCable-catalog-list" class="hackCable-catalog-list" tabindex="-1" hidden aria-hidden="true"></div>
 </div>
 <div class="resizerCanvas"></div>
 <div class="hackCable-editor">
-    <div id="hackCable-canvas" class="hackCable-canvas">
-        <div class="hackCable-canvas-overlay-container"></div>
+    <div class="hackCable-editor-viewport">
+        <div id="hackCable-canvas" class="hackCable-canvas">
+            <div class="hackCable-canvas-overlay-container"></div>
+        </div>
     </div>
 </div>

@@ -11,8 +11,9 @@
     "declaration": true,
     "target": "es2015",
     "module": "es2015",
+    "lib": ["ES2020", "DOM"],
     "strict": true,
-    "moduleResolution": "Node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "typeRoots": ["./node_modules/@types", "./src/types", "./node_modules/draw2d-types"]
   },

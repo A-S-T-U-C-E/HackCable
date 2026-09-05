@@ -1,83 +1,334 @@
-p, h1, h2, h3, h4, select, label
-    font-family Rubik
-    color white
+:root
+    --hc-ui-font Rubik, sans-serif
+    --hc-ui-font-size 13px
+    --hc-ui-line-height 1.35
+    --hc-ui-text-align start
+    --hc-accent #2c70ff
+    --hc-accent-rgb 44, 112, 255
+    --hc-accent-soft rgba(44, 112, 255, 0.18)
+    --hc-accent-muted rgba(44, 112, 255, 0.45)
+    --hc-accent-strong rgba(44, 112, 255, 0.85)
+    --hc-focus-outline-width 2px
+    --hc-focus-outline-offset 2px
+    --hc-header-bg #30343F
+    --hc-btn-bg #424B5A
+    --hc-btn-bg-hover #556075
+    --hc-btn-fg #e8e8e8
+
+p, h1, h2, h3, h4, label, button, select, input
+    font-family var(--hc-ui-font)
+    color inherit
 
 html
-    min-height 100vh
+    height 100%
+    overflow hidden
+    font-family var(--hc-ui-font)
+    font-size var(--hc-ui-font-size)
+    line-height var(--hc-ui-line-height)
+    text-align var(--hc-ui-text-align)
+
+    &[data-a11y-labels="icons"]
+        .hackCable-btn-label
+            position absolute
+            width 1px
+            height 1px
+            padding 0
+            margin -1px
+            overflow hidden
+            clip rect(0, 0, 0, 0)
+            white-space nowrap
+            border 0
+
+        .hackCable-app-toolbar button
+            min-width 28px
+            padding 4px 8px
+
+    &[data-a11y-labels="text"]
+        .hackCable-btn-icon
+            display none
 
 body
     margin 0
     padding 0
-    min-height 100vh
+    height 100%
+    min-height 0
+    overflow hidden
     position relative
+    display flex
+    flex-direction column
+    font-family var(--hc-ui-font)
+    font-size var(--hc-ui-font-size)
+    line-height var(--hc-ui-line-height)
+    color #e8e8e8
+    background #1a1d24
     
     &.resizing
         user-select none
         cursor ew-resize
 
-header
-    position absolute
-    top 40
-    height 40px
-    width 100%
-    background-color #30343F
+header.hackCable-app-header
+    flex-shrink 0
+    min-height 36px
+    background-color var(--hc-header-bg)
     border-bottom 1px solid black
+    z-index 100
+
+    .hackCable-app-toolbar
+        display flex
+        align-items center
+        gap 10px
+        height 100%
+        padding 4px 10px
+        box-sizing border-box
+
+    .hackCable-app-toolbar-group
+        display flex
+        align-items center
+        gap 6px
+        flex-wrap wrap
+
+        &--end
+            margin-left auto
+
+        // WCAG 2.2 AA : cible min. 24×24 px
+        button
+            border none
+            border-radius 4px
+            padding 4px 10px
+            min-width 24px
+            min-height 24px
+            background var(--hc-btn-bg)
+            color var(--hc-btn-fg)
+            font-size var(--hc-ui-font-size)
+            font-family var(--hc-ui-font)
+            line-height var(--hc-ui-line-height)
+            cursor pointer
+            display inline-flex
+            align-items center
+            justify-content center
+            gap 6px
+
+            .hackCable-btn-icon
+                flex 0 0 auto
+                line-height 1
+
+            .hackCable-btn-label
+                line-height inherit
+
+            &:hover:not(:disabled)
+                background var(--hc-btn-bg-hover)
+
+            &:focus-visible
+                outline var(--hc-focus-outline-width) solid var(--hc-accent)
+                outline-offset var(--hc-focus-outline-offset)
+
+            &:disabled
+                opacity 0.45
+                cursor default
+
+        .hackCable-app-minimap-toggle
+            display inline-flex
+            align-items center
+            gap 6px
+            min-height 24px
+            padding 2px 4px
+            cursor pointer
+            user-select none
+            color var(--hc-btn-fg)
+
+            input[type="checkbox"]
+                width 16px
+                height 16px
+                margin 0
+                accent-color var(--hc-accent)
+                cursor pointer
+
+                &:focus-visible
+                    outline var(--hc-focus-outline-width) solid var(--hc-accent)
+                    outline-offset var(--hc-focus-outline-offset)
+
+            span
+                font-size var(--hc-ui-font-size)
+                line-height var(--hc-ui-line-height)
+
+        .hackCable-app-language
+            display inline-flex
+            align-items center
+            gap 6px
+            min-height 24px
+            color var(--hc-btn-fg)
+
+            .hackCable-app-language-label
+                font-size var(--hc-ui-font-size)
+                white-space nowrap
+
+            select
+                height 28px
+                min-width 9.5rem
+                min-height 24px
+                padding 0 28px 0 10px
+                border 1px solid #1a1d24
+                border-radius 4px
+                background-color var(--hc-btn-bg)
+                color var(--hc-btn-fg)
+                font-family var(--hc-ui-font)
+                font-size var(--hc-ui-font-size)
+                line-height var(--hc-ui-line-height)
+                cursor pointer
+                color-scheme light
+
+                option
+                    background-color #ffffff
+                    color #111111
+
+                &:hover
+                    background-color var(--hc-btn-bg-hover)
+
+                &:focus-visible
+                    outline var(--hc-focus-outline-width) solid var(--hc-accent)
+                    outline-offset var(--hc-focus-outline-offset)
+                    border-color var(--hc-accent)
 
 main
-    box-sizing: border-box
-    padding-top 40px;
-    padding-bottom 20px;
-    height 100vh
+    box-sizing border-box
+    flex 1
+    min-height 0
     overflow hidden
     display flex
-
-    .sideBar
-        background-color #30343F
-        min-width 50px
-        width 80px
-        height 100%
-        border-right 1px solid black
-        padding 10px
-        flex-direction column
-        overflow scroll
-        flex-shrink 0
-
-        .buttonBar
-            display flex
-            flex-direction row
-            margin-bottom 10px
-            gap 10px
-            flex-wrap wrap
-            line-height 0
-            button
-                border none
-                border-radius 5px
-                padding 3px 7px
-        textarea
-            border none
-            border-radius 5px
-            width 100%
-            resize vertical
-            min-height 100px
-            height 200px
-    
-    #resizerCode
-        width 5px
-        height 100%
-        background-color #222
-        cursor ew-resize
-        flex-shrink 0
     
     #hackCable
-        flex-grow 1
-        height 100%
-        overflow auto
-
+        flex 1 1 0
+        min-height 0
+        min-width 0
+        overflow hidden
 
 footer
-    position absolute
-    bottom 0
+    flex-shrink 0
     height 20px
-    width 100%
-    background-color #30343F
+    background-color var(--hc-header-bg)
     border-top 1px solid black
+
+// Panneau accessibilité
+.hackCable-a11y-dialog
+    border none
+    border-radius 8px
+    padding 0
+    max-width unquote("min(420px, calc(100vw - 24px))")
+    width 100%
+    background #30343F
+    color #e8e8e8
+    box-shadow 0 12px 40px rgba(0, 0, 0, 0.45)
+    font-family var(--hc-ui-font)
+    font-size var(--hc-ui-font-size)
+    line-height var(--hc-ui-line-height)
+    text-align var(--hc-ui-text-align)
+
+    &::backdrop
+        background rgba(0, 0, 0, 0.45)
+
+    .hackCable-a11y-dialog-title
+        margin 0
+        padding 14px 16px 8px
+        font-size 1.15em
+        font-weight 600
+        color #fff
+
+    .hackCable-a11y-form
+        display flex
+        flex-direction column
+        gap 12px
+        padding 8px 16px 16px
+
+    .hackCable-a11y-row
+        display grid
+        grid-template-columns minmax(7rem, 0.9fr) 1.2fr
+        gap 10px
+        align-items center
+
+        label
+            color #d8dee8
+
+        select, input[type="color"]
+            width 100%
+            box-sizing border-box
+            min-height 28px
+            border 1px solid #1a1d24
+            border-radius 4px
+            background var(--hc-btn-bg)
+            color var(--hc-btn-fg)
+            font-family var(--hc-ui-font)
+            font-size var(--hc-ui-font-size)
+            color-scheme light
+
+            &:focus-visible
+                outline var(--hc-focus-outline-width) solid var(--hc-accent)
+                outline-offset var(--hc-focus-outline-offset)
+
+        select option
+            background-color #ffffff
+            color #111111
+
+        input[type="color"]
+            padding 2px
+            height 32px
+            cursor pointer
+
+    .hackCable-a11y-range
+        display flex
+        align-items center
+        gap 8px
+
+        input[type="range"]
+            flex 1
+            accent-color var(--hc-accent)
+
+        .hackCable-a11y-value
+            min-width 3.2rem
+            text-align end
+            color #c5ccd8
+            font-variant-numeric tabular-nums
+
+    .hackCable-a11y-check
+        display flex
+        align-items center
+        gap 8px
+        min-height 28px
+        cursor pointer
+        color #d8dee8
+
+        input
+            width 16px
+            height 16px
+            accent-color var(--hc-accent)
+
+            &:focus-visible
+                outline var(--hc-focus-outline-width) solid var(--hc-accent)
+                outline-offset var(--hc-focus-outline-offset)
+
+    .hackCable-a11y-actions
+        display flex
+        justify-content flex-end
+        gap 8px
+        margin-top 4px
+
+        button
+            border none
+            border-radius 4px
+            padding 6px 12px
+            min-height 28px
+            background var(--hc-btn-bg)
+            color var(--hc-btn-fg)
+            font-family var(--hc-ui-font)
+            font-size var(--hc-ui-font-size)
+            cursor pointer
+
+            &:hover
+                background var(--hc-btn-bg-hover)
+
+            &:focus-visible
+                outline var(--hc-focus-outline-width) solid var(--hc-accent)
+                outline-offset var(--hc-focus-outline-offset)
+
+            &.hackCable-a11y-close
+                background var(--hc-accent)
+                color #fff

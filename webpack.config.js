@@ -1,5 +1,4 @@
 const path = require('path');
-const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const webpack = require('webpack')
 
 module.exports = {
@@ -15,7 +14,10 @@ module.exports = {
         clean: true,
     },
     resolve: {
-        extensions: ['.ts', '.js', '.json']
+        extensions: ['.ts', '.js', '.json'],
+        alias: {
+            'draw2d-types': false,
+        },
     },
     module: {
         rules: [
@@ -50,7 +52,6 @@ module.exports = {
         ]
     },
     plugins: [
-        new ForkTsCheckerWebpackPlugin(),
         new webpack.ProvidePlugin({
             Buffer: ['buffer', 'Buffer'],
         })

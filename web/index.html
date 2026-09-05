@@ -1,53 +1,68 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <title>HackCable</title>
     <link rel="icon" href="./assets/icon.png" />
-
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;600&display=swap" rel="stylesheet" />
     <!-- CSS will be auto-injected -->
     <!-- JS will be auto-injected -->
 </head>
-
 <body>
-    <header>
-
+    <header class="hackCable-app-header">
+        <div class="hackCable-app-toolbar">
+            <div class="hackCable-app-toolbar-group">
+                <button type="button" id="update-catalog">
+                    <span class="hackCable-btn-icon" aria-hidden="true">↻</span>
+                    <span class="hackCable-btn-label">Mise à jour</span>
+                </button>
+            </div>
+            <div class="hackCable-app-toolbar-group">
+                <button type="button" id="save">
+                    <span class="hackCable-btn-icon" aria-hidden="true">⬇</span>
+                    <span class="hackCable-btn-label">Sauvegarder</span>
+                </button>
+                <button type="button" id="restore">
+                    <span class="hackCable-btn-icon" aria-hidden="true">⬆</span>
+                    <span class="hackCable-btn-label">Charger fichier</span>
+                </button>
+                <button type="button" id="undo" disabled>
+                    <span class="hackCable-btn-icon" aria-hidden="true">↶</span>
+                    <span class="hackCable-btn-label">Annuler</span>
+                </button>
+                <button type="button" id="redo" disabled>
+                    <span class="hackCable-btn-icon" aria-hidden="true">↷</span>
+                    <span class="hackCable-btn-label">Rétablir</span>
+                </button>
+            </div>
+            <div class="hackCable-app-toolbar-group hackCable-app-toolbar-group--end">
+                <label class="hackCable-app-minimap-toggle" for="show-minimap">
+                    <input type="checkbox" id="show-minimap" checked />
+                    <span id="show-minimap-label">Minicarte</span>
+                </label>
+                <button type="button" id="a11y-open" class="hackCable-a11y-open-btn" aria-haspopup="dialog">
+                    <span class="hackCable-btn-icon" aria-hidden="true">♿</span>
+                    <span class="hackCable-btn-label">Accessibilité</span>
+                </button>
+                <label class="hackCable-app-language" for="language-select">
+                    <span class="hackCable-app-language-label" id="language-select-label">Langue</span>
+                    <select id="language-select" aria-labelledby="language-select-label">
+                        <option value="fr_fr">Français</option>
+                        <option value="en_us">English</option>
+                        <option value="es_es">Español</option>
+                        <option value="ar_sa">العربية</option>
+                    </select>
+                </label>
+            </div>
+        </div>
     </header>
     <main>
-        <div class="sideBar">
-            <div class="buttonBar">
-                <button id="compile">Compiler</button>
-                <button id="execute">Exécuter</button>
-                <button id="stop">Stop</button>
-                <button id="pause">Pause</button>
-            </div>
-            <div class="buttonBar">
-                <button type="button" id="save">Sauvegarder</button>
-                <button type="button" id="restore">Charger fichier</button>
-                <button type="button" id="restore-local">Navigateur</button>
-                <button id="undo">undo</button>
-                <button id="redo">redo</button>
-            </div>
-            <div class="buttonBar">
-                <button type="button" id="language-en">English</button>
-                <button type="button" id="language-fr">Français</button>
-            </div>
-            <label for="code-editor">Code : </label>
-            <textarea id="code-editor" rows="10"></textarea>
-            <br><br>
-            <label for="code-compiled">Code compilé : </label>
-            <textarea id="code-compiled" rows="10" wrap="off"></textarea>
-        </div>
-        <div id="resizerCode"></div>
-        <div id="hackCable">
-        </div>
+        <div id="hackCable"></div>
     </main>
     <footer>
-        <div>
-
-        </div>
+        <div></div>
     </footer>
 </body>
-
 </html>
