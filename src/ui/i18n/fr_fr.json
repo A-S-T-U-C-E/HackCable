@@ -101,14 +101,17 @@
   "about": {
     "title": "À propos d’HackCable",
     "open": "À propos",
-    "blurb": "HackCable est un éditeur de câblage électronique (Arduino, ESP32, Raspberry, etc.) : placez des composants, tirez des fils, exportez le schéma. Cette démo s’appuie sur Draw2D, les éléments Wokwi et un catalogue de pièces Fritzing.",
+    "version": "Version {{version}}",
+    "copyright": "Copyright © 2021 Clément Grennerat — contributions du fork A-S-T-U-C-E (2024–2026).",
+    "blurb": "HackCable est un logiciel libre d’édition de câblage électronique (Arduino, ESP32, Raspberry, etc.) : placez des composants, tirez des fils, exportez le schéma. Cette démo s’appuie sur Draw2D, les éléments Wokwi et un catalogue de pièces Fritzing.",
     "fritzingCredit": "Les pièces breadboard du catalogue proviennent du projet open source Fritzing (Université des sciences appliquées de Potsdam et contributeurs). Fritzing est un logiciel libre de CAO électronique pour documenter des prototypes.",
     "linkFork": "Dépôt HackCable (A-S-T-U-C-E)",
     "linkUpstream": "Projet d’origine (Clément Grennerat)",
     "linkFritzing": "Site Fritzing",
     "linkFritzingGitHub": "Code source Fritzing",
     "linkWokwi": "Wokwi",
-    "license": "HackCable est sous licence GPL-3.0-or-later. Les pièces Fritzing restent sous leur licence GPL.",
+    "linkLicense": "Texte de la licence GNU GPL v3",
+    "license": "HackCable est distribué sous licence GNU GPL version 3 ou ultérieure (GPL-3.0-or-later) : vous pouvez l’utiliser, le modifier et le redistribuer aux mêmes conditions. Les pièces Fritzing restent sous leur propre licence GPL.",
     "close": "Fermer"
   },
   "a11y": {

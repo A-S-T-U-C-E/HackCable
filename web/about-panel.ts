@@ -3,27 +3,30 @@
  * Copyright (c) 2021, Clément Grennerat
  * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
  *
- * @file Dialogue « À propos » (style µcBlockly) : projet, icônes, crédits Fritzing.
+ * @file Dialogue « À propos » (style µcBlockly) : projet, version, crédits, GPL.
  *
  * Responsabilités :
- * - Construire le `<dialog>` et les rangées logo + texte
- * - Liens fork / upstream / Fritzing / Wokwi
+ * - Construire le `<dialog>` (logo, version, copyright, liens)
+ * - Liens fork / upstream / Fritzing / Wokwi / texte GPL
  */
 import i18next from "i18next";
+import pkg from "../package.json";
 
 const HACKCABLE_UPSTREAM = "https://github.com/ClementGre/HackCable";
 const HACKCABLE_FORK = "https://github.com/A-S-T-U-C-E/HackCable";
 const FRITZING_SITE = "https://fritzing.org/";
 const FRITZING_GITHUB = "https://github.com/fritzing/fritzing-app";
 const WOKWI_SITE = "https://wokwi.com/";
+const GPL_V3 = "https://www.gnu.org/licenses/gpl-3.0.html";
 
 /**
  * Traduit une clé i18n du namespace `common`.
  * @param key - Clé de traduction.
+ * @param options - Interpolation i18next (ex. `version`).
  * @returns Chaîne traduite.
  */
-function t(key: string): string {
-    return i18next.t(key, { ns: "common" });
+function t(key: string, options?: Record<string, string>): string {
+    return i18next.t(key, { ns: "common", ...options });
 }
 
 /**
@@ -69,6 +72,14 @@ export function setupAboutPanel(signal: AbortSignal): () => void {
         title.id = "about-dialog-title";
         title.className = "hackCable-about-dialog-title";
         title.textContent = t("about.title");
+
+        const version = document.createElement("p");
+        version.className = "hackCable-about-version";
+        version.textContent = t("about.version", { version: pkg.version });
+
+        const copyright = document.createElement("p");
+        copyright.className = "hackCable-about-copyright";
+        copyright.textContent = t("about.copyright");
 
         const makeLogoLink = (src: string, alt: string, href: string, wide = false) => {
             const link = document.createElement("a");
@@ -132,6 +143,7 @@ export function setupAboutPanel(signal: AbortSignal): () => void {
         addLink("about.linkFritzing", FRITZING_SITE);
         addLink("about.linkFritzingGitHub", FRITZING_GITHUB);
         addLink("about.linkWokwi", WOKWI_SITE);
+        addLink("about.linkLicense", GPL_V3);
 
         const license = document.createElement("p");
         license.className = "hackCable-about-license";
@@ -148,7 +160,7 @@ export function setupAboutPanel(signal: AbortSignal): () => void {
         closeBtn.addEventListener("click", () => panel.close());
         actions.appendChild(closeBtn);
 
-        panel.append(title, body, actions);
+        panel.append(title, version, copyright, body, actions);
     };
 
     rebuild();

@@ -101,14 +101,17 @@
   "about": {
     "title": "حول HackCable",
     "open": "حول",
-    "blurb": "HackCable محرر توصيل إلكتروني (Arduino وESP32 وRaspberry وغيرها): ضع المكوّنات، ارسم الأسلاك، وصدّر المخطط. تعتمد هذه التجربة على Draw2D وعناصر Wokwi وكتالوج أجزاء Fritzing.",
+    "version": "الإصدار {{version}}",
+    "copyright": "حقوق النشر © 2021 Clément Grennerat — مساهمات فرع A-S-T-U-C-E (2024–2026).",
+    "blurb": "HackCable برمجية حرة لتحرير التوصيل الإلكتروني (Arduino وESP32 وRaspberry وغيرها): ضع المكوّنات، ارسم الأسلاك، وصدّر المخطط. تعتمد هذه التجربة على Draw2D وعناصر Wokwi وكتالوج أجزاء Fritzing.",
     "fritzingCredit": "أجزاء اللوح التجريبي في الكتالوج تأتي من مشروع Fritzing مفتوح المصدر (جامعة العلوم التطبيقية في بوتسدام والمساهمون). Fritzing برنامج حر لتصميم الدوائر لتوثيق النماذج الأولية.",
     "linkFork": "مستودع HackCable (A-S-T-U-C-E)",
     "linkUpstream": "المشروع الأصلي (Clément Grennerat)",
     "linkFritzing": "موقع Fritzing",
     "linkFritzingGitHub": "شفرة مصدر Fritzing",
     "linkWokwi": "Wokwi",
-    "license": "HackCable مرخّص بموجب GPL-3.0-or-later. أجزاء Fritzing تبقى تحت رخصة GPL الخاصة بها.",
+    "linkLicense": "نص رخصة GNU GPL v3",
+    "license": "يُوزَّع HackCable بموجب رخصة GNU GPL الإصدار 3 أو أحدث (GPL-3.0-or-later): يمكنك استخدامه وتعديله وإعادة توزيعه وفق الشروط نفسها. أجزاء Fritzing تبقى تحت رخصة GPL الخاصة بها.",
     "close": "إغلاق"
   },
   "a11y": {
