@@ -1,5 +1,13 @@
 /**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
  * @file Overlay de progression au démarrage (chargement catalogue par lots).
+ *
+ * Responsabilités :
+ * - Afficher phases boot (éléments / montage / prêt)
+ * - Masquer l’overlay une fois le catalogue prêt
  */
 import i18next from "i18next";
 import type { CatalogBootProgress } from "../src/panels/catalog-boot";
@@ -9,6 +17,11 @@ export type BootProgressHandle = {
     close: () => void;
 };
 
+/**
+ * Retourne le libellé i18n d’une phase de chargement du catalogue.
+ * @param phase - Identifiant de phase (`maps`, `elements`, `mount`, `ready`).
+ * @returns Libellé traduit pour la phase.
+ */
 function phaseLabel(phase: CatalogBootProgress["phase"]): string {
     const t = (key: string) => i18next.t(key, { ns: "common" });
     switch (phase) {
@@ -25,7 +38,11 @@ function phaseLabel(phase: CatalogBootProgress["phase"]): string {
     }
 }
 
-/** Affiche une barre de progression (sur `document.body` pour survivre au montage UI). */
+/**
+ * Affiche une barre de progression de démarrage sur le document.
+ * @param host - Conteneur DOM recevant l’overlay (défaut : `document.body`).
+ * @returns Poignée `{ update, close }` pour piloter l’overlay.
+ */
 export function showBootProgress(host: HTMLElement = document.body): BootProgressHandle {
     const backdrop = document.createElement("div");
     backdrop.className = "hackCable-boot-progress";
@@ -78,7 +95,10 @@ export function showBootProgress(host: HTMLElement = document.body): BootProgres
     };
 }
 
-/** Laisse le navigateur peindre l’overlay avant un travail bloquant. */
+/**
+ * Laisse le navigateur peindre l’overlay avant un travail bloquant.
+ * @returns Promesse résolue après deux frames d’animation.
+ */
 export function paintBeforeHeavyWork(): Promise<void> {
     return new Promise((resolve) => {
         requestAnimationFrame(() => {

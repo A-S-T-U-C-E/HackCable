@@ -1,5 +1,13 @@
 /**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
  * @file Synchronisation du catalogue Fritzing depuis GitHub (orchestration).
+ *
+ * Responsabilités :
+ * - Comparer SHA / FZP et intégrer les pièces nouvelles ou modifiées
+ * - Reporter la progression (index / integrate)
  */
 import {
     buildFamilyCategoryMap,
@@ -79,7 +87,11 @@ async function fetchFritzingPart(
     return parsed ? { ...parsed, id } : null;
 }
 
-/** Télécharge et intègre les pièces Fritzing manquantes ou modifiées. */
+/**
+ * Télécharge et intègre les pièces Fritzing manquantes ou modifiées depuis GitHub.
+ * @param onProgress - Callback optionnel de progression (index / intégration).
+ * @returns Statistiques de synchronisation et SHA du dépôt.
+ */
 export async function syncFritzingCatalog(
     onProgress?: (progress: FritzingSyncProgress) => void,
 ): Promise<FritzingSyncResult> {

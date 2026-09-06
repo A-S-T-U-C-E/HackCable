@@ -1,7 +1,14 @@
 /**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
  * @file Accès HTTP au dépôt GitHub fritzing-parts (index, FZP, SVG).
+ *
+ * Responsabilités :
+ * - SHA du dépôt, arbre core/, téléchargement concurrent
+ * - Résolution d’URL breadboard (candidats svg/)
  */
-
 export const FRITZING_REPO = "fritzing/fritzing-parts";
 export const FRITZING_BRANCH = "develop";
 export const FRITZING_RAW_BASE = `https://raw.githubusercontent.com/${FRITZING_REPO}/${FRITZING_BRANCH}`;
@@ -9,13 +16,22 @@ export const FRITZING_SYNC_CONCURRENCY = 12;
 
 export type GitTreeEntry = { path: string; sha: string; type: string };
 
+/**
+ * Extrait le nom de fichier FZP depuis un chemin de bin core.fzb.
+ * @param path - Chemin relatif issu de core.fzb.
+ * @returns Nom de fichier `.fzp`, ou `null` si invalide.
+ */
 export function fzpFileFromBinPath(path: string): string | null {
     if (path.includes(":/")) return null;
     const file = path.replace(/^.*\//, "");
     return file.endsWith(".fzp") ? file : null;
 }
 
-/** Candidats d'URL pour un chemin `image` issu d'un FZP (ordre de préférence). */
+/**
+ * Liste les URL candidates pour un chemin `image` breadboard issu d’un FZP.
+ * @param imagePath - Chemin image du FZP (breadboardView).
+ * @returns URLs ordonnées par préférence de résolution.
+ */
 export function breadboardSvgUrlCandidates(imagePath: string): string[] {
     const normalized = imagePath.replace(/^breadboard\//, "");
     const fileName = normalized.split("/").pop() ?? normalized;
@@ -39,12 +55,20 @@ export function breadboardSvgUrlCandidates(imagePath: string): string[] {
     return [...new Set(candidates)];
 }
 
-/** Première URL candidate (sans vérification réseau). */
+/**
+ * Retourne la première URL candidate breadboard sans vérification réseau.
+ * @param imagePath - Chemin image du FZP (breadboardView).
+ * @returns URL la plus probable du SVG breadboard.
+ */
 export function resolveBreadboardSvgUrl(imagePath: string): string {
     return breadboardSvgUrlCandidates(imagePath)[0];
 }
 
-/** Résout l'URL breadboard en testant les candidats jusqu'à un SVG accessible. */
+/**
+ * Résout l’URL breadboard en testant les candidats jusqu’à un SVG accessible.
+ * @param imagePath - Chemin image du FZP (breadboardView).
+ * @returns URL retenue et contenu SVG si le téléchargement a réussi.
+ */
 export async function fetchBreadboardSvg(
     imagePath: string,
 ): Promise<{ url: string; text?: string }> {
@@ -61,7 +85,13 @@ export async function fetchBreadboardSvg(
     return { url: resolveBreadboardSvgUrl(imagePath) };
 }
 
-/** Exécute `worker` sur `items` avec au plus `limit` tâches concurrentes. */
+/**
+ * Exécute un worker sur une liste avec un plafond de concurrence.
+ * @param items - Éléments à traiter.
+ * @param limit - Nombre maximal de tâches parallèles.
+ * @param worker - Fonction asynchrone appliquée à chaque élément.
+ * @returns Tableau des résultats dans l’ordre d’entrée.
+ */
 export async function mapWithConcurrency<T, R>(
     items: T[],
     limit: number,
@@ -81,6 +111,10 @@ export async function mapWithConcurrency<T, R>(
     return results;
 }
 
+/**
+ * Récupère le SHA du commit HEAD de la branche Fritzing sur GitHub.
+ * @returns SHA du commit courant sur la branche develop.
+ */
 export async function fetchRepoHeadSha(): Promise<string> {
     const response = await fetch(`https://api.github.com/repos/${FRITZING_REPO}/commits/${FRITZING_BRANCH}`);
     if (!response.ok) {
@@ -91,6 +125,10 @@ export async function fetchRepoHeadSha(): Promise<string> {
     return json.sha;
 }
 
+/**
+ * Télécharge le fichier bins/core.fzb du dépôt Fritzing.
+ * @returns Contenu XML de core.fzb.
+ */
 export async function fetchCoreFzb(): Promise<string> {
     const response = await fetch(`${FRITZING_RAW_BASE}/bins/core.fzb`);
     if (!response.ok) {
@@ -99,6 +137,10 @@ export async function fetchCoreFzb(): Promise<string> {
     return response.text();
 }
 
+/**
+ * Récupère l’index récursif des fichiers `.fzp` du dossier core.
+ * @returns Entrées Git tree pour chaque blob FZP.
+ */
 export async function fetchCoreFzpIndex(): Promise<GitTreeEntry[]> {
     const response = await fetch(
         `https://api.github.com/repos/${FRITZING_REPO}/git/trees/${FRITZING_BRANCH}:core?recursive=1`,

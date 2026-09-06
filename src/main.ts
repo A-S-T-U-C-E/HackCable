@@ -1,5 +1,17 @@
 /**
- * @file Point d'entrée HackCable : montage UI, catalogue et éditeur.
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Point d’entrée bibliothèque HackCable : montage UI, catalogue et éditeur.
+ *
+ * Responsabilités :
+ * - Classe `HackCable` (API publique pour intégrateurs)
+ * - Injection du template UI, i18n, sync Fritzing
+ * - Redimensionnement de la barre latérale catalogue
+ *
+ * @see docs/architecture.md
+ * @see docs/MAINTENANCE.md
  */
 import "./ui/css.styl"
 import { Catalog } from "./panels/catalog";
@@ -30,7 +42,7 @@ export type {
     McuPinPeerConnection,
     McuPinStatus,
     McuPinTableChangeListener,
-} from "./editor/editor";
+} from "./editor/mcu-pin";
 
 import './jquery-ui-draggable';
 
@@ -39,8 +51,10 @@ export class HackCable {
     private readonly _editor: Editor;
 
     /**
-     * Préfère {@link HackCable.create} : le catalogue est construit par lots
-     * avec progression, pour ne pas figer l’UI au démarrage.
+     * Monte HackCable dans le DOM ; préférer {@link HackCable.create} pour un boot progressif.
+     * @param mountDiv - Conteneur d’accueil de l’UI HackCable.
+     * @param _language - Code langue (réservé ; i18n doit être initialisé avant).
+     * @param options - `deferCatalogBuild` retarde la construction du catalogue.
      */
     constructor(
         mountDiv: HTMLElement,
@@ -68,8 +82,11 @@ export class HackCable {
     }
 
     /**
-     * Monte HackCable et charge le catalogue par lots.
-     * @param onProgress progression 0..1 (maps → éléments → DOM)
+     * Monte HackCable et charge le catalogue par lots avec progression.
+     * @param mountDiv - Conteneur d’accueil de l’UI HackCable.
+     * @param language - Code langue (ex. `fr_fr`).
+     * @param onProgress - Callback de progression du boot catalogue.
+     * @returns Instance HackCable prête à l’emploi.
      */
     static async create(
         mountDiv: HTMLElement,
@@ -85,6 +102,11 @@ export class HackCable {
         return hackCable;
     }
 
+    /**
+     * Change la langue UI, reconstruit le catalogue et met à jour le document.
+     * @param language - Code langue cible (ex. `en_us`).
+     * @returns Fonction de traduction i18next (`t`).
+     */
     public async changeLanguage(language: string): Promise<TFunction> {
         const code = normalizeHackCableLanguage(language) ?? "fr_fr";
         await i18next.changeLanguage(code);
@@ -94,10 +116,20 @@ export class HackCable {
         return i18next.t.bind(i18next);
     }
 
+    /**
+     * Retourne le code langue i18next actif.
+     * @returns Code langue courant (ex. `fr_fr`).
+     */
     public getLanguage(): string {
         return i18next.language;
     }
 
+    /**
+     * Synchronise le catalogue Fritzing depuis GitHub et reconstruit le panneau.
+     * @param onProgress - Progression de la sync Fritzing (index / intégration).
+     * @param onCatalogProgress - Progression du rebuild catalogue local.
+     * @returns Statistiques de la synchronisation (ajouts, mises à jour, etc.).
+     */
     public async updateFritzingCatalog(
         onProgress?: (progress: FritzingSyncProgress) => void,
         onCatalogProgress?: CatalogBootProgressCallback,
@@ -145,31 +177,57 @@ export class HackCable {
         }
     }
 
+    /** Panneau catalogue (navigation, recherche, vignettes). */
     public get catalog() {
         return this._catalog;
     }
+    /** Éditeur canvas Draw2D (figures, connexions, undo). */
     public get editor() {
         return this._editor;
     }
 
-    /** Table des broches MCU (connectées ou non) — API pour logiciels tiers (µcBlockly…). */
+    /**
+     * Table des broches MCU connectées ou non — API pour intégrateurs (µcBlockly…).
+     * @returns Table agrégée des connexions par broche MCU.
+     */
     public getMcuPinConnectionTable() {
         return this._editor.getMcuPinConnectionTable();
     }
 
+    /**
+     * Table des broches d’une carte MCU identifiée sur le canvas.
+     * @param figureId - Identifiant Draw2D de la figure carte.
+     * @returns Table des broches de la carte, ou `undefined` si introuvable.
+     */
     public getMcuBoardPinTable(figureId: string) {
         return this._editor.getMcuBoardPinTable(figureId);
     }
 
+    /**
+     * Statut d’une broche MCU (connectée, libellé, pairs, etc.).
+     * @param figureId - Identifiant Draw2D de la figure carte.
+     * @param pinKeyOrLabel - Clé interne ou libellé de la broche.
+     * @returns Statut de la broche, ou `undefined` si introuvable.
+     */
     public getMcuPinStatus(figureId: string, pinKeyOrLabel: string) {
         return this._editor.getMcuPinStatus(figureId, pinKeyOrLabel);
     }
 
+    /**
+     * Indique si une broche MCU est connectée à au moins un fil.
+     * @param figureId - Identifiant Draw2D de la figure carte.
+     * @param pinKeyOrLabel - Clé interne ou libellé de la broche.
+     * @returns `true` si la broche a une connexion active.
+     */
     public isMcuPinConnected(figureId: string, pinKeyOrLabel: string) {
         return this._editor.isMcuPinConnected(figureId, pinKeyOrLabel);
     }
 
-    /** @returns désabonnement */
+    /**
+     * S’abonne aux changements de la table des broches MCU.
+     * @param listener - Callback invoqué à chaque mise à jour de la table.
+     * @returns Fonction de désabonnement.
+     */
     public onMcuPinTableChange(listener: (table: ReturnType<Editor["getMcuPinConnectionTable"]>) => void) {
         return this._editor.onMcuPinTableChange(listener);
     }

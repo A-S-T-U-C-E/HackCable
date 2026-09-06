@@ -1,5 +1,15 @@
 /**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
  * @file Minicarte du plan (aperçu, rectangle de vue, navigation clic/glisser).
+ *
+ * Responsabilités :
+ * - Projeter le monde canvas dans une surface réduite
+ * - Déplacer la vue (pan) et recentrer au clic
+ *
+ * @see src/editor/minimap-geometry.ts
  */
 import type { Canvas } from "./canvas";
 import { ComponentFigure } from "./component-figure";
@@ -161,10 +171,18 @@ function drawViewport(
 const MINIMAP_VISIBILITY_KEY = "hackCable-show-minimap";
 const MINIMAP_POSITION_KEY = "hackCable-minimap-position";
 
+/**
+ * Indique si la minicarte est affichée (préférence localStorage).
+ * @returns `true` sauf si l'utilisateur l'a masquée.
+ */
 export function isMinimapVisible(): boolean {
     return localStorage.getItem(MINIMAP_VISIBILITY_KEY) !== "false";
 }
 
+/**
+ * Affiche ou masque la minicarte et persiste la préférence.
+ * @param visible - `true` pour afficher, `false` pour masquer.
+ */
 export function setMinimapVisible(visible: boolean): void {
     localStorage.setItem(MINIMAP_VISIBILITY_KEY, visible ? "true" : "false");
     const minimap = document.querySelector(".hackCable-canvas-minimap");
@@ -225,7 +243,11 @@ function defaultMinimapPosition(host: HTMLElement, root: HTMLElement): MinimapPo
     return clampMinimapPosition(host, root, 16, Math.max(0, host.clientHeight - root.offsetHeight - 16));
 }
 
-/** Installe la minicarte flottante et retourne une fonction de nettoyage. */
+/**
+ * Installe la minicarte flottante et retourne une fonction de nettoyage.
+ * @param canvas - Instance canvas draw2d.
+ * @returns Fonction de nettoyage retirant la minicarte et les écouteurs.
+ */
 export function setupCanvasMinimap(canvas: Canvas): () => void {
     const host = document.querySelector(".hackCable-editor");
     if (!(host instanceof HTMLElement)) {

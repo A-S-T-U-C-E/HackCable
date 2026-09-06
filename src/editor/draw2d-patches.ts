@@ -1,5 +1,13 @@
 /**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
  * @file Correctifs draw2d (bugs command stack / vertices).
+ *
+ * Responsabilités :
+ * - Patcher le command stack pour les CommandMoveVertex invalides
+ * - Éviter les plantages undo/redo sur sommets de fils
  */
 import draw2d from "draw2d";
 import { ensureOrthogonalPortExits, markConnectionUserRouted } from "./connection-router";
@@ -22,9 +30,7 @@ type CommandCollectionInstance = {
 };
 
 /**
- * draw2d exécute toutes les commandes d’une CommandCollection dès qu’au moins une
- * canExecute() — y compris un CommandMoveVertex sans newPoint (clic sommet sans drag),
- * ce qui provoque `Cannot read properties of null (reading 'x')`.
+ * Applique les correctifs draw2d au command stack et aux routeurs (idempotent).
  */
 export function patchDraw2dCommandStack(): void {
     if (patched) return;

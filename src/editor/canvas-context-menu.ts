@@ -1,5 +1,13 @@
 /**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
  * @file Menu contextuel (clic droit) sur le canvas draw2d.
+ *
+ * Responsabilités :
+ * - Afficher actions figure / fil / plan (supprimer, label, etc.)
+ * - Positionner le menu hors overflow du viewport
  */
 import draw2d from "draw2d";
 import { deleteFigureWithUndo } from "./canvas-commands";
@@ -38,7 +46,8 @@ function resolveRemovable(figure: unknown): Removable | null {
 
 /**
  * Branche le menu contextuel sur l'événement draw2d `contextmenu`.
- * @param canvas Instance draw2d.Canvas (typage large à cause du module `draw2d`).
+ * @param canvas - Instance draw2d.Canvas (typage large à cause du module `draw2d`).
+ * @returns Fonction de nettoyage retirant menu et écouteurs.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function setupDraw2dContextMenu(canvas: any): () => void {

@@ -1,5 +1,13 @@
 /**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
  * @file Panneau d’options d’accessibilité (style µcBlockly).
+ *
+ * Responsabilités :
+ * - UI labels / police / interligne / focus / accent / routeur
+ * - Persister via `a11y-settings`
  */
 import i18next from "i18next";
 import {
@@ -14,10 +22,21 @@ import { WIRE_ROUTER_OPTIONS } from "../src/editor/connection-router-preference"
 
 type OnChange = (settings: A11ySettings) => void;
 
+/**
+ * Traduit une clé i18n du namespace `common`.
+ * @param key - Clé de traduction.
+ * @returns Chaîne traduite.
+ */
 function t(key: string): string {
     return i18next.t(key, { ns: "common" });
 }
 
+/**
+ * Assemble une rangée label + contrôle du formulaire a11y.
+ * @param label - Élément `<label>` associé au contrôle.
+ * @param control - Champ de saisie ou sélecteur.
+ * @returns Conteneur `.hackCable-a11y-row`.
+ */
 function fieldRow(label: HTMLElement, control: HTMLElement): HTMLDivElement {
     const row = document.createElement("div");
     row.className = "hackCable-a11y-row";
@@ -25,6 +44,12 @@ function fieldRow(label: HTMLElement, control: HTMLElement): HTMLDivElement {
     return row;
 }
 
+/**
+ * Branche le panneau d’accessibilité et persiste les réglages.
+ * @param signal - Signal d’annulation pour retirer les écouteurs.
+ * @param onChange - Callback invoqué après chaque modification des réglages.
+ * @returns Fonction de rafraîchissement des libellés i18n du bouton d’ouverture.
+ */
 export function setupA11yPanel(signal: AbortSignal, onChange: OnChange): () => void {
     const openBtn = document.getElementById("a11y-open");
     let dialog = document.getElementById("a11y-dialog");
@@ -270,6 +295,7 @@ export function setupA11yPanel(signal: AbortSignal, onChange: OnChange): () => v
     };
 }
 
+/** Met à jour les libellés i18n du bouton d’ouverture du panneau a11y. */
 export function refreshA11yPanelI18n(): void {
     const openBtn = document.getElementById("a11y-open");
     if (!(openBtn instanceof HTMLButtonElement)) return;

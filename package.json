@@ -10,7 +10,9 @@
     "build:types": "tsc --emitDeclarationOnly",
     "build:src": "webpack --mode=production",
     "build:web": "webpack --mode=production --config ./webpack.config.web.js",
-    "serve:web": "npx webpack serve --mode=development --config ./webpack.config.web.js"
+    "serve:web": "npx webpack serve --mode=development --config ./webpack.config.web.js",
+    "docs": "node scripts/generate-docs.mjs",
+    "docs:watch": "node --watch-path=src scripts/generate-docs.mjs"
   },
   "exports": {
     ".": "./dist/src/bundle.js"
@@ -23,7 +25,7 @@
     "url": "git+https://github.com/A-S-T-U-C-E/HackCable.git"
   },
   "author": "Clément Grennerat",
-  "license": "BSD-3-Clause",
+  "license": "GPL-3.0-or-later",
   "bugs": {
     "url": "https://github.com/A-S-T-U-C-E/HackCable/issues"
   },

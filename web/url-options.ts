@@ -1,5 +1,13 @@
 /**
- * @file Options démo déclenchables par l’URL (?lang=fr&minimap&labels=icons&...).
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Options démo déclenchables par l’URL (?lang=fr&minimap&labels=icons&…).
+ *
+ * Responsabilités :
+ * - Parser les query params
+ * - Appliquer langue, minimap, a11y, routeur au démarrage
  */
 import type { HackCableLanguage } from "../src/ui/i18n/languages";
 import { normalizeHackCableLanguage } from "../src/ui/i18n/languages";
@@ -18,6 +26,11 @@ export interface UrlDemoOptions {
     a11y?: Partial<A11ySettings>;
 }
 
+/**
+ * Interprète un paramètre booléen d’URL (`1`, `true`, `on`, etc.).
+ * @param value - Valeur brute du paramètre ou `null` si absent.
+ * @returns Booléen interprété ou `undefined` si non reconnu.
+ */
 function parseBoolParam(value: string | null): boolean | undefined {
     if (value === null) return undefined;
     const v = value.trim().toLowerCase();
@@ -26,6 +39,11 @@ function parseBoolParam(value: string | null): boolean | undefined {
     return undefined;
 }
 
+/**
+ * Convertit un code langue HackCable en code court pour l’URL.
+ * @param lang - Code langue complet (`fr_fr`, `en_us`, …).
+ * @returns Code court (`fr`, `en`, `es`, `ar`).
+ */
 function shortLangCode(lang: HackCableLanguage): string {
     if (lang === "en_us") return "en";
     if (lang === "es_es") return "es";
@@ -33,6 +51,11 @@ function shortLangCode(lang: HackCableLanguage): string {
     return "fr";
 }
 
+/**
+ * Parse les options de démo depuis la query string de l’URL.
+ * @param search - Chaîne de requête (défaut : `window.location.search`).
+ * @returns Options reconnues (langue, minimap, auto-repli, a11y).
+ */
 export function parseUrlDemoOptions(search = window.location.search): UrlDemoOptions {
     const params = new URLSearchParams(search);
     const options: UrlDemoOptions = {};
@@ -67,6 +90,10 @@ export interface DemoOptionsState {
     a11y?: A11ySettings;
 }
 
+/**
+ * Met à jour l’URL du navigateur pour refléter l’état courant de la démo.
+ * @param state - État à sérialiser dans les paramètres de requête.
+ */
 export function writeUrlDemoOptions(state: DemoOptionsState): void {
     const url = new URL(window.location.href);
     const params = url.searchParams;

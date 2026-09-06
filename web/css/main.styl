@@ -1,3 +1,14 @@
+/**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Styles de la page démo (toolbar, dialogue à propos, accessibilité, boot).
+ *
+ * Responsabilités :
+ * - Chrome autour de la bibliothèque HackCable
+ * - Thème boutons, dialogs, overlay de boot
+ */
 :root
     --hc-ui-font Rubik, sans-serif
     --hc-ui-font-size 13px
@@ -403,6 +414,105 @@ footer
             &.hackCable-a11y-close
                 background var(--hc-accent)
                 color #fff
+
+.hackCable-about-dialog
+    width unquote("min(480px, calc(100vw - 32px))")
+    max-height unquote("calc(100vh - 48px)")
+    overflow auto
+    border none
+    border-radius 10px
+    padding 20px 22px
+    background #30343F
+    color #e8e8e8
+    font-family var(--hc-ui-font)
+    font-size var(--hc-ui-font-size)
+    line-height var(--hc-ui-line-height)
+    box-shadow 0 12px 36px rgba(0, 0, 0, 0.45)
+
+    &::backdrop
+        background rgba(0, 0, 0, 0.45)
+
+    .hackCable-about-dialog-title
+        margin 0 0 14px
+        font-size 1.2em
+        font-weight 600
+        color #fff
+
+    .hackCable-about-row
+        display flex
+        align-items flex-start
+        gap 14px
+        margin 0 0 16px
+
+    .hackCable-about-logo-link
+        flex 0 0 auto
+        display inline-flex
+        border-radius 12px
+        outline-offset 3px
+
+        &:focus-visible
+            outline var(--hc-focus-outline-width) solid var(--hc-accent)
+
+    .hackCable-about-logo
+        width 64px
+        height 64px
+        object-fit contain
+        border-radius 12px
+        background #1a1d24
+        padding 6px
+        box-sizing border-box
+
+        &--wide
+            width 120px
+            background #8c1d18
+            padding 4px 8px
+
+    .hackCable-about-row-text
+        margin 0
+        flex 1 1 auto
+        min-width 0
+        color #c8cdd6
+
+    .hackCable-about-body
+        // liens / licence sous les rangées icône+texte
+
+    .hackCable-about-links
+        margin 0 0 12px
+        padding-left 1.2em
+        color #c8cdd6
+
+        a
+            color var(--hc-accent)
+            text-decoration none
+
+            &:hover
+                text-decoration underline
+
+    .hackCable-about-license
+        font-size 0.92em
+        opacity 0.85
+
+    .hackCable-about-actions
+        display flex
+        justify-content flex-end
+        margin-top 8px
+
+    .hackCable-about-close
+        border none
+        border-radius 4px
+        padding 7px 16px
+        background var(--hc-accent)
+        color #fff
+        font-family inherit
+        font-size inherit
+        cursor pointer
+
+        &:hover
+            background var(--hc-accent-strong, #2c70ff)
+
+        &:focus-visible
+            outline var(--hc-focus-outline-width) solid var(--hc-accent)
+            outline-offset var(--hc-focus-outline-offset)
 
 .hackCable-load-merge-backdrop
     position fixed

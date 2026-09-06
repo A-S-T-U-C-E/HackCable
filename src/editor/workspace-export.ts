@@ -1,6 +1,14 @@
 /**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
  * @file Export d’une capture PNG du plan, recadrée sur le contenu.
- * Inspiré de draw2d io_png_crop / io_svg_basic :
+ *
+ * Responsabilités :
+ * - Rendre le canvas (SVG + overlays) en image
+ * - Recadrer sur l’emprise des figures (style io_png_crop)
+ *
  * @see https://freegroup.github.io/draw2d/#/examples/io_png_crop
  * @see https://freegroup.github.io/draw2d/#/examples/io_svg_basic
  */
@@ -32,7 +40,11 @@ function expandBounds(bounds: ContentBounds, pad: number): CropRect {
     };
 }
 
-/** Bornes du schéma (composants + fils + labels). */
+/**
+ * Calcule les bornes du schéma (composants + fils + labels).
+ * @param canvas - Canvas draw2d / HackCable.
+ * @returns Rectangle englobant ou `null` si le plan est vide.
+ */
 export function getWorkspaceExportBounds(canvas: object): ContentBounds | null {
     return getWorkspaceExportBoundsInner(asExportCanvas(canvas));
 }
@@ -208,8 +220,9 @@ function marshalPngCropped(
 }
 
 /**
- * Capture PNG du workspace, recadrée sur le contenu (composants + fils),
- * avec les overlays Fritzing/Wokwi composites par-dessus le calque draw2d.
+ * Capture PNG du workspace recadrée sur le contenu avec overlays composites.
+ * @param canvas - Canvas draw2d / HackCable.
+ * @returns Data URL PNG (`data:image/png;base64,...`).
  */
 export async function exportWorkspacePngDataUrl(canvas: object): Promise<string> {
     const view = asExportCanvas(canvas);
@@ -262,7 +275,11 @@ export async function exportWorkspacePngDataUrl(canvas: object): Promise<string>
     }
 }
 
-/** Export SVG draw2d (comme io_svg_basic), viewBox ajusté au contenu. */
+/**
+ * Exporte le SVG draw2d avec viewBox ajusté au contenu.
+ * @param canvas - Canvas draw2d / HackCable.
+ * @returns Promesse résolue avec la chaîne SVG.
+ */
 export function exportWorkspaceSvgString(canvas: object): Promise<string> {
     const view = asExportCanvas(canvas);
     return new Promise((resolve, reject) => {
@@ -301,7 +318,10 @@ function buildExportFilename(ext: "png" | "svg", date = new Date()): string {
     return `hackcable-${date.toISOString().slice(0, 10)}.${ext}`;
 }
 
-/** Télécharge le SVG ajusté du workspace. */
+/**
+ * Télécharge le SVG ajusté du workspace en fichier local.
+ * @param canvas - Canvas draw2d / HackCable.
+ */
 export async function downloadWorkspaceSvg(canvas: object): Promise<void> {
     const svg = await exportWorkspaceSvgString(canvas);
     const blob = new Blob([svg], { type: "image/svg+xml;charset=utf-8" });

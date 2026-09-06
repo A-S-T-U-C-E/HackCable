@@ -1,5 +1,13 @@
 /**
- * @file Barre d'outils de zoom flottante sur le canvas.
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Barre d’outils de zoom flottante sur le canvas.
+ *
+ * Responsabilités :
+ * - Boutons zoom + / − / 100 % / ajuster à la fenêtre
+ * - Branchement i18n et accessibilité
  */
 import i18next from "i18next";
 import { tr } from "../ui/i18n/translate";
@@ -25,7 +33,11 @@ function createButton(action: ZoomAction, label: string, glyph: string, onClick:
     return button;
 }
 
-/** Installe les boutons de zoom et retourne une fonction de nettoyage. */
+/**
+ * Installe les boutons de zoom et retourne une fonction de nettoyage.
+ * @param canvas - Instance canvas draw2d.
+ * @returns Fonction de nettoyage retirant la barre d'outils.
+ */
 export function setupCanvasZoomToolbar(canvas: Canvas): () => void {
     const host = document.querySelector(".hackCable-editor");
     if (!(host instanceof HTMLElement)) {

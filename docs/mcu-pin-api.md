@@ -4,9 +4,11 @@ HackCable entretient, pour chaque **microcontrôleur / carte programmable** sur 
 
 Destiné aux logiciels tiers (ex. **µcBlockly**) qui doivent savoir quelles GPIO / alimentations sont déjà câblées.
 
+Licence : GPL-3.0-or-later.
+
 ## Cartes concernées
 
-Une pièce est traitée comme MCU si :
+Une pièce est traitée comme MCU si `isMicrocontrollerBoard(component)` :
 
 - Wokwi : `type === CARD` ou `category === "Microcontroller"` (ex. Arduino Uno)
 - Fritzing : `category === "Microcontroller"` **ou** `"Computer"` (Arduino, ESP, STM32, PICAXE, Raspberry Pi, Beagle…)
@@ -78,11 +80,23 @@ unsub();
 if (hackCable.isMcuPinConnected(figureId, "D13")) { /* … */ }
 ```
 
-Types exportés depuis le package : `McuPinConnectionTable`, `McuBoardPinTable`, `McuPinStatus`, `McuPinPeerConnection`, `isMicrocontrollerBoard`.
+Types exportés : `McuPinConnectionTable`, `McuBoardPinTable`, `McuPinStatus`, `McuPinPeerConnection`, `McuPinTableChangeListener`, `isMicrocontrollerBoard`.
 
-## Implémentation
+## Implémentation (fichiers)
 
-- `src/editor/mcu-pin-table.ts` — construction / indexation
-- `src/editor/editor.ts` — cache + écoute canvas
-- `src/panels/component.ts` — `isMicrocontrollerBoard`
-- `src/main.ts` — façade publique
+```
+src/editor/mcu-pin/
+  index.ts               — exports publics
+  types.ts               — types
+  list-pins.ts           — liste des broches d’une carte
+  port-connections.ts    — fils branchés sur un port
+  build-table.ts         — construction du snapshot
+  query.ts               — recherches dans un snapshot
+  watch.ts               — cache + écoute canvas (McuPinTableStore)
+
+src/editor/editor.ts     — délègue à McuPinTableStore
+src/panels/component.ts  — isMicrocontrollerBoard
+src/main.ts              — façade HackCable
+```
+
+Voir aussi [MAINTENANCE.md](MAINTENANCE.md).

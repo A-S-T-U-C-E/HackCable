@@ -1,5 +1,13 @@
 /**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
  * @file Types et constantes du catalogue Fritzing (broches, sync, stockage).
+ *
+ * Responsabilités :
+ * - Modèle `FritzingComponentInfo` / store localStorage
+ * - Versions d’algo (pins, catégories, URLs SVG)
  */
 import type { FritzingCategory } from "./fritzing-categories";
 

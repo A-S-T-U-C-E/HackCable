@@ -1,12 +1,21 @@
 /**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
  * @file Dialogue de fusion à l’ouverture d’un fichier (remplacer / ajouter / annuler).
+ *
+ * Responsabilités :
+ * - Demander le mode `EditorLoadMode`
+ * - Accessibilité dialog / focus
  */
 import i18next from "i18next";
 
 export type LoadMergeChoice = "replace" | "append" | "cancel";
 
 /**
- * Propose Remplacer / Ajouter / Annuler (style Blockly) lorsque le plan n’est pas vide.
+ * Propose Remplacer / Ajouter / Annuler lorsque le plan n’est pas vide.
+ * @returns Promesse résolue avec le choix de l’utilisateur.
  */
 export function askLoadMergeChoice(): Promise<LoadMergeChoice> {
     const t = (key: string) => i18next.t(key, { ns: "common" });

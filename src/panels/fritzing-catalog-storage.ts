@@ -1,5 +1,13 @@
 /**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
  * @file Persistance locale du catalogue Fritzing (localStorage + migration).
+ *
+ * Responsabilités :
+ * - Charger / sauver le store JSON
+ * - Migrer catégories et URLs SVG si algo obsolète
  */
 import { resolveFritzingCategory, type FritzingCategoryMaps } from "./fritzing-categories";
 import type { FritzingCatalogStore, FritzingComponentInfo } from "./fritzing-types";
@@ -8,6 +16,10 @@ import { resolveBreadboardSvgUrl } from "./fritzing-github";
 
 const STORAGE_KEY = "hackCable-fritzing-catalog";
 
+/**
+ * Charge le catalogue Fritzing persisté dans localStorage.
+ * @returns Store parsé, ou `null` si absent ou invalide.
+ */
 export function loadFritzingCatalog(): FritzingCatalogStore | null {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
@@ -18,10 +30,18 @@ export function loadFritzingCatalog(): FritzingCatalogStore | null {
     }
 }
 
+/**
+ * Persiste le catalogue Fritzing dans localStorage.
+ * @param store - Store complet à sérialiser.
+ */
 export function saveFritzingCatalog(store: FritzingCatalogStore): void {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
 }
 
+/**
+ * Retourne les pièces Fritzing stockées, avec migrations si algo obsolète.
+ * @returns Liste des composants Fritzing prêts pour le catalogue.
+ */
 export function getStoredFritzingComponents(): FritzingComponentInfo[] {
     const store = loadFritzingCatalog();
     const parts = store?.parts ?? [];

@@ -1,10 +1,18 @@
 /**
-
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
  * @file Taxonomie Fritzing : catégories, parsing core.fzb et résolution.
-
+ *
+ * Responsabilités :
+ * - Liste ordonnée des catégories breadboard
+ * - Maps module/famille/fichier → catégorie
+ * - Heuristiques de repli (titre, tags, chemin FZP)
  */
-
 export const FRITZING_CATEGORIES = [
+
+    "Wokwi",
 
     "Basic",
 
@@ -91,6 +99,8 @@ export interface FritzingCategoryContext {
 
 
 const CATEGORY_I18N_KEYS: Record<FritzingCategory, string> = {
+
+    Wokwi: "catalog.fritzing.wokwi",
 
     Basic: "catalog.fritzing.basic",
 
@@ -214,6 +224,11 @@ const TAXONOMY_ROOT_CATEGORY: Record<string, FritzingCategory> = {
 
 
 
+/**
+ * Retourne la clé i18n associée à une catégorie Fritzing.
+ * @param category - Catégorie Fritzing.
+ * @returns Clé de traduction dans le namespace `common`.
+ */
 export function fritzingCategoryI18nKey(category: FritzingCategory): string {
 
     return CATEGORY_I18N_KEYS[category];
@@ -222,6 +237,11 @@ export function fritzingCategoryI18nKey(category: FritzingCategory): string {
 
 
 
+/**
+ * Type guard : vérifie si une chaîne est une catégorie Fritzing connue.
+ * @param value - Chaîne à tester.
+ * @returns `true` si la valeur est dans {@link FRITZING_CATEGORIES}.
+ */
 export function isFritzingCategory(value: string): value is FritzingCategory {
 
     return (FRITZING_CATEGORIES as readonly string[]).includes(value);
@@ -230,6 +250,12 @@ export function isFritzingCategory(value: string): value is FritzingCategory {
 
 
 
+/**
+ * Compare deux catégories Fritzing selon l’ordre d’affichage catalogue.
+ * @param a - Première catégorie.
+ * @param b - Seconde catégorie.
+ * @returns Delta d’index négatif, nul ou positif pour le tri.
+ */
 export function compareFritzingCategories(a: FritzingCategory, b: FritzingCategory): number {
 
     return (CATEGORY_ORDER.get(a) ?? 999) - (CATEGORY_ORDER.get(b) ?? 999);
@@ -238,13 +264,16 @@ export function compareFritzingCategories(a: FritzingCategory, b: FritzingCatego
 
 
 
+/**
+ * Indique si une catégorie est affichée dans le catalogue breadboard.
+ * @param category - Catégorie Fritzing.
+ * @returns `false` pour les catégories « vue » ou outils masqués par défaut.
+ */
 export function isBreadboardCatalogCategory(category: FritzingCategory): boolean {
 
     return !FRITZING_VIEW_CATEGORIES.has(category);
 
 }
-
-
 
 function fzpBasename(path: string): string {
 
@@ -264,8 +293,11 @@ function extractFzpFile(path: string): string | null {
 
 
 
-/** Parse bins/core.fzb : espaces (__spacer__) = titres de catégorie. */
-
+/**
+ * Parse le fichier bins/core.fzb et extrait les maps module/fichier → catégorie.
+ * @param xml - Contenu XML de core.fzb.
+ * @returns Maps de résolution de catégories Fritzing.
+ */
 export function parseCoreFzb(xml: string): FritzingCategoryMaps {
 
     const moduleToCategory = new Map<string, FritzingCategory>();
@@ -316,6 +348,12 @@ export function parseCoreFzb(xml: string): FritzingCategoryMaps {
 
 
 
+/**
+ * Construit la map famille → catégorie à partir de core.fzb et des familles FZP.
+ * @param fzbXml - Contenu XML de core.fzb.
+ * @param familyByModuleId - Map moduleId → famille extraite des FZP.
+ * @returns Map famille → catégorie Fritzing.
+ */
 export function buildFamilyCategoryMap(
 
     fzbXml: string,
@@ -456,8 +494,12 @@ function inferFritzingCategoryFromText(hay: string): FritzingCategory | null {
 
 
 
-/** Résout la catégorie Fritzing (bin officiel → famille → taxonomie → heuristiques). */
-
+/**
+ * Résout la catégorie Fritzing d’une pièce (bin officiel, famille, taxonomie, heuristiques).
+ * @param context - Métadonnées de la pièce (moduleId, famille, tags, etc.).
+ * @param maps - Maps de catégories issues de core.fzb.
+ * @returns Catégorie Fritzing retenue.
+ */
 export function resolveFritzingCategory(
 
     context: FritzingCategoryContext,

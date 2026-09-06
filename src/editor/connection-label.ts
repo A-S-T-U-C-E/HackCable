@@ -1,5 +1,14 @@
 /**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
  * @file Labels éditables sur les connexions (style draw2d connection_custom_labeld).
+ *
+ * Responsabilités :
+ * - Ajouter / lire / supprimer le texte au milieu d’un fil
+ * - Édition au double-clic
+ *
  * @see https://freegroup.github.io/draw2d/#/examples/connection_custom_labeld
  */
 import draw2d from "draw2d";
@@ -53,7 +62,11 @@ function eachChildFigure(conn: ConnLike, fn: (figure: LabelLike) => void): void 
     }
 }
 
-/** Label déjà présent sur la connexion, ou null. */
+/**
+ * Retourne le label déjà présent sur la connexion, ou null.
+ * @param conn - Connexion draw2d.
+ * @returns Figure label ou `null`.
+ */
 export function getConnectionWireLabel(conn: unknown): LabelLike | null {
     if (!conn || typeof conn !== "object") return null;
     let found: LabelLike | null = null;
@@ -63,7 +76,11 @@ export function getConnectionWireLabel(conn: unknown): LabelLike | null {
     return found;
 }
 
-/** Texte du label de fil, ou undefined. */
+/**
+ * Retourne le texte du label de fil, ou undefined.
+ * @param conn - Connexion draw2d.
+ * @returns Texte non vide ou `undefined`.
+ */
 export function getConnectionWireLabelText(conn: unknown): string | undefined {
     const label = getConnectionWireLabel(conn);
     if (!label || typeof label.getText !== "function") return undefined;
@@ -71,7 +88,13 @@ export function getConnectionWireLabelText(conn: unknown): string | undefined {
     return text.length > 0 ? text : undefined;
 }
 
-/** Crée (ou remplace) un label au milieu du fil, éditable au double-clic. */
+/**
+ * Crée (ou remplace) un label au milieu du fil, éditable au double-clic.
+ * @param conn - Connexion draw2d.
+ * @param text - Texte initial (défaut i18n si absent).
+ * @param options - `startEdit: false` pour ne pas ouvrir l'éditeur inline.
+ * @returns Instance label draw2d créée.
+ */
 export function addConnectionWireLabel(conn: unknown, text?: string, options?: { startEdit?: boolean }): LabelLike {
     const connection = conn as ConnLike;
     const existing = getConnectionWireLabel(conn);
@@ -108,7 +131,11 @@ export function addConnectionWireLabel(conn: unknown, text?: string, options?: {
     return label;
 }
 
-/** Supprime le label de fil s’il existe. */
+/**
+ * Supprime le label de fil s'il existe.
+ * @param conn - Connexion draw2d.
+ * @returns `true` si un label a été retiré.
+ */
 export function removeConnectionWireLabel(conn: unknown): boolean {
     const label = getConnectionWireLabel(conn);
     if (!label) return false;

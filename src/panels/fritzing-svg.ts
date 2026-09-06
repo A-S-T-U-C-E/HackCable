@@ -1,5 +1,13 @@
 /**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
  * @file Géométrie SVG Fritzing : viewBox, dimensions physiques et extraction des broches.
+ *
+ * Responsabilités :
+ * - Convertir unités SVG → pouces (logique fritzing-app)
+ * - Positions de broches en % pour `PercentPortLocator`
  */
 import type { FritzingPin } from "./fritzing-types";
 
@@ -41,14 +49,20 @@ function chopTrailingNonDigits(value: string): string {
     return s;
 }
 
-/** Détecte un export Adobe Illustrator (commentaire XML ou générateur). */
+/**
+ * Détecte un export Adobe Illustrator dans le texte SVG.
+ * @param svgText - Contenu SVG brut.
+ * @returns `true` si le SVG provient d’Illustrator.
+ */
 export function isIllustratorSvg(svgText: string): boolean {
     return /Adobe Illustrator/i.test(svgText);
 }
 
 /**
- * Convertit une longueur SVG en pouces, comme `TextUtils::convertToInches` (fritzing-app).
- * @see https://github.com/fritzing/fritzing-app/blob/develop/src/utils/textutils.cpp
+ * Convertit une longueur SVG en pouces (logique fritzing-app `TextUtils::convertToInches`).
+ * @param raw - Valeur avec unité (mm, px, in, etc.).
+ * @param isIllustrator - Utilise le DPI Illustrator si le SVG en est l’origine.
+ * @returns Longueur en pouces, ou `null` si invalide.
  */
 export function fritzingConvertToInches(raw: string, isIllustrator: boolean): number | null {
     let text = raw.trim();
@@ -90,7 +104,14 @@ function fallbackInchesFromViewBox(viewBoxAxis: number, isIllustrator: boolean):
     return viewBoxAxis / dpi;
 }
 
-/** @deprecated Préférer {@link fritzingConvertToInches}. */
+/**
+ * Convertit une longueur SVG en pouces avec repli sur le viewBox.
+ * @param raw - Valeur avec unité, ou `null`/`undefined`.
+ * @param viewBoxAxis - Dimension du viewBox pour le repli.
+ * @param isIllustrator - Utilise le DPI Illustrator si applicable.
+ * @returns Longueur en pouces.
+ * @deprecated Préférer {@link fritzingConvertToInches}.
+ */
 export function parseSvgLengthInches(
     raw: string | null | undefined,
     viewBoxAxis: number,
@@ -101,6 +122,11 @@ export function parseSvgLengthInches(
         ?? fallbackInchesFromViewBox(viewBoxAxis, isIllustrator);
 }
 
+/**
+ * Résout les dimensions physiques breadboard d’un SVG Fritzing.
+ * @param svgText - Contenu SVG brut.
+ * @returns Largeur/hauteur en pouces et viewBox parsé.
+ */
 export function resolveSvgPhysicalInches(svgText: string): {
     widthInches: number;
     heightInches: number;
@@ -119,6 +145,11 @@ export function resolveSvgPhysicalInches(svgText: string): {
     };
 }
 
+/**
+ * Parse le viewBox (ou width/height) d’un SVG Fritzing.
+ * @param svgText - Contenu SVG brut.
+ * @returns ViewBox normalisé avec dimensions positives.
+ */
 export function parseSvgViewBox(svgText: string): SvgViewBox {
     const doc = new DOMParser().parseFromString(svgText, "image/svg+xml");
     const svg = doc.documentElement;
@@ -158,6 +189,12 @@ function findGraphicsChild(element: Element): SVGGraphicsElement | null {
     return child instanceof SVGGraphicsElement ? child : null;
 }
 
+/**
+ * Localise l’élément graphique d’un connecteur par son `svgId`.
+ * @param doc - Document ou nœud SVG parent.
+ * @param svgId - Identifiant du connecteur dans le SVG.
+ * @returns Élément graphique trouvé, ou `null`.
+ */
 export function findConnectorElement(doc: ParentNode, svgId: string): SVGGraphicsElement | null {
     const escaped = svgId.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
     const candidates = [
@@ -263,6 +300,12 @@ function toViewBoxPercent(
     };
 }
 
+/**
+ * Extrait les positions de broches en % viewBox depuis un SVG breadboard.
+ * @param svgText - Contenu SVG breadboard.
+ * @param connectors - Références connecteurs issues du FZP.
+ * @returns Broches positionnées et viewBox utilisé.
+ */
 export function extractConnectorPins(
     svgText: string,
     connectors: FritzingConnectorRef[],
@@ -302,6 +345,11 @@ export function extractConnectorPins(
     });
 }
 
+/**
+ * Construit des références connecteur à partir de broches catalogue.
+ * @param pins - Broches avec id, nom et svgId optionnel.
+ * @returns Références prêtes pour {@link extractConnectorPins}.
+ */
 export function buildConnectorRefs(
     pins: { id: string; name: string; svgId?: string }[],
 ): FritzingConnectorRef[] {
@@ -312,6 +360,12 @@ export function buildConnectorRefs(
     }));
 }
 
+/**
+ * Applique une taille d’affichage px à un élément SVG.
+ * @param svg - Élément SVG cible.
+ * @param width - Largeur d’affichage en pixels.
+ * @param height - Hauteur d’affichage en pixels.
+ */
 export function applySvgDisplaySize(svg: SVGSVGElement, width: number, height: number): void {
     svg.setAttribute("width", String(width));
     svg.setAttribute("height", String(height));

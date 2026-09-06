@@ -1,5 +1,13 @@
 /**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
  * @file Initialisation i18next pour HackCable (fr / en / es / ar).
+ *
+ * Responsabilités :
+ * - Charger les JSON `common`
+ * - Exposer `initHackCableI18n`
  */
 import i18next from "i18next";
 import frFr from "./fr_fr.json";
@@ -29,8 +37,9 @@ function applyLocaleResourceBundles(): void {
 }
 
 /**
- * À appeler avec await avant `new HackCable(...)` pour que `i18next` et les maps
- * composants soient prêts (init est asynchrone dans i18next ≥ 21).
+ * Initialise i18next et charge les bundles de traduction HackCable.
+ * @param language - Code langue initial (ex. `fr_fr`).
+ * @param debug - Active les logs i18next en console.
  */
 export async function initHackCableI18n(language: string, debug: boolean): Promise<void> {
     const lng = normalizeHackCableLanguage(language) ?? "fr_fr";

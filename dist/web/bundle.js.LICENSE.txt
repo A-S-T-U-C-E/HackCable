@@ -2916,3 +2916,528 @@
  * Copyright 2019 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
+
+/**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Accès HTTP au dépôt GitHub fritzing-parts (index, FZP, SVG).
+ *
+ * Responsabilités :
+ * - SHA du dépôt, arbre core/, téléchargement concurrent
+ * - Résolution d’URL breadboard (candidats svg/)
+ */
+
+/**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Barre d’outils de zoom flottante sur le canvas.
+ *
+ * Responsabilités :
+ * - Boutons zoom + / − / 100 % / ajuster à la fenêtre
+ * - Branchement i18n et accessibilité
+ */
+
+/**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Boot de la démo web (HMR webpack) et montage de `HackCable`.
+ *
+ * Responsabilités :
+ * - Charger i18n puis démarrer `app.ts`
+ * - Recharger à chaud en développement
+ */
+
+/**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Branchements UI de la démo web (catalogue, fichiers, langue, undo/redo, URL).
+ *
+ * Responsabilités :
+ * - Handlers boutons toolbar
+ * - Sync URL ↔ état (langue, minimap, labels, etc.)
+ */
+
+/**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Catalogue de composants Wokwi et Fritzing (types, registre, éléments UI).
+ *
+ * Responsabilités :
+ * - Registre Wokwi (ids, classes Lit, i18n)
+ * - Fusion + dédoublonnage avec le cache Fritzing
+ * - `ComponentElement` : vignette catalogue dimensionnée
+ */
+
+/**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Codes de langue HackCable et helpers document (lang / dir).
+ *
+ * Responsabilités :
+ * - Normaliser une valeur URL / navigateur
+ * - Appliquer `lang` et `dir` sur `<html>` (RTL arabe)
+ */
+
+/**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Commandes draw2d (undo/redo) pour l’éditeur HackCable.
+ *
+ * Responsabilités :
+ * - Envelopper ajout / suppression / déplacement dans le command stack
+ * - Garantir l’annulation cohérente des figures et connexions
+ */
+
+/**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Construit la table live « broches MCU × connexions ».
+ *
+ * Responsabilités :
+ * - Assembler un snapshot pour une figure carte
+ * - Associer chaque broche à ses peers câblés
+ */
+
+/**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Correctifs draw2d (bugs command stack / vertices).
+ *
+ * Responsabilités :
+ * - Patcher le command stack pour les CommandMoveVertex invalides
+ * - Éviter les plantages undo/redo sur sommets de fils
+ */
+
+/**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Dialogue de fusion à l’ouverture d’un fichier (remplacer / ajouter / annuler).
+ *
+ * Responsabilités :
+ * - Demander le mode `EditorLoadMode`
+ * - Accessibilité dialog / focus
+ */
+
+/**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Dialogue « À propos » (style µcBlockly) : projet, icônes, crédits Fritzing.
+ *
+ * Responsabilités :
+ * - Construire le `<dialog>` et les rangées logo + texte
+ * - Liens fork / upstream / Fritzing / Wokwi
+ */
+
+/**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Dédoublonnage catalogue : masque les pièces Fritzing déjà couvertes par Wokwi.
+ *
+ * Responsabilités :
+ * - Normaliser titres / moduleId pour rapprochement
+ * - Préférer Wokwi lorsqu’un équivalent Fritzing existe
+ */
+
+/**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Factory des routeurs de fils + application sur le canvas.
+ *
+ * Responsabilités :
+ * - Instancier le routeur selon la préférence courante
+ * - Réappliquer le routeur à toutes les connexions existantes
+ *
+ * @see docs/wire-routers.md
+ */
+
+/**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Figure draw2d pour un composant catalogue (overlay Wokwi ou SVG Fritzing).
+ *
+ * Responsabilités :
+ * - Créer ports hybrides et hit-targets
+ * - Synchroniser overlay HTML (taille mm→px Wokwi, SVG Fritzing)
+ * - Hit-test avec rotation ; export sérialisable
+ */
+
+/**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Géométrie SVG Fritzing : viewBox, dimensions physiques et extraction des broches.
+ *
+ * Responsabilités :
+ * - Convertir unités SVG → pouces (logique fritzing-app)
+ * - Positions de broches en % pour `PercentPortLocator`
+ */
+
+/**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Helper i18n : traduction courte depuis le namespace `common`.
+ *
+ * Responsabilités :
+ * - Wrapper `i18next.t` → `tr(key)`
+ */
+
+/**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Identifiants et préférence utilisateur pour les routeurs de fils.
+ *
+ * Responsabilités :
+ * - Énumérer les algorithmes exposés dans l’UI accessibilité
+ * - Valider / normaliser l’id stocké (localStorage, URL)
+ */
+
+/**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Labels éditables sur les connexions (style draw2d connection_custom_labeld).
+ *
+ * Responsabilités :
+ * - Ajouter / lire / supprimer le texte au milieu d’un fil
+ * - Édition au double-clic
+ *
+ * @see https://freegroup.github.io/draw2d/#/examples/connection_custom_labeld
+ */
+
+/**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Liste les broches d’un composant catalogue (Fritzing / Wokwi / ports live).
+ *
+ * Responsabilités :
+ * - Priorité : métadonnées Fritzing → pinInfo Wokwi → ports de la figure
+ * - Instancier brièvement un élément Wokwi pour lire `pinInfo`
+ */
+
+/**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Lit les fils branchés sur un port draw2d (extrémité opposée = peer).
+ *
+ * Responsabilités :
+ * - Parcourir les connexions source/target d’un port
+ * - Dédupliquer les peers et résoudre le libellé opposé
+ */
+
+/**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Locateurs de ports draw2d et échelle d’affichage des composants Fritzing.
+ *
+ * Responsabilités :
+ * - `CoordinatePortLocator` (Wokwi, px absolus)
+ * - `PercentPortLocator` (Fritzing, % largeur/hauteur)
+ * - Conversion pouces physiques → pixels canvas
+ */
+
+/**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Menu contextuel (clic droit) sur le canvas draw2d.
+ *
+ * Responsabilités :
+ * - Afficher actions figure / fil / plan (supprimer, label, etc.)
+ * - Positionner le menu hors overflow du viewport
+ */
+
+/**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Minicarte du plan (aperçu, rectangle de vue, navigation clic/glisser).
+ *
+ * Responsabilités :
+ * - Projeter le monde canvas dans une surface réduite
+ * - Déplacer la vue (pan) et recentrer au clic
+ *
+ * @see src/editor/minimap-geometry.ts
+ */
+
+/**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Options démo déclenchables par l’URL (?lang=fr&minimap&labels=icons&…).
+ *
+ * Responsabilités :
+ * - Parser les query params
+ * - Appliquer langue, minimap, a11y, routeur au démarrage
+ */
+
+/**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Options d’accessibilité (labels, police, interligne, focus, couleur UI, routeur).
+ *
+ * Responsabilités :
+ * - Lire / écrire localStorage
+ * - Appliquer les classes CSS et préférences routeur
+ */
+
+/**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Orchestration de la démo web HackCable (toolbar, panneaux, cycle de vie).
+ *
+ * Responsabilités :
+ * - Créer l’instance `HackCable`
+ * - Brancher sauvegarde, sync catalogue, accessibilité, à propos
+ * - Appliquer les options URL
+ */
+
+/**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Overlay de progression au démarrage (chargement catalogue par lots).
+ *
+ * Responsabilités :
+ * - Afficher phases boot (éléments / montage / prêt)
+ * - Masquer l’overlay une fois le catalogue prêt
+ */
+
+/**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Panneau catalogue : navigation par catégories (flyout type µcBlockly) et liste.
+ *
+ * Responsabilités :
+ * - Nav catégories + recherche + repli automatique
+ * - Monter les vignettes (Wokwi / Fritzing) et le DnD vers le canvas
+ * - Rebuild progressif (boot par lots)
+ */
+
+/**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Panneau d’options d’accessibilité (style µcBlockly).
+ *
+ * Responsabilités :
+ * - UI labels / police / interligne / focus / accent / routeur
+ * - Persister via `a11y-settings`
+ */
+
+/**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Panning du viewport sans interférer avec le tirage de fil depuis un port.
+ *
+ * Responsabilités :
+ * - Étendre `PanningSelectionPolicy` draw2d
+ * - Ignorer le pan pendant un drag de port / connexion
+ */
+
+/**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Parsing des fichiers FZP Fritzing et extraction des connecteurs / broches.
+ *
+ * Responsabilités :
+ * - Lire titre, famille, image breadboard, connecteurs
+ * - Produire une `FritzingComponentInfo` (sans id numérique)
+ */
+
+/**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Persistance locale du catalogue Fritzing (localStorage + migration).
+ *
+ * Responsabilités :
+ * - Charger / sauver le store JSON
+ * - Migrer catégories et URLs SVG si algo obsolète
+ */
+
+/**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Point d’entrée bibliothèque HackCable : montage UI, catalogue et éditeur.
+ *
+ * Responsabilités :
+ * - Classe `HackCable` (API publique pour intégrateurs)
+ * - Injection du template UI, i18n, sync Fritzing
+ * - Redimensionnement de la barre latérale catalogue
+ *
+ * @see docs/architecture.md
+ * @see docs/MAINTENANCE.md
+ */
+
+/**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Politique de création de connexions (tirage depuis un port uniquement).
+ *
+ * Responsabilités :
+ * - Installer la ConnectionCreatePolicy draw2d
+ * - Restreindre le démarrage de fil aux pastilles hybrides
+ */
+
+/**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Rend un routeur draw2d « éditable » (poignées de sommets, sticky route).
+ *
+ * Responsabilités :
+ * - Policy de sélection des vertex (style connection_vertex)
+ * - Conserver le tracé manuel après déplacement des composants
+ *
+ * @see https://freegroup.github.io/draw2d/#/examples/connection_vertex
+ */
+
+/**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Requêtes simples sur une table MCU déjà construite.
+ *
+ * Responsabilités :
+ * - Indexer / chercher une broche par id
+ * - Savoir si une broche est connectée
+ */
+
+/**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Routeur Manhattan interactif + ponts aux croisements de fils.
+ *
+ * Responsabilités :
+ * - Router les connexions avec sauts (bridges)
+ * - Créer une connexion câblée (`createWiringConnection`)
+ * - Marquer un tracé comme modifié par l’utilisateur
+ *
+ * @see docs/wire-routers.md
+ */
+
+/**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Synchronisation du catalogue Fritzing depuis GitHub (orchestration).
+ *
+ * Responsabilités :
+ * - Comparer SHA / FZP et intégrer les pièces nouvelles ou modifiées
+ * - Reporter la progression (index / integrate)
+ */
+
+/**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Taxonomie Fritzing : catégories, parsing core.fzb et résolution.
+ *
+ * Responsabilités :
+ * - Liste ordonnée des catégories breadboard
+ * - Maps module/famille/fichier → catégorie
+ * - Heuristiques de repli (titre, tags, chemin FZP)
+ */
+
+/**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Utilitaires DOM (styles inline, conversion d’unités SVG).
+ *
+ * Responsabilités :
+ * - `css()` pour styles numériques en px
+ * - `unitToPx` / `measureWokwiSvgSize` (mm Wokwi → px canvas)
+ */
+
+/**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Utilitaires partagés de la démo web (fichiers JSON, i18n barre latérale).
+ *
+ * Responsabilités :
+ * - Téléchargement / lecture de fichiers schéma
+ * - Rafraîchir libellés i18n de la toolbar
+ */
+
+/**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Éditeur de schéma : sérialisation, zoom, undo/redo, API MCU.
+ *
+ * Responsabilités :
+ * - Canvas draw2d (`Canvas`)
+ * - Sauvegarde / chargement JSON (`EditorSaveData`)
+ * - Délégation de la table des broches MCU à `mcu-pin/McuPinTableStore`
+ */

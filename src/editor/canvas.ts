@@ -1,5 +1,14 @@
 /**
- * @file Canvas draw2d principal : viewport, zoom, overlay HTML et politiques d'édition.
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Canvas draw2d principal : viewport, zoom, overlay HTML et politiques d’édition.
+ *
+ * Responsabilités :
+ * - Installer pan / zoom / snap / connexions
+ * - Overlay HTML des composants sous le SVG draw2d
+ * - Drop catalogue → `ComponentFigure`, grille et monde extensible
  */
 import draw2d from "draw2d";
 import { setupDraw2dContextMenu } from "./canvas-context-menu";
@@ -32,6 +41,10 @@ export class Canvas extends draw2d.Canvas {
     private disposeViewportWheel: (() => void) | null = null;
     private disposeLayoutSync: (() => void) | null = null;
 
+    /**
+     * Initialise le canvas draw2d avec overlay HTML, politiques et UI flottante.
+     * @param divId - Identifiant DOM du conteneur canvas.
+     */
     constructor(divId: string) {
         patchDraw2dCommandStack();
         super(divId);
@@ -77,6 +90,7 @@ export class Canvas extends draw2d.Canvas {
         if (!viewport) return () => undefined;
 
         const refresh = () => {
+            this.ensureWorldCoversViewport();
             this.onZoomChange();
             for (const figure of this.getFigures().data) {
                 if (figure instanceof ComponentFigure) {
@@ -92,22 +106,29 @@ export class Canvas extends draw2d.Canvas {
         return () => observer.disconnect();
     }
 
+    /** Augmente le zoom d'un pas discret. */
     public zoomIn(): void {
         zoomInCanvas(this);
     }
 
+    /** Diminue le zoom d'un pas discret. */
     public zoomOut(): void {
         zoomOutCanvas(this);
     }
 
+    /** Réinitialise le zoom à 100 %. */
     public zoomReset(): void {
         zoomResetCanvas(this);
     }
 
+    /** Ajuste le zoom pour afficher toutes les figures. */
     public zoomToFit(): void {
         zoomToFitCanvas(this);
     }
 
+    /**
+     * Libère les ressources UI (minicarte, toolbar, écouteurs) avant destruction draw2d.
+     */
     public destroy(): void {
         this.disposeLayoutSync?.();
         this.disposeLayoutSync = null;
@@ -134,6 +155,12 @@ export class Canvas extends draw2d.Canvas {
      * La formule draw2d (offset(canvas) + scroll) compte alors le pan deux fois et
      * casse getBestFigure / pastilles après un déplacement du viewport.
      */
+    /**
+     * Convertit des coordonnées document (viewport) en coordonnées logiques canvas.
+     * @param x - Abscisse en pixels écran.
+     * @param y - Ordonnée en pixels écran.
+     * @returns Point logique draw2d.
+     */
     public fromDocumentToCanvasCoordinate(x: number, y: number) {
         const viewport = getEditorViewport();
         if (!viewport) {
@@ -147,6 +174,12 @@ export class Canvas extends draw2d.Canvas {
         );
     }
 
+    /**
+     * Convertit des coordonnées logiques canvas en coordonnées document (viewport).
+     * @param x - Abscisse logique draw2d.
+     * @param y - Ordonnée logique draw2d.
+     * @returns Point en pixels écran.
+     */
     public fromCanvasToDocumentCoordinate(x: number, y: number) {
         const viewport = getEditorViewport();
         if (!viewport) {
@@ -160,7 +193,37 @@ export class Canvas extends draw2d.Canvas {
         );
     }
 
+    /**
+     * Sur grand écran, le monde fixe 1500×1000 laisse du blanc hors grille.
+     * On agrandit la taille logique pour que CSS (logical/zoom) couvre au moins le viewport.
+     */
+    private ensureWorldCoversViewport(): void {
+        const viewport = getEditorViewport();
+        if (!viewport) return;
+
+        const zoom = Math.max(0.01, this.getZoom());
+        const needW = Math.max(
+            CANVAS_WORLD_WIDTH,
+            Math.ceil(viewport.clientWidth * zoom),
+        );
+        const needH = Math.max(
+            CANVAS_WORLD_HEIGHT,
+            Math.ceil(viewport.clientHeight * zoom),
+        );
+
+        const curW = Number(this.initialWidth) || CANVAS_WORLD_WIDTH;
+        const curH = Number(this.initialHeight) || CANVAS_WORLD_HEIGHT;
+        if (needW <= curW && needH <= curH) return;
+
+        const newW = Math.max(curW, needW);
+        const newH = Math.max(curH, needH);
+        this.initialWidth = newW;
+        this.initialHeight = newH;
+        this.setDimension(newW, newH);
+    }
+
     private onZoomChange() {
+        this.ensureWorldCoversViewport();
         const zoom = Math.max(0.01, this.getZoom());
         // WheelZoomPolicy : viewBox fixe, SVG = initial/zoom. Aligner le div canvas
         // pour que la zone scrollable couvre bien le dessin.
@@ -190,6 +253,7 @@ export class Canvas extends draw2d.Canvas {
             this.selected = selected;
         }
     }
+    /** Vide le canvas et réinitialise le zoom à 100 %. */
     public clear() {
         super.clear();
         this.setZoom(DEFAULT_ZOOM_LEVEL);
@@ -204,12 +268,19 @@ export class Canvas extends draw2d.Canvas {
         this.selected.syncOverlayLayout(x, y);
     }
 
+    /**
+     * Autorise le dépôt drag-and-drop depuis le catalogue.
+     * @param event - Événement dragover natif.
+     */
     public dragover_handler(event: DragEvent) {
         event.preventDefault(); // This is crucial to allow dropping
         event.dataTransfer!.dropEffect = "copy";
     }
 
-    // when the draggable object is dropped onto a droppable object
+    /**
+     * Crée une figure composant à la position du drop catalogue.
+     * @param event - Événement drop natif.
+     */
     public drop_handler(event: DragEvent) {
         event.preventDefault();
         const item_data = event.dataTransfer!.getData("text");

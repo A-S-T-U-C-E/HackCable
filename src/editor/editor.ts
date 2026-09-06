@@ -1,21 +1,30 @@
 /**
- * @file Éditeur de schéma : sérialisation, chargement et pile undo/redo draw2d.
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Éditeur de schéma : sérialisation, zoom, undo/redo, API MCU.
+ *
+ * Responsabilités :
+ * - Canvas draw2d (`Canvas`)
+ * - Sauvegarde / chargement JSON (`EditorSaveData`)
+ * - Délégation de la table des broches MCU à `mcu-pin/McuPinTableStore`
  */
+import type { Port } from "draw2d-types";
+import { getComponentById } from "../panels/component";
 import { Canvas } from "./canvas";
 import { ComponentFigure } from "./component-figure";
 import type { FigureData, WiringData } from "./component-figure";
-import { createWiringConnection, markConnectionUserRouted } from "./connection-router";
 import { addConnectionWireLabel } from "./connection-label";
-import { getComponentById } from "../panels/component";
-import type { Port } from "draw2d-types";
+import { createWiringConnection, markConnectionUserRouted } from "./connection-router";
 import {
-    buildMcuPinConnectionTable,
-    indexMcuPinConnectionTable,
-    isMcuPinConnectedInTable,
+    asMcuPinWatchCanvas,
+    McuPinTableStore,
     type McuBoardPinTable,
     type McuPinConnectionTable,
     type McuPinStatus,
-} from "./mcu-pin-table";
+    type McuPinTableChangeListener,
+} from "./mcu-pin";
 
 export type EditorSaveData = { figures: FigureData[]; connections: WiringData[] };
 
@@ -26,9 +35,8 @@ export type {
     McuPinConnectionTable,
     McuPinPeerConnection,
     McuPinStatus,
-} from "./mcu-pin-table";
-
-export type McuPinTableChangeListener = (table: McuPinConnectionTable) => void;
+    McuPinTableChangeListener,
+} from "./mcu-pin";
 
 interface Draw2dCommandStack {
     undo(): void;
@@ -38,6 +46,7 @@ interface Draw2dCommandStack {
     markSaveLocation?: () => void;
 }
 
+/** Nouvel id de figure (évite les collisions en mode « Ajouter »). */
 function newFigureId(): string {
     if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
         return crypto.randomUUID();
@@ -47,107 +56,105 @@ function newFigureId(): string {
 
 export class Editor {
     private readonly _canvas: Canvas;
-    private mcuPinTableCache: McuPinConnectionTable = [];
-    private mcuPinTableDirty = true;
-    private readonly mcuPinTableListeners = new Set<McuPinTableChangeListener>();
-    private mcuPinTableWatching = false;
+    private readonly mcuPins: McuPinTableStore;
 
+    /** Crée l'éditeur, le canvas draw2d et le store de broches MCU. */
     constructor() {
         this._canvas = new Canvas("hackCable-canvas");
-        this.ensureMcuPinTableWatch();
+        this.mcuPins = new McuPinTableStore(asMcuPinWatchCanvas(this._canvas));
+        this.mcuPins.startWatching();
     }
 
     private getCommandStack(): Draw2dCommandStack {
         return this._canvas.getCommandStack() as Draw2dCommandStack;
     }
 
-    private ensureMcuPinTableWatch(): void {
-        if (this.mcuPinTableWatching) return;
-        this.mcuPinTableWatching = true;
-        const invalidate = () => this.invalidateMcuPinTable();
-        this._canvas.on("figure:add", invalidate);
-        this._canvas.on("figure:remove", invalidate);
-        this._canvas.on("connect", invalidate);
-        this._canvas.on("disconnect", invalidate);
-        this._canvas.on("figure:ports", invalidate);
-    }
-
-    private invalidateMcuPinTable(): void {
-        this.mcuPinTableDirty = true;
-        if (this.mcuPinTableListeners.size === 0) return;
-        // Notifier après le tick draw2d (ports / connexions à jour).
-        queueMicrotask(() => {
-            const table = this.getMcuPinConnectionTable();
-            for (const listener of this.mcuPinTableListeners) {
-                listener(table);
-            }
-        });
-    }
-
-    private rebuildMcuPinTable(): McuPinConnectionTable {
-        const figures = this._canvas.getFigures()?.data ?? [];
-        this.mcuPinTableCache = buildMcuPinConnectionTable(figures);
-        this.mcuPinTableDirty = false;
-        return this.mcuPinTableCache;
-    }
+    // —— API broches MCU (voir docs/mcu-pin-api.md) ————————————————
 
     /**
      * Table entretenue des broches MCU (Arduino, Raspberry, STM, PICAXE…).
-     * Source de vérité : état live du canvas.
+     * @returns Snapshot courant ; source de vérité = état live du canvas.
      */
     public getMcuPinConnectionTable(): McuPinConnectionTable {
-        if (this.mcuPinTableDirty) return this.rebuildMcuPinTable();
-        return this.mcuPinTableCache;
+        return this.mcuPins.getTable();
     }
 
-    /** Une carte MCU du plan, ou undefined. */
+    /**
+     * Retourne la table d'une carte MCU du plan.
+     * @param figureId - Identifiant de l'instance figure.
+     * @returns Table de la carte ou `undefined` si absente.
+     */
     public getMcuBoardPinTable(figureId: string): McuBoardPinTable | undefined {
-        return this.getMcuPinConnectionTable().find((board) => board.figureId === figureId);
+        return this.mcuPins.getBoard(figureId);
     }
 
-    /** Statut d’une broche (accepte `pinKey` ou `pinLabel`). */
+    /**
+     * Retourne le statut d'une broche MCU.
+     * @param figureId - Identifiant de l'instance figure.
+     * @param pinKeyOrLabel - Clé draw2d ou libellé humain (ex. `D13`).
+     * @returns Statut de la broche ou `undefined`.
+     */
     public getMcuPinStatus(figureId: string, pinKeyOrLabel: string): McuPinStatus | undefined {
-        const index = indexMcuPinConnectionTable(this.getMcuPinConnectionTable());
-        return index.get(figureId)?.get(pinKeyOrLabel);
+        return this.mcuPins.getPinStatus(figureId, pinKeyOrLabel);
     }
 
+    /**
+     * Indique si une broche MCU est câblée.
+     * @param figureId - Identifiant de l'instance figure.
+     * @param pinKeyOrLabel - Clé draw2d ou libellé humain.
+     * @returns `true` si au moins un fil est branché.
+     */
     public isMcuPinConnected(figureId: string, pinKeyOrLabel: string): boolean {
-        return isMcuPinConnectedInTable(this.getMcuPinConnectionTable(), figureId, pinKeyOrLabel);
+        return this.mcuPins.isPinConnected(figureId, pinKeyOrLabel);
     }
 
     /**
      * Abonnement aux changements de câblage / figures MCU.
-     * @returns fonction de désabonnement
+     * @param listener - Callback invoqué à chaque mise à jour de la table.
+     * @returns Fonction de désabonnement.
      */
     public onMcuPinTableChange(listener: McuPinTableChangeListener): () => void {
-        this.mcuPinTableListeners.add(listener);
-        listener(this.getMcuPinConnectionTable());
-        return () => {
-            this.mcuPinTableListeners.delete(listener);
-        };
+        return this.mcuPins.subscribe(listener);
     }
 
+    // —— Undo / redo ——————————————————————————————————————————————
+
+    /** Annule la dernière commande si possible. */
     public undo(): void {
         if (this.canUndo()) this.getCommandStack().undo();
     }
 
+    /** Rétablit la dernière commande annulée si possible. */
     public redo(): void {
         if (this.canRedo()) this.getCommandStack().redo();
     }
 
+    /** @returns `true` si une commande peut être annulée. */
     public canUndo(): boolean {
         return Boolean(this.getCommandStack().canUndo?.());
     }
 
+    /** @returns `true` si une commande peut être rétablie. */
     public canRedo(): boolean {
         return Boolean(this.getCommandStack().canRedo?.());
     }
 
-    /** Vrai s’il n’y a aucun composant sur le plan. */
+    // —— Workspace ————————————————————————————————————————————————
+
+    /**
+     * Indique si le workspace ne contient aucun composant.
+     * @returns `true` s'il n'y a aucune figure composant sur le plan.
+     */
     public isWorkspaceEmpty(): boolean {
-        return !this._canvas.getFigures().data.some((figure: unknown) => figure instanceof ComponentFigure);
+        return !this._canvas.getFigures().data.some(
+            (figure: unknown) => figure instanceof ComponentFigure,
+        );
     }
 
+    /**
+     * Exporte le schéma (figures + fils) pour fichier `.hackcable`.
+     * @returns Données sérialisables du workspace.
+     */
     public getEditorSaveData(): EditorSaveData {
         const data: EditorSaveData = { figures: [], connections: [] };
 
@@ -162,35 +169,47 @@ export class Editor {
 
     /**
      * Charge une sauvegarde.
-     * - replace : vide le plan puis importe
-     * - append : ajoute en remappant les ids en conflit
+     * @param data - Figures et connexions à importer.
+     * @param mode - `replace` vide le plan ; `append` ajoute avec remap d'ids.
      */
     public loadEditorSaveData(data: EditorSaveData, mode: EditorLoadMode = "replace"): void {
         if (mode === "replace") {
             this._canvas.clear();
             this.importSaveData(data, null);
         } else {
-            const usedIds = new Set<string>();
-            this._canvas.getFigures().data.forEach((figure: unknown) => {
-                if (figure instanceof ComponentFigure) usedIds.add(figure.getId());
-            });
-            const idMap = new Map<string, string>();
-            for (const figureData of data.figures) {
-                let nextId = figureData.figureId;
-                if (usedIds.has(nextId)) {
-                    do {
-                        nextId = newFigureId();
-                    } while (usedIds.has(nextId));
-                }
-                idMap.set(figureData.figureId, nextId);
-                usedIds.add(nextId);
-            }
-            this.importSaveData(data, idMap);
+            this.importSaveData(data, this.buildAppendIdMap(data));
         }
         this.getCommandStack().markSaveLocation?.();
-        this.invalidateMcuPinTable();
+        this.mcuPins.invalidate();
     }
 
+    /**
+     * Construit une map ancien figureId → nouvel id pour le mode append.
+     */
+    private buildAppendIdMap(data: EditorSaveData): Map<string, string> {
+        const usedIds = new Set<string>();
+        this._canvas.getFigures().data.forEach((figure: unknown) => {
+            if (figure instanceof ComponentFigure) usedIds.add(figure.getId());
+        });
+
+        const idMap = new Map<string, string>();
+        for (const figureData of data.figures) {
+            let nextId = figureData.figureId;
+            if (usedIds.has(nextId)) {
+                do {
+                    nextId = newFigureId();
+                } while (usedIds.has(nextId));
+            }
+            idMap.set(figureData.figureId, nextId);
+            usedIds.add(nextId);
+        }
+        return idMap;
+    }
+
+    /**
+     * Importe figures puis connexions.
+     * @param idMap - `null` = garder les ids du fichier ; sinon remap
+     */
     private importSaveData(data: EditorSaveData, idMap: Map<string, string> | null): void {
         const resolveId = (id: string) => idMap?.get(id) ?? id;
 
@@ -206,42 +225,51 @@ export class Editor {
         }
 
         for (const connectionData of data.connections) {
-            const sourceFigure: ComponentFigure = this._canvas.getFigure(resolveId(connectionData.fromFigure));
-            const targetFigure: ComponentFigure = this._canvas.getFigure(resolveId(connectionData.targetFigure));
-            if (sourceFigure && targetFigure) {
-                const sourcePort: Port = sourceFigure.getPortByName(connectionData.fromPortName);
-                const targetPort: Port = targetFigure.getPortByName(connectionData.targetPortName);
-                if (sourcePort && targetPort) {
-                    const con = createWiringConnection();
-                    con.setSource(sourcePort);
-                    con.setTarget(targetPort);
-                    con.setVertices(connectionData.svgPath);
-                    markConnectionUserRouted(con);
-                    this._canvas.add(con);
-                    if (connectionData.label) {
-                        addConnectionWireLabel(con, connectionData.label, { startEdit: false });
-                    }
-                }
+            const sourceFigure: ComponentFigure = this._canvas.getFigure(
+                resolveId(connectionData.fromFigure),
+            );
+            const targetFigure: ComponentFigure = this._canvas.getFigure(
+                resolveId(connectionData.targetFigure),
+            );
+            if (!sourceFigure || !targetFigure) continue;
+
+            const sourcePort: Port = sourceFigure.getPortByName(connectionData.fromPortName);
+            const targetPort: Port = targetFigure.getPortByName(connectionData.targetPortName);
+            if (!sourcePort || !targetPort) continue;
+
+            const con = createWiringConnection();
+            con.setSource(sourcePort);
+            con.setTarget(targetPort);
+            con.setVertices(connectionData.svgPath);
+            markConnectionUserRouted(con);
+            this._canvas.add(con);
+            if (connectionData.label) {
+                addConnectionWireLabel(con, connectionData.label, { startEdit: false });
             }
         }
     }
 
+    /** Instance canvas draw2d sous-jacente. */
     get canvas(): Canvas {
         return this._canvas;
     }
 
+    /** Augmente le zoom du canvas. */
     public zoomIn(): void {
         this._canvas.zoomIn();
     }
 
+    /** Diminue le zoom du canvas. */
     public zoomOut(): void {
         this._canvas.zoomOut();
     }
 
+    /** Réinitialise le zoom à 100 %. */
     public zoomReset(): void {
         this._canvas.zoomReset();
     }
 
+    /** Ajuste le zoom pour afficher toutes les figures. */
     public zoomToFit(): void {
         this._canvas.zoomToFit();
     }

@@ -3,6 +3,10 @@ node_modules/
 
 # Build output
 build/
+dist/
+
+# Generated API docs (npm run docs)
+docs/api/
 
 # IDE files
 .vscode/

@@ -1,5 +1,13 @@
 /**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
  * @file Branchements UI de la démo web (catalogue, fichiers, langue, undo/redo, URL).
+ *
+ * Responsabilités :
+ * - Handlers boutons toolbar
+ * - Sync URL ↔ état (langue, minimap, labels, etc.)
  */
 import i18next from "i18next";
 import type { Editor } from "../src/editor/editor";
@@ -15,6 +23,10 @@ import { exportWorkspacePngDataUrl } from "../src/editor/workspace-export";
 import { readA11ySettings } from "./a11y-settings";
 import { writeUrlDemoOptions } from "./url-options";
 
+/**
+ * Synchronise l’URL avec l’état courant de la démo.
+ * @param hackCable - Instance HackCable dont l’état est reflété dans l’URL.
+ */
 function syncDemoUrl(hackCable: HackCable): void {
     writeUrlDemoOptions({
         lang: resolveUiLanguage(),
@@ -24,10 +36,20 @@ function syncDemoUrl(hackCable: HackCable): void {
     });
 }
 
+/**
+ * Retourne l’élément libellé d’un bouton toolbar.
+ * @param button - Bouton contenant éventuellement `.hackCable-btn-label`.
+ * @returns Élément libellé ou `null` si absent.
+ */
 function getButtonLabelEl(button: HTMLElement): HTMLElement | null {
     return button.querySelector(".hackCable-btn-label");
 }
 
+/**
+ * Met à jour le texte, le titre et l’aria-label d’un bouton toolbar.
+ * @param button - Bouton à mettre à jour.
+ * @param text - Nouveau libellé visible.
+ */
 function setButtonLabelText(button: HTMLElement, text: string): void {
     const label = getButtonLabelEl(button);
     if (label) label.textContent = text;
@@ -36,6 +58,11 @@ function setButtonLabelText(button: HTMLElement, text: string): void {
     button.setAttribute("aria-label", text);
 }
 
+/**
+ * Branche le bouton de mise à jour du catalogue Fritzing.
+ * @param hackCable - Instance HackCable pour lancer la synchronisation.
+ * @param signal - Signal d’annulation pour retirer l’écouteur.
+ */
 export function setupCatalogUpdate(hackCable: HackCable, signal: AbortSignal): void {
     const updateButton = document.getElementById("update-catalog");
     if (!updateButton) return;
@@ -74,6 +101,12 @@ export function setupCatalogUpdate(hackCable: HackCable, signal: AbortSignal): v
     }, { signal });
 }
 
+/**
+ * Branche sauvegarde et restauration de schéma (.hackcable / JSON).
+ * @param editor - Éditeur source des données de sauvegarde.
+ * @param signal - Signal d’annulation pour retirer les écouteurs.
+ * @returns Input fichier caché utilisé pour l’import.
+ */
 export function setupSaveRestore(editor: Editor, signal: AbortSignal): HTMLInputElement {
     const save = document.getElementById("save");
     const restore = document.getElementById("restore");
@@ -129,6 +162,11 @@ export function setupSaveRestore(editor: Editor, signal: AbortSignal): HTMLInput
     return restoreFileInput;
 }
 
+/**
+ * Branche l’export PNG du plan de travail.
+ * @param editor - Éditeur dont le canvas est exporté.
+ * @param signal - Signal d’annulation pour retirer l’écouteur.
+ */
 export function setupExportImage(editor: Editor, signal: AbortSignal): void {
     const button = document.getElementById("export-image");
     if (!button) return;
@@ -151,6 +189,11 @@ export function setupExportImage(editor: Editor, signal: AbortSignal): void {
     }, { signal });
 }
 
+/**
+ * Branche le sélecteur de langue et synchronise l’URL.
+ * @param hackCable - Instance HackCable pour changer la langue.
+ * @param signal - Signal d’annulation pour retirer l’écouteur.
+ */
 export function setupLanguageSelect(hackCable: HackCable, signal: AbortSignal): void {
     const select = document.getElementById("language-select");
     if (!(select instanceof HTMLSelectElement)) return;
@@ -173,6 +216,11 @@ export function setupLanguageSelect(hackCable: HackCable, signal: AbortSignal): 
     }, { signal });
 }
 
+/**
+ * Branche la case à cocher d’affichage de la minimap.
+ * @param hackCable - Instance HackCable pour synchroniser l’URL.
+ * @param signal - Signal d’annulation pour retirer l’écouteur.
+ */
 export function setupMinimapToggle(hackCable: HackCable, signal: AbortSignal): void {
     const checkbox = document.getElementById("show-minimap");
     if (!(checkbox instanceof HTMLInputElement)) return;
@@ -186,6 +234,10 @@ export function setupMinimapToggle(hackCable: HackCable, signal: AbortSignal): v
     }, { signal });
 }
 
+/**
+ * Synchronise l’URL lorsque l’auto-repli du catalogue change.
+ * @param hackCable - Instance HackCable écoutée pour les changements de repli.
+ */
 export function setupCatalogUrlSync(hackCable: HackCable): void {
     hackCable.catalog.setAutoCollapseChangeListener(() => {
         syncDemoUrl(hackCable);
@@ -193,6 +245,10 @@ export function setupCatalogUrlSync(hackCable: HackCable): void {
     syncDemoUrl(hackCable);
 }
 
+/**
+ * Active ou désactive les boutons undo/redo selon la pile de commandes.
+ * @param editor - Éditeur dont l’état undo/redo est consulté.
+ */
 function refreshUndoRedoButtons(editor: Editor): void {
     const undoBtn = document.getElementById("undo");
     const redoBtn = document.getElementById("redo");
@@ -200,6 +256,11 @@ function refreshUndoRedoButtons(editor: Editor): void {
     if (redoBtn instanceof HTMLButtonElement) redoBtn.disabled = !editor.canRedo();
 }
 
+/**
+ * Branche undo/redo (boutons et raccourcis clavier Ctrl+Z / Ctrl+Y).
+ * @param editor - Éditeur piloté par la pile de commandes.
+ * @param signal - Signal d’annulation pour retirer les écouteurs.
+ */
 export function setupUndoRedo(editor: Editor, signal: AbortSignal): void {
     const undoBtn = document.getElementById("undo");
     const redoBtn = document.getElementById("redo");

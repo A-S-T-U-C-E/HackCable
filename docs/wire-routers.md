@@ -1,3 +1,9 @@
+<!--
+  Licence : GPL-3.0-or-later — Copyright (c) 2021, Clément Grennerat
+  Fork A-S-T-U-C-E : https://github.com/A-S-T-U-C-E/HackCable
+  Sources : src/editor/connection-router-*.ts
+-->
+
 # Algorithmes de tracé des fils
 
 HackCable propose plusieurs **routeurs de connexion** draw2d, sélectionnables dans le panneau **Accessibilité → Tracé des fils**.
@@ -69,7 +75,9 @@ Donc : un fil, pas de croisement, pas d’édition → ces cinq modes se ressemb
 
 ## Implémentation
 
-- Préférence : `src/editor/connection-router-preference.ts` (`withVertexEditing` pour les routeurs non interactifs)
+- Ids / préférence : `src/editor/connection-router-ids.ts`
+- Édition de sommets : `src/editor/connection-router-editable.ts`
+- Factory + apply canvas : `src/editor/connection-router-preference.ts`
 - Routeur par défaut (ponts + interactif) : `src/editor/connection-router.ts` (`BridgedInteractiveManhattanRouter`)
 - Marquage « tracé manuel » après Move/Add/Remove vertex : `src/editor/draw2d-patches.ts`
 - Réglage UI / persistance : panneau accessibilité (`web/a11y-panel.ts`, champ `wireRouter` dans `web/a11y-settings.ts`)

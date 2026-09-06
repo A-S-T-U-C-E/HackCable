@@ -1,5 +1,14 @@
 /**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
  * @file Figure draw2d pour un composant catalogue (overlay Wokwi ou SVG Fritzing).
+ *
+ * Responsabilités :
+ * - Créer ports hybrides et hit-targets
+ * - Synchroniser overlay HTML (taille mm→px Wokwi, SVG Fritzing)
+ * - Hit-test avec rotation ; export sérialisable
  */
 import draw2d from "draw2d";
 import type { ElementPin } from "@wokwi/elements";
@@ -20,7 +29,7 @@ import {
 } from "./coordinate-port-locator";
 import { resolvePortConnectionDirection } from "./port-connection-direction";
 import { getConnectionWireLabelText } from "./connection-label";
-import { css, unitToPx } from "../utils/dom";
+import { css, measureWokwiSvgSize } from "../utils/dom";
 import type { Port } from "draw2d-types";
 
 export type FigureData = {
@@ -76,7 +85,8 @@ function wireHybridPort(port: HybridDraw2dPort, diameter: number, alpha = 0.8): 
 
 /**
  * Recale diamètre/corona selon la taille du composant et le zoom.
- * Priorité : laisser le corps du composant saisissable ; pastilles petites sur les bords.
+ * @param figure - Figure composant dont les ports sont ajustés.
+ * @param zoomFactor - Facteur de zoom courant du canvas.
  */
 export function syncFigurePortHitTargets(figure: ComponentFigure, zoomFactor: number): void {
     const zoom = Math.max(0.01, zoomFactor);
@@ -110,6 +120,10 @@ export class ComponentFigure extends draw2d.shape.basic.Rectangle {
     private readonly overlay: HTMLElement;
     private fritzingSvgLoading = false;
 
+    /**
+     * Crée une figure draw2d pour un composant catalogue (Wokwi ou Fritzing).
+     * @param component - Métadonnées catalogue du composant.
+     */
     constructor(component: CatalogComponentInfo) {
         super();
         this.component = component;
@@ -128,7 +142,7 @@ export class ComponentFigure extends draw2d.shape.basic.Rectangle {
         this.on("added", (_emitter: unknown, event: { canvas: { overlayContainer: HTMLElement; getZoom?: () => number } }) => {
             event.canvas.overlayContainer.append(this.overlay);
             if (isWokwiComponent(this.component)) {
-                setTimeout(() => this.syncOverlaySize());
+                void this.syncWokwiOverlaySizeAsync();
             } else {
                 this.syncOverlayLayout();
             }
@@ -146,7 +160,10 @@ export class ComponentFigure extends draw2d.shape.basic.Rectangle {
     private createWokwiOverlay(component: WokwiComponentInfo): HTMLElement {
         const element: WokwiComponent = new component.clasz();
         css(element, { pointerEvents: "none" });
-        for (const pinInfo of element.pinInfo as ElementPin[]) {
+        const pins = (element as { pinInfo?: ElementPin[] }).pinInfo ?? [];
+        // Taille initiale dès la création — sinon le hit-test draw2d reste trop petit pour déplacer.
+        this.applyWokwiSizeFromPins(pins);
+        for (const pinInfo of pins) {
             const port = this.createPort(
                 "hybrid",
                 new CoordinatePortLocator(pinInfo.name, pinInfo.x, pinInfo.y),
@@ -154,6 +171,23 @@ export class ComponentFigure extends draw2d.shape.basic.Rectangle {
             wireHybridPort(port as HybridDraw2dPort, 6, 0.8);
         }
         return element;
+    }
+
+    /** Emprise approximative d’après les broches Wokwi (avant mesure du SVG). */
+    private applyWokwiSizeFromPins(pins: ElementPin[]): void {
+        if (pins.length === 0) {
+            this.setWidth(80);
+            this.setHeight(80);
+            return;
+        }
+        let maxX = 0;
+        let maxY = 0;
+        for (const pin of pins) {
+            maxX = Math.max(maxX, Number(pin.x) || 0);
+            maxY = Math.max(maxY, Number(pin.y) || 0);
+        }
+        this.setWidth(Math.max(40, Math.ceil(maxX + 10)));
+        this.setHeight(Math.max(40, Math.ceil(maxY + 10)));
     }
 
     private createFritzingOverlay(component: FritzingComponentInfo): HTMLElement {
@@ -239,23 +273,41 @@ export class ComponentFigure extends draw2d.shape.basic.Rectangle {
         self.layoutPorts();
     }
 
+    private async syncWokwiOverlaySizeAsync(): Promise<void> {
+        const host = this.overlay as HTMLElement & { updateComplete?: Promise<unknown> };
+        try {
+            if (host.updateComplete) {
+                await host.updateComplete;
+            }
+        } catch {
+            // Élément non Lit ou rendu déjà fait.
+        }
+
+        for (let attempt = 0; attempt < 12; attempt += 1) {
+            if (this.overlay.shadowRoot?.querySelector("svg")) {
+                this.syncOverlaySize();
+                const canvas = this.getCanvas?.();
+                const zoom = canvas && typeof canvas.getZoom === "function" ? canvas.getZoom() : 1;
+                syncFigurePortHitTargets(this, zoom);
+                return;
+            }
+            await new Promise<void>((resolve) => {
+                window.requestAnimationFrame(() => resolve());
+            });
+        }
+
+        // SVG indisponible : conserver l’emprise pins + layout overlay.
+        this.syncOverlayLayout();
+    }
+
     private syncOverlaySize(): void {
         if (!isWokwiComponent(this.component)) return;
 
         const svg = this.overlay.shadowRoot?.querySelector("svg");
         if (!svg) return;
 
-        const viewBox = svg.getAttribute("viewBox");
-        let width: number;
-        let height: number;
-        if (viewBox) {
-            const parts = viewBox.trim().split(/[\s,]+/).map(Number);
-            width = parts[2] ?? unitToPx(svg.getAttribute("width"));
-            height = parts[3] ?? unitToPx(svg.getAttribute("height"));
-        } else {
-            width = unitToPx(svg.getAttribute("width"));
-            height = unitToPx(svg.getAttribute("height"));
-        }
+        const { width, height } = measureWokwiSvgSize(svg);
+        if (!(width > 0) || !(height > 0)) return;
 
         this.setWidth(width);
         this.setHeight(height);
@@ -264,36 +316,61 @@ export class ComponentFigure extends draw2d.shape.basic.Rectangle {
         this.syncOverlayLayout();
     }
 
+    /** Met la figure et son overlay au premier plan lors de la sélection. */
     public onSelected(): void {
         this.toFront();
     }
 
+    /** Hook appelé quand la figure perd la sélection (réservé futur surlignage). */
     public onUnselected(): void {
         // Réservé pour un futur surlignage de sélection.
     }
 
+    /**
+     * Retourne l'élément HTML overlay (Wokwi custom element ou wrapper Fritzing).
+     * @returns Élément overlay du composant.
+     */
     public getOverlayElement(): HTMLElement {
         return this.overlay;
     }
 
-    /** Métadonnées catalogue du composant (Wokwi ou Fritzing). */
+    /**
+     * Retourne les métadonnées catalogue du composant (Wokwi ou Fritzing).
+     * @returns Entrée catalogue associée à cette figure.
+     */
     public getComponentInfo(): CatalogComponentInfo {
         return this.component;
     }
 
+    /**
+     * Retourne les ports hybrides (pastilles de connexion) de cette figure.
+     * @returns Copie du tableau des ports draw2d.
+     */
+    public getHybridPorts(): Port[] {
+        return [...(this.hybridPorts?.data ?? [])] as Port[];
+    }
+
+    /** Remonte la figure draw2d et son overlay HTML au premier plan. */
     public toFront(): void {
         super.toFront();
         this.getCanvas().overlayContainer.append(this.overlay);
     }
 
+    /**
+     * Retourne le port hybride identifié par son nom draw2d.
+     * @param name - Identifiant du port (`portId` du locateur).
+     * @returns Port correspondant ou `undefined`.
+     */
     public getPortByName(name: string): Port {
         return this.hybridPorts.data.find((port: Port) => port.getLocator().portId === name);
     }
 
     /**
-     * draw2d garde un AABB non tourné pour getBoundingBox ; le SVG / overlay
-     * tournent autour du centre (+ scale 90/270). Sans ceci, les clics ratent
-     * le composant et la policy de pan croit que le workspace est vide.
+     * Teste si un point canvas touche la figure (AABB corrigé pour la rotation).
+     * @param x - Abscisse logique du point.
+     * @param y - Ordonnée logique du point.
+     * @param corona - Marge de tolérance optionnelle.
+     * @returns `true` si le point intersecte la figure.
      */
     public hitTest(x: number, y: number, corona?: number): boolean {
         const angle = ((Number(this.getRotationAngle()) || 0) % 360 + 360) % 360;
@@ -329,6 +406,11 @@ export class ComponentFigure extends draw2d.shape.basic.Rectangle {
         return Math.abs(rx) <= w / 2 + pad && Math.abs(ry) <= h / 2 + pad;
     }
 
+    /**
+     * Synchronise position, taille et rotation de l'overlay HTML avec la figure.
+     * @param canvasX - Position X optionnelle (sinon position courante).
+     * @param canvasY - Position Y optionnelle (sinon position courante).
+     */
     public syncOverlayLayout(canvasX?: number, canvasY?: number): void {
         const top = canvasY ?? this.getY();
         const left = canvasX ?? this.getX();
@@ -353,6 +435,10 @@ export class ComponentFigure extends draw2d.shape.basic.Rectangle {
         });
     }
 
+    /**
+     * Fait pivoter la figure du delta indiqué et recalcule ports et overlay.
+     * @param delta - Angle en degrés (positif = sens horaire draw2d).
+     */
     public rotateByDegrees(delta: number): void {
         const cur = Number(this.getRotationAngle()) || 0;
         const next = ((cur + delta) % 360 + 360) % 360;
@@ -364,6 +450,10 @@ export class ComponentFigure extends draw2d.shape.basic.Rectangle {
         syncFigurePortHitTargets(this, zoom);
     }
 
+    /**
+     * Exporte les données sérialisables de la figure pour sauvegarde.
+     * @returns Position, rotation et identifiants catalogue/figure.
+     */
     public getFigureData(): FigureData {
         const angle = Number(this.getRotationAngle()) || 0;
         return {
@@ -375,6 +465,10 @@ export class ComponentFigure extends draw2d.shape.basic.Rectangle {
         };
     }
 
+    /**
+     * Exporte les connexions sortantes de cette figure pour sauvegarde.
+     * @returns Liste des fils dont cette figure est la source.
+     */
     public getWiringData(): WiringData[] {
         const wiringData: WiringData[] = [];
 

@@ -1,5 +1,14 @@
 /**
- * @file Panneau catalogue : navigation par catégories (flyout type µcBlockly) et liste de composants.
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Panneau catalogue : navigation par catégories (flyout type µcBlockly) et liste.
+ *
+ * Responsabilités :
+ * - Nav catégories + recherche + repli automatique
+ * - Monter les vignettes (Wokwi / Fritzing) et le DnD vers le canvas
+ * - Rebuild progressif (boot par lots)
  */
 import { ComponentFigure } from "../editor/component-figure";
 import { addFigureWithUndo } from "../editor/canvas-commands";
@@ -8,13 +17,13 @@ import type { Editor } from "../editor/editor";
 import { tr } from "../ui/i18n/translate";
 import {
     ComponentElement,
-    ComponentType,
     catalogComponentById,
     getCatalogComponents,
     getComponentById,
-    isFritzingComponent,
+    isWokwiComponent,
     type CatalogComponentInfo,
 } from "./component";
+import { normalizeCatalogKey } from "./catalog-dedupe";
 import {
     CATALOG_BOOT_BATCH_SIZE,
     reportCatalogBoot,
@@ -32,6 +41,7 @@ import {
 const DEFAULT_EXPANDED_SIDEBAR_WIDTH = 320;
 const COLLAPSED_SIDEBAR_WIDTH = 132;
 const AUTO_COLLAPSE_STORAGE_KEY = "hackCable-catalog-auto-collapse";
+const SEARCH_DEBOUNCE_MS = 180;
 
 function readAutoCollapsePreference(): boolean {
     return localStorage.getItem(AUTO_COLLAPSE_STORAGE_KEY) !== "false";
@@ -41,7 +51,10 @@ function writeAutoCollapsePreference(enabled: boolean): void {
     localStorage.setItem(AUTO_COLLAPSE_STORAGE_KEY, enabled ? "true" : "false");
 }
 
-/** Préférence repli auto (avant montage du catalogue, ex. depuis l’URL). */
+/**
+ * Définit la préférence de repli automatique du flyout catalogue.
+ * @param enabled - `true` pour replier le flyout au clic workspace / Escape / drag.
+ */
 export function setCatalogAutoCollapsePreference(enabled: boolean): void {
     writeAutoCollapsePreference(enabled);
 }
@@ -61,7 +74,15 @@ export class Catalog {
     private lastExpandedWidth = DEFAULT_EXPANDED_SIDEBAR_WIDTH;
     private autoCollapseBound = false;
     private autoCollapseButton: HTMLButtonElement | undefined;
+    private searchQuery = "";
+    private searchDebounceTimer: number | undefined;
+    private catalogListGeneration = 0;
 
+    /**
+     * Initialise le panneau catalogue (nav, recherche, liste de vignettes).
+     * @param hackCable - Instance parente exposant l’éditeur canvas.
+     * @param options - `deferBuild` retarde le premier montage asynchrone.
+     */
     constructor(hackCable: { editor: Editor }, options?: { deferBuild?: boolean }) {
         this.hackCable = hackCable;
         this.autoCollapse = readAutoCollapsePreference();
@@ -83,15 +104,26 @@ export class Catalog {
 
     private onAutoCollapseChange: ((enabled: boolean) => void) | null = null;
 
-    /** Repli auto du flyout (workspace, Escape, drag) — sinon le catalogue reste déplié. */
+    /**
+     * Indique si le repli automatique du flyout catalogue est activé.
+     * @returns `true` si le flyout se replie au clic workspace, Escape ou drag.
+     */
     isAutoCollapseEnabled(): boolean {
         return this.autoCollapse;
     }
 
+    /**
+     * Enregistre un écouteur sur le changement de préférence repli auto.
+     * @param listener - Callback appelé avec la nouvelle valeur, ou `null` pour retirer.
+     */
     setAutoCollapseChangeListener(listener: ((enabled: boolean) => void) | null): void {
         this.onAutoCollapseChange = listener;
     }
 
+    /**
+     * Active ou désactive le repli automatique du flyout catalogue.
+     * @param enabled - Nouvelle valeur de la préférence.
+     */
     setAutoCollapseEnabled(enabled: boolean): void {
         if (this.autoCollapse === enabled) {
             this.syncAutoCollapseButton();
@@ -109,6 +141,9 @@ export class Catalog {
         this.onAutoCollapseChange?.(enabled);
     }
 
+    /**
+     * Recharge les éléments catalogue depuis les maps composants en mémoire.
+     */
     reloadElements(): void {
         this.elements = this.listCatalogComponents()
             .map((component) => new ComponentElement(component));
@@ -118,15 +153,9 @@ export class Catalog {
     private listCatalogComponents(): CatalogComponentInfo[] {
         const fromMaps = Object.values(catalogComponentById);
         if (fromMaps.length > 0) {
-            return fromMaps.filter((component) => {
-                if (isFritzingComponent(component)) return true;
-                return component.type !== ComponentType.CARD;
-            });
+            return fromMaps;
         }
-        return getCatalogComponents().filter((component) => {
-            if (isFritzingComponent(component)) return true;
-            return component.type !== ComponentType.CARD;
-        });
+        return getCatalogComponents();
     }
 
     private async reloadElementsAsync(onProgress?: CatalogBootProgressCallback): Promise<void> {
@@ -151,13 +180,32 @@ export class Catalog {
     }
 
     private usedCategories(): FritzingCategory[] {
-        const categories = new Set(this.elements.map((element) => element.category));
+        const categories = new Set(this.visibleElements().map((element) => element.category));
         return FRITZING_CATEGORIES
             .filter((category) => categories.has(category) && isBreadboardCatalogCategory(category));
     }
 
     private categoryCount(category: FritzingCategory): number {
-        return this.elements.filter((element) => element.category === category).length;
+        return this.visibleElements().filter((element) => element.category === category).length;
+    }
+
+    private visibleElements(): ComponentElement[] {
+        const query = normalizeCatalogKey(this.searchQuery);
+        const breadboard = this.elements.filter((element) => isBreadboardCatalogCategory(element.category));
+        if (!query) return breadboard;
+        return breadboard.filter((element) => this.matchesSearch(element, query));
+    }
+
+    private matchesSearch(element: ComponentElement, query: string): boolean {
+        const haystack = normalizeCatalogKey(`${element.name} ${element.description}`);
+        return haystack.includes(query);
+    }
+
+    private compareCatalogElements(a: ComponentElement, b: ComponentElement): number {
+        const aWokwi = isWokwiComponent(a.componentInfo) ? 0 : 1;
+        const bWokwi = isWokwiComponent(b.componentInfo) ? 0 : 1;
+        if (aWokwi !== bWokwi) return aWokwi - bWokwi;
+        return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
     }
 
     private setActiveCategory(category: FritzingCategory | ""): void {
@@ -372,11 +420,116 @@ export class Catalog {
         this.catalog.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
     }
 
+    private createSearchField(): HTMLDivElement {
+        const wrap = document.createElement("div");
+        wrap.className = "hackCable-catalog-search";
+
+        const input = document.createElement("input");
+        input.type = "search";
+        input.className = "hackCable-catalog-search-input";
+        input.id = "hackCable-catalog-search";
+        input.value = this.searchQuery;
+        input.placeholder = tr("catalog.searchPlaceholder");
+        input.setAttribute("aria-label", tr("catalog.searchLabel"));
+        input.autocomplete = "off";
+        input.spellcheck = false;
+
+        input.addEventListener("input", () => {
+            this.searchQuery = input.value;
+            if (this.searchDebounceTimer !== undefined) {
+                window.clearTimeout(this.searchDebounceTimer);
+            }
+            this.searchDebounceTimer = window.setTimeout(() => {
+                this.searchDebounceTimer = undefined;
+                this.applySearchFilter();
+            }, SEARCH_DEBOUNCE_MS);
+        });
+
+        input.addEventListener("keydown", (event) => {
+            if (event.key === "Escape") {
+                if (input.value) {
+                    input.value = "";
+                    this.searchQuery = "";
+                    this.applySearchFilter();
+                    event.stopPropagation();
+                }
+                return;
+            }
+            if (event.key === "Enter") {
+                event.preventDefault();
+                this.openCategory(this.activeCategory || "");
+            }
+        });
+
+        input.addEventListener("focus", () => {
+            if (!this.listOpen) {
+                this.setListOpen(true);
+            }
+        });
+
+        wrap.appendChild(input);
+        return wrap;
+    }
+
+    private applySearchFilter(): void {
+        this.rebuildNavCategoryList();
+        void this.updateCatalogListAsync().then(() => {
+            if (this.searchQuery.trim() && !this.listOpen) {
+                this.setListOpen(true);
+            }
+            if (this.activeCategory) {
+                this.scrollToCategory(this.activeCategory);
+            } else {
+                this.catalog?.scrollTo({ top: 0 });
+            }
+        });
+    }
+
+    private rebuildNavCategoryList(): void {
+        if (!this.nav) return;
+        const list = this.nav.querySelector(".hackCable-catalog-nav-list");
+        if (!(list instanceof HTMLUListElement)) {
+            this.buildCategoryNav();
+            return;
+        }
+
+        list.innerHTML = "";
+        const listId = "hackCable-catalog-list";
+        const appendItem = (button: HTMLButtonElement) => {
+            const item = document.createElement("li");
+            item.setAttribute("role", "none");
+            item.appendChild(button);
+            list.appendChild(item);
+        };
+
+        appendItem(this.createNavButton(
+            "",
+            tr("catalog.navAll"),
+            tr("catalog.filterAll"),
+            listId,
+        ));
+
+        for (const category of this.usedCategories()) {
+            const count = this.categoryCount(category);
+            appendItem(this.createNavButton(
+                category,
+                tr(fritzingCategoryI18nKey(category)),
+                `${tr(fritzingCategoryI18nKey(category))} (${count})`,
+                categoryDomId(category),
+            ));
+        }
+
+        this.setActiveCategory(this.activeCategory);
+        this.syncNavExpandedState();
+    }
+
     private buildCategoryNav(): void {
         if (!this.nav) return;
         this.nav.innerHTML = "";
         this.nav.setAttribute("aria-label", tr("catalog.navLabel"));
         this.nav.setAttribute("aria-orientation", "vertical");
+
+        this.nav.appendChild(this.createSearchField());
 
         const list = document.createElement("ul");
         list.className = "hackCable-catalog-nav-list";
@@ -419,11 +572,17 @@ export class Catalog {
         this.syncNavExpandedState();
     }
 
+    /**
+     * Lance la construction nav + liste de façon asynchrone (sans attendre).
+     */
     build(): void {
         void this.buildAsync();
     }
 
-    /** Construit nav + liste par lots (laisse le navigateur peindre entre les lots). */
+    /**
+     * Construit la navigation et la liste catalogue par lots avec progression.
+     * @param onProgress - Callback optionnel de progression du boot.
+     */
     async buildAsync(onProgress?: CatalogBootProgressCallback): Promise<void> {
         await this.reloadElementsAsync(onProgress);
         this.buildCategoryNav();
@@ -431,19 +590,33 @@ export class Catalog {
         reportCatalogBoot(onProgress, "ready", 1, 1);
     }
 
+    /**
+     * Reconstruit le catalogue après un changement de locale (sans attendre).
+     */
     rebuildFromLocale(): void {
         void this.rebuildFromLocaleAsync();
     }
 
+    /**
+     * Reconstruit le catalogue après un changement de locale.
+     * @param onProgress - Callback optionnel de progression du rebuild.
+     */
     async rebuildFromLocaleAsync(onProgress?: CatalogBootProgressCallback): Promise<void> {
         await this.buildAsync(onProgress);
         this.setListOpen(this.listOpen);
     }
 
+    /**
+     * Reconstruit le catalogue après une sync Fritzing (sans attendre).
+     */
     rebuildFromCatalog(): void {
         void this.rebuildFromCatalogAsync();
     }
 
+    /**
+     * Reconstruit le catalogue après une sync Fritzing.
+     * @param onProgress - Callback optionnel de progression du rebuild.
+     */
     async rebuildFromCatalogAsync(onProgress?: CatalogBootProgressCallback): Promise<void> {
         await this.buildAsync(onProgress);
         this.setListOpen(this.listOpen);
@@ -476,16 +649,32 @@ export class Catalog {
         div.appendChild(previewNode);
     }
 
+    /**
+     * Met à jour la liste DOM des vignettes catalogue (sans attendre).
+     */
     updateCatalogList(): void {
         void this.updateCatalogListAsync();
     }
 
+    /**
+     * Met à jour la liste DOM des vignettes catalogue par lots.
+     * @param onProgress - Callback optionnel de progression du montage.
+     */
     async updateCatalogListAsync(onProgress?: CatalogBootProgressCallback): Promise<void> {
+        const generation = ++this.catalogListGeneration;
         if (this.catalog) this.catalog.innerHTML = "";
 
-        const visible = this.elements
-            .filter((element) => isBreadboardCatalogCategory(element.category))
-            .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
+        const visible = this.visibleElements().sort((a, b) => this.compareCatalogElements(a, b));
+
+        if (visible.length === 0 && this.searchQuery.trim()) {
+            if (generation !== this.catalogListGeneration) return;
+            const empty = document.createElement("p");
+            empty.className = "hackCable-catalog-search-empty";
+            empty.textContent = tr("catalog.searchEmpty");
+            this.catalog?.appendChild(empty);
+            reportCatalogBoot(onProgress, "mount", 0, 0);
+            return;
+        }
 
         const byCategory = new Map<FritzingCategory, ComponentElement[]>();
         for (const element of visible) {
@@ -502,10 +691,12 @@ export class Catalog {
         const fragment = document.createDocumentFragment();
 
         for (const category of categories) {
+            if (generation !== this.catalogListGeneration) return;
             const items = byCategory.get(category) ?? [];
             const section = document.createElement("section");
             section.className = "hackCable-catalog-section";
             section.id = categoryDomId(category);
+            section.dataset.category = category;
 
             const header = document.createElement("h4");
             header.className = "hackCable-catalog-section-title";
@@ -518,6 +709,7 @@ export class Catalog {
             grid.className = "hackCable-catalog-section-grid";
 
             for (let i = 0; i < items.length; i += CATALOG_BOOT_BATCH_SIZE) {
+                if (generation !== this.catalogListGeneration) return;
                 const slice = items.slice(i, i + CATALOG_BOOT_BATCH_SIZE);
                 for (const element of slice) {
                     this.mountComponentCard(element, grid);
@@ -531,6 +723,7 @@ export class Catalog {
             fragment.appendChild(section);
         }
 
+        if (generation !== this.catalogListGeneration) return;
         this.catalog?.appendChild(fragment);
         reportCatalogBoot(onProgress, "mount", total, total);
     }

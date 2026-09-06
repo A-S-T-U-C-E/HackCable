@@ -1,5 +1,13 @@
 /**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
  * @file Options d’accessibilité (labels, police, interligne, focus, couleur UI, routeur).
+ *
+ * Responsabilités :
+ * - Lire / écrire localStorage
+ * - Appliquer les classes CSS et préférences routeur
  */
 import {
     DEFAULT_WIRE_ROUTER,
@@ -48,18 +56,40 @@ export const DEFAULT_A11Y_SETTINGS: A11ySettings = {
     wireRouter: DEFAULT_WIRE_ROUTER,
 };
 
+/**
+ * Borne une valeur numérique entre un minimum et un maximum.
+ * @param n - Valeur à borner.
+ * @param min - Borne inférieure inclusive.
+ * @param max - Borne supérieure inclusive.
+ * @returns Valeur clampée.
+ */
 function clamp(n: number, min: number, max: number): number {
     return Math.min(max, Math.max(min, n));
 }
 
+/**
+ * Vérifie si une chaîne est un mode d’affichage des labels valide.
+ * @param value - Valeur à tester.
+ * @returns Vrai si la valeur est un `A11yLabelMode`.
+ */
 function isLabelMode(value: string): value is A11yLabelMode {
     return value === "icons" || value === "text" || value === "both";
 }
 
+/**
+ * Vérifie si une chaîne est un mode d’alignement de texte valide.
+ * @param value - Valeur à tester.
+ * @returns Vrai si la valeur est un `A11yTextAlign`.
+ */
 function isAlign(value: string): value is A11yTextAlign {
     return value === "start" || value === "justify";
 }
 
+/**
+ * Normalise une couleur d’accent hexadécimale (#RGB ou #RRGGBB).
+ * @param raw - Couleur brute saisie par l’utilisateur.
+ * @returns Couleur hex normalisée ou valeur par défaut si invalide.
+ */
 function normalizeAccent(raw: string): string {
     const value = raw.trim();
     if (/^#[0-9a-fA-F]{6}$/.test(value)) return value.toLowerCase();
@@ -72,6 +102,11 @@ function normalizeAccent(raw: string): string {
     return DEFAULT_A11Y_SETTINGS.accent;
 }
 
+/**
+ * Fusionne et valide des réglages d’accessibilité partiels.
+ * @param partial - Réglages partiels ou null pour les valeurs par défaut.
+ * @returns Objet `A11ySettings` complet et normalisé.
+ */
 export function normalizeA11ySettings(partial: Partial<A11ySettings> | null | undefined): A11ySettings {
     const base = { ...DEFAULT_A11Y_SETTINGS, ...(partial ?? {}) };
     const font = A11Y_FONTS.some((f) => f.id === base.font) ? base.font : DEFAULT_A11Y_SETTINGS.font;
@@ -87,6 +122,10 @@ export function normalizeA11ySettings(partial: Partial<A11ySettings> | null | un
     };
 }
 
+/**
+ * Lit les réglages d’accessibilité depuis le localStorage.
+ * @returns Réglages persistés ou valeurs par défaut en cas d’erreur.
+ */
 export function readA11ySettings(): A11ySettings {
     try {
         const raw = localStorage.getItem(A11Y_STORAGE_KEY);
@@ -97,10 +136,19 @@ export function readA11ySettings(): A11ySettings {
     }
 }
 
+/**
+ * Persiste les réglages d’accessibilité dans le localStorage.
+ * @param settings - Réglages à enregistrer (normalisés avant écriture).
+ */
 export function writeA11ySettings(settings: A11ySettings): void {
     localStorage.setItem(A11Y_STORAGE_KEY, JSON.stringify(normalizeA11ySettings(settings)));
 }
 
+/**
+ * Retourne la pile CSS associée à un identifiant de police.
+ * @param fontId - Identifiant de police (`A11Y_FONTS`).
+ * @returns Pile `font-family` CSS.
+ */
 function fontStackFor(fontId: string): string {
     return A11Y_FONTS.find((f) => f.id === fontId)?.stack ?? "Rubik, sans-serif";
 }
@@ -127,6 +175,11 @@ function ensureAtkinsonFont(): void {
     document.head.appendChild(link);
 }
 
+/**
+ * Convertit une couleur hexadécimale en composantes RGB.
+ * @param hex - Couleur au format `#RGB` ou `#RRGGBB`.
+ * @returns Composantes `{ r, g, b }` ou bleu par défaut si invalide.
+ */
 function hexToRgb(hex: string): { r: number; g: number; b: number } {
     const raw = hex.replace("#", "").trim();
     const full = raw.length === 3
@@ -143,7 +196,11 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } {
     };
 }
 
-/** Palette dérivée de l’accent (CSS + canvas). */
+/**
+ * Calcule la palette dérivée de la couleur d’accent (CSS + canvas).
+ * @param accentHex - Couleur d’accent hexadécimale.
+ * @returns Palette `{ hex, rgb, soft, muted, strong }`.
+ */
 export function getUiAccentPalette(accentHex = DEFAULT_A11Y_SETTINGS.accent): {
     hex: string;
     rgb: string;
@@ -162,12 +219,19 @@ export function getUiAccentPalette(accentHex = DEFAULT_A11Y_SETTINGS.accent): {
     };
 }
 
+/**
+ * Lit la couleur d’accent active depuis les variables CSS du document.
+ * @returns Palette d’accent dérivée de `--hc-accent` ou de la valeur par défaut.
+ */
 export function readAccentFromDocument(): ReturnType<typeof getUiAccentPalette> {
     const fromCss = getComputedStyle(document.documentElement).getPropertyValue("--hc-accent").trim();
     return getUiAccentPalette(fromCss || DEFAULT_A11Y_SETTINGS.accent);
 }
 
-/** Applique les réglages via variables CSS et attributs sur `<html>`. */
+/**
+ * Applique les réglages via variables CSS et attributs sur `<html>`.
+ * @param settings - Réglages d’accessibilité à appliquer au DOM.
+ */
 export function applyA11ySettings(settings: A11ySettings): void {
     const s = normalizeA11ySettings(settings);
     if (s.font === "OpenDyslexic") ensureOpenDyslexicFont();
@@ -195,6 +259,11 @@ export function applyA11ySettings(settings: A11ySettings): void {
     document.dispatchEvent(new CustomEvent("hackcable:a11y-changed", { detail: s }));
 }
 
+/**
+ * Extrait les réglages d’accessibilité depuis les paramètres d’URL.
+ * @param params - Paramètres de requête à analyser.
+ * @returns Réglages partiels reconnus dans l’URL.
+ */
 export function parseA11yFromUrlParams(params: URLSearchParams): Partial<A11ySettings> {
     const partial: Partial<A11ySettings> = {};
 
@@ -228,6 +297,11 @@ export function parseA11yFromUrlParams(params: URLSearchParams): Partial<A11ySet
     return partial;
 }
 
+/**
+ * Écrit les réglages d’accessibilité dans les paramètres d’URL.
+ * @param params - Objet `URLSearchParams` à modifier.
+ * @param settings - Réglages à sérialiser dans l’URL.
+ */
 export function writeA11yToUrlParams(params: URLSearchParams, settings: A11ySettings): void {
     const s = normalizeA11ySettings(settings);
     params.set("labels", s.labels);

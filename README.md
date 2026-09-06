@@ -48,7 +48,19 @@ Build ou serveur de dev pour la page web :
 - `build:web`
 - `serve:web`
 
+Documentation API (JSDoc → Markdown/HTML) :
+
+- `docs` — génère `docs/api/`
+- `docs:watch` — régénère à chaque changement sous `src/`
+
 ## Documentation
 
-- [Algorithmes de tracé des fils](docs/wire-routers.md) — différences entre les routeurs draw2d (Manhattan, ponts, labyrinthe, etc.)
-- [API table des broches MCU](docs/mcu-pin-api.md) — broches connectées ou non, pour logiciels tiers (µcBlockly…)
+- [Guide de maintenance](docs/MAINTENANCE.md) — pour contribuer / s’y retrouver
+- [Architecture](docs/architecture.md) — aperçu des modules
+- [Algorithmes de tracé des fils](docs/wire-routers.md) — différences entre les routeurs draw2d
+- [API table des broches MCU](docs/mcu-pin-api.md) — broches connectées ou non (µcBlockly…)
+- [Référence API générée](docs/api/index.html) — JSDoc → Markdown/HTML (`npm run docs`)
+
+## Licence
+
+[GPL-3.0-or-later](LICENSE) — Copyright (c) 2021, Clément Grennerat ; contributions du fork A-S-T-U-C-E.

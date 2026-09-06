@@ -1,6 +1,16 @@
 /**
- * @file Routeur Manhattan interactif + ponts aux croisements (segment handling draw2d).
- * @see https://freegroup.github.io/draw2d/#/examples/connection_segment_handling
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Routeur Manhattan interactif + ponts aux croisements de fils.
+ *
+ * Responsabilités :
+ * - Router les connexions avec sauts (bridges)
+ * - Créer une connexion câblée (`createWiringConnection`)
+ * - Marquer un tracé comme modifié par l’utilisateur
+ *
+ * @see docs/wire-routers.md
  */
 import draw2d from "draw2d";
 import { segmentMatchesExitDirection } from "./port-connection-direction";
@@ -45,9 +55,9 @@ type VertexList = {
 };
 
 /**
- * Si la sortie du port ne correspond plus au premier/dernier segment
- * (ex. pastille latérale routée vers le bas), repasser en autoroute.
- * @returns true si un recalcul a été demandé
+ * Vérifie si la sortie du port correspond encore au premier/dernier segment.
+ * @param conn - Connexion draw2d à analyser.
+ * @returns `true` si un recalcul de routage a été demandé.
  */
 export function ensureOrthogonalPortExits(conn: WiringConnection): boolean {
     const meta = conn._routingMetaData;
@@ -235,7 +245,10 @@ export const BridgedInteractiveManhattanRouter =
         },
     });
 
-/** Marque une connexion comme routée manuellement (conserve les sommets au reload). */
+/**
+ * Marque une connexion comme routée manuellement (conserve les sommets au reload).
+ * @param conn - Connexion draw2d à marquer.
+ */
 export function markConnectionUserRouted(conn: {
     _routingMetaData?: { routedByUserInteraction?: boolean; fromDir?: number; toDir?: number };
 }): void {
@@ -243,7 +256,10 @@ export function markConnectionUserRouted(conn: {
     conn._routingMetaData!.routedByUserInteraction = true;
 }
 
-/** draw2d.splitSegment exige `_routingMetaData` (créé par InteractiveManhattan.onInstall). */
+/**
+ * Crée `_routingMetaData` si absent (requis par split/remove de segments).
+ * @param conn - Connexion draw2d à initialiser.
+ */
 export function ensureRoutingMetaData(conn: {
     _routingMetaData?: { routedByUserInteraction?: boolean; fromDir?: number; toDir?: number };
 }): void {
@@ -262,7 +278,13 @@ export type ConnectionSegmentHit = {
     end: Point2;
 };
 
-/** Segment sous le point canvas, ou null. */
+/**
+ * Retourne le segment de connexion sous le point canvas, ou null.
+ * @param conn - Connexion draw2d.
+ * @param x - Abscisse logique du point.
+ * @param y - Ordonnée logique du point.
+ * @returns Segment touché ou `null`.
+ */
 export function hitConnectionSegment(
     conn: { hitSegment?: (x: number, y: number) => ConnectionSegmentHit | null },
     x: number,
@@ -272,7 +294,11 @@ export function hitConnectionSegment(
     return conn.hitSegment(x, y) ?? null;
 }
 
-/** Routeurs Manhattan interactifs : édition de segments (split / remove). */
+/**
+ * Indique si la connexion supporte l'édition de segments orthogonaux.
+ * @param conn - Connexion draw2d.
+ * @returns `true` si split/remove de segments est possible.
+ */
 export function supportsOrthogonalSegmentEdit(conn: {
     getRouter?: () => { canRemoveSegmentAt?: (c: unknown, index: number) => boolean; NAME?: string };
 }): boolean {
@@ -283,7 +309,12 @@ export function supportsOrthogonalSegmentEdit(conn: {
     return name.includes("InteractiveManhattan");
 }
 
-/** Peut-on supprimer le segment (règles InteractiveManhattan) ? */
+/**
+ * Indique si le segment peut être supprimé selon les règles InteractiveManhattan.
+ * @param conn - Connexion draw2d.
+ * @param segmentIndex - Index du segment à supprimer.
+ * @returns `true` si la suppression est autorisée.
+ */
 export function canRemoveConnectionSegment(
     conn: { getRouter?: () => { canRemoveSegmentAt?: (c: unknown, index: number) => boolean } },
     segmentIndex: number,
@@ -294,7 +325,13 @@ export function canRemoveConnectionSegment(
     return router.canRemoveSegmentAt(conn, segmentIndex) === true;
 }
 
-/** Ajoute un coude orthogonal sur le segment (comme l’exemple draw2d). */
+/**
+ * Ajoute un coude orthogonal sur le segment (comme l'exemple draw2d).
+ * @param conn - Connexion draw2d.
+ * @param segmentIndex - Index du segment cible.
+ * @param x - Abscisse logique du nouveau sommet.
+ * @param y - Ordonnée logique du nouveau sommet.
+ */
 export function splitConnectionSegment(
     conn: unknown,
     segmentIndex: number,
@@ -306,14 +343,21 @@ export function splitConnectionSegment(
     markConnectionUserRouted(conn as WiringConnection);
 }
 
-/** Supprime un segment orthogonal. */
+/**
+ * Supprime un segment orthogonal de la connexion.
+ * @param conn - Connexion draw2d.
+ * @param segmentIndex - Index du segment à retirer.
+ */
 export function removeConnectionSegment(conn: unknown, segmentIndex: number): void {
     ensureRoutingMetaData(conn as WiringConnection);
     segmentPolicy.removeSegment(conn, segmentIndex);
     markConnectionUserRouted(conn as WiringConnection);
 }
 
-/** Crée une connexion câblage avec le routeur préféré. */
+/**
+ * Crée une connexion câblage avec le routeur préféré.
+ * @returns Nouvelle instance draw2d.Connection configurée.
+ */
 export function createWiringConnection(): InstanceType<typeof draw2d.Connection> {
     return new draw2d.Connection({
         router: createWireRouterInstance(getPreferredWireRouterId()),

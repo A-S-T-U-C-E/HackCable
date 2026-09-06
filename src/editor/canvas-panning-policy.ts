@@ -1,5 +1,13 @@
 /**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
  * @file Panning du viewport sans interférer avec le tirage de fil depuis un port.
+ *
+ * Responsabilités :
+ * - Étendre `PanningSelectionPolicy` draw2d
+ * - Ignorer le pan pendant un drag de port / connexion
  */
 import draw2d from "draw2d";
 import type { Canvas } from "./canvas";

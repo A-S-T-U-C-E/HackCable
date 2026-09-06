@@ -1,7 +1,13 @@
 /**
- * jQuery UI minimal pour draw2d (Canvas.init appelle .droppable / .draggable).
- * Le catalogue HackCable utilise le DnD HTML5 natif ; le menu contextuel est custom.
- * jQuery core reste requis par draw2d.
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Imports jQuery UI minimaux requis par draw2d (droppable / draggable).
+ *
+ * Responsabilités :
+ * - Charger jQuery + widgets droppable/draggable (Canvas.init draw2d)
+ * - Le DnD catalogue reste en HTML5 natif ; le menu contextuel est custom
  */
 import $ from "jquery";
 import "jquery-ui/ui/version";

@@ -1,3 +1,14 @@
+/**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Déclarations de types ambient pour draw2d (sous-ensemble utilisé par HackCable).
+ *
+ * Responsabilités :
+ * - Typer Canvas, Figure, Port, Connection, policies
+ * - Éviter d’importer tout le typings amont
+ */
 // Type definitions for [draw2d]
 // Project: [http://www.draw2d.org]
 // Definitions by: Hesham Elbadawi <https://github.com/Hesham-Elbadawi/draw2d-types>

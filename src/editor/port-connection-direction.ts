@@ -1,8 +1,14 @@
 /**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
  * @file Direction de sortie des fils depuis une pastille (bord le plus proche).
  *
- * draw2d.Rectangle.getDirection, pour un point *intérieur* au bbox, ne renvoie
- * que UP/DOWN — d’où des sorties verticales sur des ports latéraux inset (Fritzing).
+ * Responsabilités :
+ * - Corriger le bug draw2d UP/DOWN pour un point intérieur au bbox
+ * - Tourner la direction avec l’angle du composant
+ * - Vérifier l’alignement du premier segment de fil
  */
 import type { Port } from "draw2d-types";
 import { CoordinatePortLocator, PercentPortLocator } from "./coordinate-port-locator";
@@ -23,7 +29,14 @@ type SizedParent = {
     getRotationAngle?: () => number;
 };
 
-/** Bord le plus proche en coordonnées locales (avant rotation du composant). */
+/**
+ * Détermine le bord le plus proche en coordonnées locales (avant rotation).
+ * @param localX - Position X locale du port.
+ * @param localY - Position Y locale du port.
+ * @param width - Largeur du composant parent.
+ * @param height - Hauteur du composant parent.
+ * @returns Constante `PORT_DIR` du bord le plus proche.
+ */
 export function nearestEdgeDirection(localX: number, localY: number, width: number, height: number): number {
     const w = Math.max(1, width);
     const h = Math.max(1, height);
@@ -37,7 +50,12 @@ export function nearestEdgeDirection(localX: number, localY: number, width: numb
     return candidates[0][0];
 }
 
-/** Fait tourner une direction draw2d avec l’angle du composant (pas de 90°). */
+/**
+ * Fait tourner une direction draw2d avec l'angle du composant (pas de 90°).
+ * @param direction - Direction initiale (`PORT_DIR`).
+ * @param angleDeg - Angle de rotation du composant en degrés.
+ * @returns Direction tournée.
+ */
 export function rotatePortDirection(direction: number, angleDeg: number): number {
     const steps = ((Math.round(angleDeg / 90) % 4) + 4) % 4;
     return (((direction % 4) + 4) % 4 + steps) % 4;
@@ -72,7 +90,11 @@ function localPortPoint(port: PortLike, parent: SizedParent): { x: number; y: nu
     return { x: ax - px, y: ay - py };
 }
 
-/** Direction de connexion attendue (sortie orthogonale hors du composant). */
+/**
+ * Calcule la direction de connexion attendue (sortie orthogonale hors du composant).
+ * @param port - Port draw2d ou objet port-like.
+ * @returns Constante `PORT_DIR` de sortie.
+ */
 export function resolvePortConnectionDirection(port: Port | PortLike): number {
     const parent = (port as PortLike).getParent?.() as SizedParent | null | undefined;
     if (!parent || typeof parent.getWidth !== "function") {
@@ -84,7 +106,13 @@ export function resolvePortConnectionDirection(port: Port | PortLike): number {
     return rotatePortDirection(localDir, angle);
 }
 
-/** Le premier (ou dernier) segment suit-il la direction de sortie du port ? */
+/**
+ * Vérifie si un segment suit la direction de sortie du port.
+ * @param portPoint - Point d'ancrage au port.
+ * @param nextPoint - Extrémité opposée du segment.
+ * @param direction - Direction attendue (`PORT_DIR`).
+ * @returns `true` si le segment est aligné avec la direction.
+ */
 export function segmentMatchesExitDirection(
     portPoint: { x: number; y: number },
     nextPoint: { x: number; y: number },

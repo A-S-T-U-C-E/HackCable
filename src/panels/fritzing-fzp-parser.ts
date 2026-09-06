@@ -1,5 +1,13 @@
 /**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
  * @file Parsing des fichiers FZP Fritzing et extraction des connecteurs / broches.
+ *
+ * Responsabilités :
+ * - Lire titre, famille, image breadboard, connecteurs
+ * - Produire une `FritzingComponentInfo` (sans id numérique)
  */
 import { resolveFritzingCategory, type FritzingCategoryMaps } from "./fritzing-categories";
 import { extractConnectorPins, resolveSvgPhysicalInches } from "./fritzing-svg";
@@ -35,7 +43,15 @@ function parseFzpConnectors(doc: Document): { id: string; name: string; svgId: s
     }));
 }
 
-/** Parse un FZP et retourne les métadonnées catalogue (sans identifiant numérique). */
+/**
+ * Parse un FZP Fritzing et produit les métadonnées catalogue (sans id numérique).
+ * @param xml - Contenu XML du fichier FZP.
+ * @param fzpPath - Chemin relatif de la pièce dans le dépôt.
+ * @param fzpSha - SHA Git du blob FZP.
+ * @param categoryMaps - Maps de résolution de catégories.
+ * @param options - SVG breadboard pré-téléchargé et URL résolue (optionnels).
+ * @returns Métadonnées catalogue, ou `null` si le FZP est invalide.
+ */
 export function parseFzp(
     xml: string,
     fzpPath: string,

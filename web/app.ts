@@ -1,5 +1,14 @@
 /**
- * @file Point d'entrée de la démo web HackCable.
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Orchestration de la démo web HackCable (toolbar, panneaux, cycle de vie).
+ *
+ * Responsabilités :
+ * - Créer l’instance `HackCable`
+ * - Brancher sauvegarde, sync catalogue, accessibilité, à propos
+ * - Appliquer les options URL
  */
 import { HackCable, initHackCableI18n } from "../src/main";
 import { isMinimapVisible, setMinimapVisible } from "../src/editor/canvas-minimap";
@@ -12,6 +21,7 @@ import {
     readA11ySettings,
     writeA11ySettings,
 } from "./a11y-settings";
+import { setupAboutPanel } from "./about-panel";
 import { setupA11yPanel } from "./a11y-panel";
 import { paintBeforeHeavyWork, showBootProgress } from "./boot-progress";
 import { applyWebDemoUiI18n, resolveUiLanguage } from "./demo-utils";
@@ -26,7 +36,10 @@ import {
 } from "./demo-handlers";
 import { parseUrlDemoOptions, writeUrlDemoOptions } from "./url-options";
 
-/** Monte la démo web. Retourne une fonction pour retirer les écouteurs (HMR). */
+/**
+ * Monte la démo web HackCable (toolbar, panneaux, cycle de vie).
+ * @returns Fonction de nettoyage pour retirer les écouteurs (HMR).
+ */
 export async function mountWebDemoApp(): Promise<() => void> {
     const ac = new AbortController();
     const { signal } = ac;
@@ -102,12 +115,14 @@ export async function mountWebDemoApp(): Promise<() => void> {
         }
         syncUrl();
     });
+    const refreshAboutI18n = setupAboutPanel(signal);
 
     const languageSelect = document.getElementById("language-select");
     languageSelect?.addEventListener("change", () => {
         window.setTimeout(() => {
             applyWebDemoUiI18n();
             refreshA11yI18n();
+            refreshAboutI18n();
         }, 0);
     }, { signal });
 
@@ -116,5 +131,6 @@ export async function mountWebDemoApp(): Promise<() => void> {
         hackCable.catalog.setAutoCollapseChangeListener(null);
         restoreFileInput.remove();
         document.getElementById("a11y-dialog")?.remove();
+        document.getElementById("about-dialog")?.remove();
     };
 }
