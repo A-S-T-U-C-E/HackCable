@@ -153,6 +153,19 @@ export function isWokwiComponent(component: CatalogComponentInfo): component is 
     return !isFritzingComponent(component);
 }
 
+/**
+ * Cartes programmables (MCU, SBC) : Arduino / ESP / STM / PICAXE / Raspberry, etc.
+ * Inclut la catégorie Fritzing « Computer » (Raspberry Pi, Beagle…).
+ */
+export function isMicrocontrollerBoard(component: CatalogComponentInfo): boolean {
+    if (isWokwiComponent(component)) {
+        return component.type === ComponentType.CARD
+            || component.category === "Microcontroller";
+    }
+    return component.category === "Microcontroller"
+        || component.category === "Computer";
+}
+
 export function getCatalogComponents(): CatalogComponentInfo[] {
     const wokwi = wokwiComponents().map((component) => ({ ...component, source: "wokwi" as const }));
     return [...wokwi, ...getStoredFritzingComponents()];

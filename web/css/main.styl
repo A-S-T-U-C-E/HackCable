@@ -74,11 +74,10 @@ html
             padding 4px 8px
 
     &[data-a11y-labels="text"]
-        .hackCable-btn-icon
-            display none
-
-        .hackCable-minimap-icon,
-        .hackCable-language-icon
+        // Spécificité ≥ toolbar (sinon display:inline-flex gagne)
+        .hackCable-app-header .hackCable-app-toolbar-group button .hackCable-btn-icon
+        .hackCable-app-header .hackCable-app-toolbar-group .hackCable-app-minimap-toggle .hackCable-btn-icon
+        .hackCable-app-header .hackCable-app-toolbar-group .hackCable-app-language .hackCable-btn-icon
             display none
 
 body
@@ -468,3 +467,55 @@ footer
 
         &:hover
             background var(--hc-accent-strong, #2c70ff)
+
+.hackCable-boot-progress
+    position fixed
+    inset 0
+    z-index 300000
+    display flex
+    align-items center
+    justify-content center
+    padding 24px
+    box-sizing border-box
+    background rgba(20, 22, 28, 0.72)
+    font-family var(--hc-ui-font)
+    font-size var(--hc-ui-font-size)
+    line-height var(--hc-ui-line-height)
+    color #e8e8e8
+
+.hackCable-boot-progress-panel
+    width unquote("min(360px, calc(100vw - 48px))")
+    padding 20px 22px
+    border-radius 8px
+    background #30343F
+    border 1px solid #1a1d24
+    box-shadow 0 12px 32px rgba(0, 0, 0, 0.45)
+
+.hackCable-boot-progress-title
+    margin 0 0 6px
+    font-weight 600
+    font-size 1.05em
+    color #fff
+
+.hackCable-boot-progress-detail
+    margin 0 0 14px
+    color #c8cdd6
+
+.hackCable-boot-progress-track
+    height 8px
+    border-radius 999px
+    background #1a1d24
+    overflow hidden
+
+.hackCable-boot-progress-fill
+    height 100%
+    width 0
+    border-radius inherit
+    background var(--hc-accent, #2c70ff)
+    transition width 120ms linear
+
+.hackCable-boot-progress-percent
+    margin 10px 0 0
+    text-align end
+    color #aeb6c2
+    font-variant-numeric tabular-nums

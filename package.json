@@ -1,7 +1,7 @@
 {
   "name": "hackcable",
   "version": "1.0.0",
-  "description": "Arduino and ESP32 simulator (Components wiring + code emulation)",
+  "description": "Arduino and ESP32 Components wiring",
   "main": "dist/bundle.js",
   "types": "dist/types/src/main.d.ts",
   "scripts": {

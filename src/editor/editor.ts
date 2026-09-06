@@ -5,12 +5,30 @@ import { Canvas } from "./canvas";
 import { ComponentFigure } from "./component-figure";
 import type { FigureData, WiringData } from "./component-figure";
 import { createWiringConnection, markConnectionUserRouted } from "./connection-router";
+import { addConnectionWireLabel } from "./connection-label";
 import { getComponentById } from "../panels/component";
 import type { Port } from "draw2d-types";
+import {
+    buildMcuPinConnectionTable,
+    indexMcuPinConnectionTable,
+    isMcuPinConnectedInTable,
+    type McuBoardPinTable,
+    type McuPinConnectionTable,
+    type McuPinStatus,
+} from "./mcu-pin-table";
 
 export type EditorSaveData = { figures: FigureData[]; connections: WiringData[] };
 
 export type EditorLoadMode = "replace" | "append";
+
+export type {
+    McuBoardPinTable,
+    McuPinConnectionTable,
+    McuPinPeerConnection,
+    McuPinStatus,
+} from "./mcu-pin-table";
+
+export type McuPinTableChangeListener = (table: McuPinConnectionTable) => void;
 
 interface Draw2dCommandStack {
     undo(): void;
@@ -29,13 +47,84 @@ function newFigureId(): string {
 
 export class Editor {
     private readonly _canvas: Canvas;
+    private mcuPinTableCache: McuPinConnectionTable = [];
+    private mcuPinTableDirty = true;
+    private readonly mcuPinTableListeners = new Set<McuPinTableChangeListener>();
+    private mcuPinTableWatching = false;
 
     constructor() {
         this._canvas = new Canvas("hackCable-canvas");
+        this.ensureMcuPinTableWatch();
     }
 
     private getCommandStack(): Draw2dCommandStack {
         return this._canvas.getCommandStack() as Draw2dCommandStack;
+    }
+
+    private ensureMcuPinTableWatch(): void {
+        if (this.mcuPinTableWatching) return;
+        this.mcuPinTableWatching = true;
+        const invalidate = () => this.invalidateMcuPinTable();
+        this._canvas.on("figure:add", invalidate);
+        this._canvas.on("figure:remove", invalidate);
+        this._canvas.on("connect", invalidate);
+        this._canvas.on("disconnect", invalidate);
+        this._canvas.on("figure:ports", invalidate);
+    }
+
+    private invalidateMcuPinTable(): void {
+        this.mcuPinTableDirty = true;
+        if (this.mcuPinTableListeners.size === 0) return;
+        // Notifier après le tick draw2d (ports / connexions à jour).
+        queueMicrotask(() => {
+            const table = this.getMcuPinConnectionTable();
+            for (const listener of this.mcuPinTableListeners) {
+                listener(table);
+            }
+        });
+    }
+
+    private rebuildMcuPinTable(): McuPinConnectionTable {
+        const figures = this._canvas.getFigures()?.data ?? [];
+        this.mcuPinTableCache = buildMcuPinConnectionTable(figures);
+        this.mcuPinTableDirty = false;
+        return this.mcuPinTableCache;
+    }
+
+    /**
+     * Table entretenue des broches MCU (Arduino, Raspberry, STM, PICAXE…).
+     * Source de vérité : état live du canvas.
+     */
+    public getMcuPinConnectionTable(): McuPinConnectionTable {
+        if (this.mcuPinTableDirty) return this.rebuildMcuPinTable();
+        return this.mcuPinTableCache;
+    }
+
+    /** Une carte MCU du plan, ou undefined. */
+    public getMcuBoardPinTable(figureId: string): McuBoardPinTable | undefined {
+        return this.getMcuPinConnectionTable().find((board) => board.figureId === figureId);
+    }
+
+    /** Statut d’une broche (accepte `pinKey` ou `pinLabel`). */
+    public getMcuPinStatus(figureId: string, pinKeyOrLabel: string): McuPinStatus | undefined {
+        const index = indexMcuPinConnectionTable(this.getMcuPinConnectionTable());
+        return index.get(figureId)?.get(pinKeyOrLabel);
+    }
+
+    public isMcuPinConnected(figureId: string, pinKeyOrLabel: string): boolean {
+        return isMcuPinConnectedInTable(this.getMcuPinConnectionTable(), figureId, pinKeyOrLabel);
+    }
+
+    /**
+     * Abonnement aux changements de câblage / figures MCU.
+     * @returns fonction de désabonnement
+     */
+    public onMcuPinTableChange(listener: McuPinTableChangeListener): () => void {
+        this.mcuPinTableListeners.add(listener);
+        listener(this.getMcuPinConnectionTable());
+        return () => {
+            this.mcuPinTableListeners.delete(listener);
+        };
     }
 
     public undo(): void {
@@ -99,6 +188,7 @@ export class Editor {
             this.importSaveData(data, idMap);
         }
         this.getCommandStack().markSaveLocation?.();
+        this.invalidateMcuPinTable();
     }
 
     private importSaveData(data: EditorSaveData, idMap: Map<string, string> | null): void {
@@ -128,6 +218,9 @@ export class Editor {
                     con.setVertices(connectionData.svgPath);
                     markConnectionUserRouted(con);
                     this._canvas.add(con);
+                    if (connectionData.label) {
+                        addConnectionWireLabel(con, connectionData.label, { startEdit: false });
+                    }
                 }
             }
         }

@@ -3,6 +3,10 @@
  */
 import "./ui/css.styl"
 import { Catalog } from "./panels/catalog";
+import {
+    reportCatalogBoot,
+    type CatalogBootProgressCallback,
+} from "./panels/catalog-boot";
 import { Editor } from "./editor/editor";
 import i18next, { type TFunction } from "i18next";
 import { refreshWokwiComponentMaps } from "./panels/component";
@@ -12,12 +16,21 @@ import { applyDocumentLocale, normalizeHackCableLanguage } from "./ui/i18n/langu
 
 export { syncFritzingCatalog } from "./panels/fritzing-sync";
 export type { FritzingSyncProgress, FritzingSyncResult } from "./panels/fritzing-types";
+export type { CatalogBootProgress, CatalogBootProgressCallback } from "./panels/catalog-boot";
 export { initHackCableI18n } from "./ui/i18n/i18n-loader";
 export {
     HACKCABLE_LANGUAGES,
     normalizeHackCableLanguage,
     type HackCableLanguage,
 } from "./ui/i18n/languages";
+export { isMicrocontrollerBoard } from "./panels/component";
+export type {
+    McuBoardPinTable,
+    McuPinConnectionTable,
+    McuPinPeerConnection,
+    McuPinStatus,
+    McuPinTableChangeListener,
+} from "./editor/editor";
 
 import './jquery-ui-draggable';
 
@@ -25,31 +38,60 @@ export class HackCable {
     private readonly _catalog: Catalog;
     private readonly _editor: Editor;
 
-    constructor(mountDiv: HTMLElement, _language: string = "fr_fr") {
+    /**
+     * Préfère {@link HackCable.create} : le catalogue est construit par lots
+     * avec progression, pour ne pas figer l’UI au démarrage.
+     */
+    constructor(
+        mountDiv: HTMLElement,
+        _language: string = "fr_fr",
+        options?: { deferCatalogBuild?: boolean },
+    ) {
         if (!i18next.isInitialized) {
             throw new Error(
                 "HackCable: appelez d'abord await initHackCableI18n(lang) (voir web/index.ts)."
             );
         }
-        refreshWokwiComponentMaps();
+
+        // create() a déjà rafraîchi les maps ; sinon on le fait ici.
+        if (!options?.deferCatalogBuild) {
+            refreshWokwiComponentMaps();
+        }
 
         mountDiv.innerHTML = require('./ui/ui.html').default
         mountDiv.classList.add("hackCable-root");
 
-        this._catalog = new Catalog(this)
+        // Éditeur d’abord : le workspace (drop) est prêt pendant le montage du catalogue.
         this._editor = new Editor();
-        
+        this._catalog = new Catalog(this, { deferBuild: options?.deferCatalogBuild === true });
         this.setupResizer();
     }
 
-    public changeLanguage(language: string): Promise<TFunction> {
+    /**
+     * Monte HackCable et charge le catalogue par lots.
+     * @param onProgress progression 0..1 (maps → éléments → DOM)
+     */
+    static async create(
+        mountDiv: HTMLElement,
+        language: string = "fr_fr",
+        onProgress?: CatalogBootProgressCallback,
+    ): Promise<HackCable> {
+        reportCatalogBoot(onProgress, "maps", 0, 1);
+        refreshWokwiComponentMaps();
+        reportCatalogBoot(onProgress, "maps", 1, 1);
+
+        const hackCable = new HackCable(mountDiv, language, { deferCatalogBuild: true });
+        await hackCable._catalog.buildAsync(onProgress);
+        return hackCable;
+    }
+
+    public async changeLanguage(language: string): Promise<TFunction> {
         const code = normalizeHackCableLanguage(language) ?? "fr_fr";
-        return i18next.changeLanguage(code).then(() => {
-            refreshWokwiComponentMaps();
-            this._catalog.rebuildFromLocale();
-            applyDocumentLocale(code);
-            return i18next.t.bind(i18next);
-        });
+        await i18next.changeLanguage(code);
+        refreshWokwiComponentMaps();
+        await this._catalog.rebuildFromLocaleAsync();
+        applyDocumentLocale(code);
+        return i18next.t.bind(i18next);
     }
 
     public getLanguage(): string {
@@ -58,10 +100,11 @@ export class HackCable {
 
     public async updateFritzingCatalog(
         onProgress?: (progress: FritzingSyncProgress) => void,
+        onCatalogProgress?: CatalogBootProgressCallback,
     ): Promise<FritzingSyncResult> {
         const result = await syncFritzingCatalog(onProgress);
         refreshWokwiComponentMaps();
-        this._catalog.rebuildFromCatalog();
+        await this._catalog.rebuildFromCatalogAsync(onCatalogProgress);
         return result;
     }
 
@@ -107,5 +150,27 @@ export class HackCable {
     }
     public get editor() {
         return this._editor;
+    }
+
+    /** Table des broches MCU (connectées ou non) — API pour logiciels tiers (µcBlockly…). */
+    public getMcuPinConnectionTable() {
+        return this._editor.getMcuPinConnectionTable();
+    }
+
+    public getMcuBoardPinTable(figureId: string) {
+        return this._editor.getMcuBoardPinTable(figureId);
+    }
+
+    public getMcuPinStatus(figureId: string, pinKeyOrLabel: string) {
+        return this._editor.getMcuPinStatus(figureId, pinKeyOrLabel);
+    }
+
+    public isMcuPinConnected(figureId: string, pinKeyOrLabel: string) {
+        return this._editor.isMcuPinConnected(figureId, pinKeyOrLabel);
+    }
+
+    /** @returns désabonnement */
+    public onMcuPinTableChange(listener: (table: ReturnType<Editor["getMcuPinConnectionTable"]>) => void) {
+        return this._editor.onMcuPinTableChange(listener);
     }
 }

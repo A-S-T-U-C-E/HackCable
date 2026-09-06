@@ -13,7 +13,14 @@ import {
     getCatalogComponents,
     getComponentById,
     isFritzingComponent,
+    type CatalogComponentInfo,
 } from "./component";
+import {
+    CATALOG_BOOT_BATCH_SIZE,
+    reportCatalogBoot,
+    yieldToBrowser,
+    type CatalogBootProgressCallback,
+} from "./catalog-boot";
 import {
     FRITZING_CATEGORIES,
     compareFritzingCategories,
@@ -55,19 +62,20 @@ export class Catalog {
     private autoCollapseBound = false;
     private autoCollapseButton: HTMLButtonElement | undefined;
 
-    constructor(hackCable: { editor: Editor }) {
+    constructor(hackCable: { editor: Editor }, options?: { deferBuild?: boolean }) {
         this.hackCable = hackCable;
         this.autoCollapse = readAutoCollapsePreference();
-        this.reloadElements();
 
         const root = document.querySelector(".hackCable-catalog-list");
         const nav = document.querySelector(".hackCable-catalog-nav");
         if (root instanceof HTMLDivElement && nav instanceof HTMLElement) {
             this.catalog = root;
             this.nav = nav;
-            this.build();
             this.bindAutoCollapse();
             this.setListOpen(!this.autoCollapse);
+            if (!options?.deferBuild) {
+                void this.buildAsync();
+            }
         } else {
             console.error("[HackCable] Unable to find catalog list or category nav");
         }
@@ -102,12 +110,39 @@ export class Catalog {
     }
 
     reloadElements(): void {
-        this.elements = getCatalogComponents()
-            .filter((component) => {
+        this.elements = this.listCatalogComponents()
+            .map((component) => new ComponentElement(component));
+    }
+
+    /** Composants catalogue (évite un 2ᵉ parse localStorage si les maps sont déjà remplies). */
+    private listCatalogComponents(): CatalogComponentInfo[] {
+        const fromMaps = Object.values(catalogComponentById);
+        if (fromMaps.length > 0) {
+            return fromMaps.filter((component) => {
                 if (isFritzingComponent(component)) return true;
                 return component.type !== ComponentType.CARD;
-            })
-            .map((component) => new ComponentElement(component));
+            });
+        }
+        return getCatalogComponents().filter((component) => {
+            if (isFritzingComponent(component)) return true;
+            return component.type !== ComponentType.CARD;
+        });
+    }
+
+    private async reloadElementsAsync(onProgress?: CatalogBootProgressCallback): Promise<void> {
+        const components = this.listCatalogComponents();
+        const total = components.length;
+        this.elements = [];
+        reportCatalogBoot(onProgress, "elements", 0, total);
+
+        for (let i = 0; i < components.length; i += CATALOG_BOOT_BATCH_SIZE) {
+            const slice = components.slice(i, i + CATALOG_BOOT_BATCH_SIZE);
+            for (const component of slice) {
+                this.elements.push(new ComponentElement(component));
+            }
+            reportCatalogBoot(onProgress, "elements", Math.min(i + slice.length, total), total);
+            await yieldToBrowser();
+        }
     }
 
     private sideBar(): HTMLElement | null {
@@ -385,21 +420,32 @@ export class Catalog {
     }
 
     build(): void {
+        void this.buildAsync();
+    }
+
+    /** Construit nav + liste par lots (laisse le navigateur peindre entre les lots). */
+    async buildAsync(onProgress?: CatalogBootProgressCallback): Promise<void> {
+        await this.reloadElementsAsync(onProgress);
         this.buildCategoryNav();
-        this.updateCatalogList();
+        await this.updateCatalogListAsync(onProgress);
+        reportCatalogBoot(onProgress, "ready", 1, 1);
     }
 
     rebuildFromLocale(): void {
-        this.reloadElements();
-        this.buildCategoryNav();
-        this.updateCatalogList();
+        void this.rebuildFromLocaleAsync();
+    }
+
+    async rebuildFromLocaleAsync(onProgress?: CatalogBootProgressCallback): Promise<void> {
+        await this.buildAsync(onProgress);
         this.setListOpen(this.listOpen);
     }
 
     rebuildFromCatalog(): void {
-        this.reloadElements();
-        this.buildCategoryNav();
-        this.updateCatalogList();
+        void this.rebuildFromCatalogAsync();
+    }
+
+    async rebuildFromCatalogAsync(onProgress?: CatalogBootProgressCallback): Promise<void> {
+        await this.buildAsync(onProgress);
         this.setListOpen(this.listOpen);
     }
 
@@ -431,6 +477,10 @@ export class Catalog {
     }
 
     updateCatalogList(): void {
+        void this.updateCatalogListAsync();
+    }
+
+    async updateCatalogListAsync(onProgress?: CatalogBootProgressCallback): Promise<void> {
         if (this.catalog) this.catalog.innerHTML = "";
 
         const visible = this.elements
@@ -445,6 +495,12 @@ export class Catalog {
         }
 
         const categories = [...byCategory.keys()].sort(compareFritzingCategories);
+        const total = visible.length;
+        let mounted = 0;
+        reportCatalogBoot(onProgress, "mount", 0, total);
+
+        const fragment = document.createDocumentFragment();
+
         for (const category of categories) {
             const items = byCategory.get(category) ?? [];
             const section = document.createElement("section");
@@ -460,11 +516,22 @@ export class Catalog {
 
             const grid = document.createElement("div");
             grid.className = "hackCable-catalog-section-grid";
-            for (const element of items) {
-                this.mountComponentCard(element, grid);
+
+            for (let i = 0; i < items.length; i += CATALOG_BOOT_BATCH_SIZE) {
+                const slice = items.slice(i, i + CATALOG_BOOT_BATCH_SIZE);
+                for (const element of slice) {
+                    this.mountComponentCard(element, grid);
+                }
+                mounted += slice.length;
+                reportCatalogBoot(onProgress, "mount", mounted, total);
+                await yieldToBrowser();
             }
+
             section.appendChild(grid);
-            this.catalog?.appendChild(section);
+            fragment.appendChild(section);
         }
+
+        this.catalog?.appendChild(fragment);
+        reportCatalogBoot(onProgress, "mount", total, total);
     }
 }

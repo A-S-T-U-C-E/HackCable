@@ -9,8 +9,9 @@ import {
     normalizeHackCableLanguage,
     type HackCableLanguage,
 } from "../src/ui/i18n/languages";
-import { applyWebDemoUiI18n, buildHackCableSaveFilename, downloadJsonFile, formatSyncProgress, isEditorSaveData, resolveUiLanguage } from "./demo-utils";
+import { applyWebDemoUiI18n, buildHackCableExportFilename, buildHackCableSaveFilename, downloadDataUrl, downloadJsonFile, formatSyncProgress, isEditorSaveData, resolveUiLanguage } from "./demo-utils";
 import { askLoadMergeChoice } from "./load-merge-dialog";
+import { exportWorkspacePngDataUrl } from "../src/editor/workspace-export";
 import { readA11ySettings } from "./a11y-settings";
 import { writeUrlDemoOptions } from "./url-options";
 
@@ -126,6 +127,28 @@ export function setupSaveRestore(editor: Editor, signal: AbortSignal): HTMLInput
     }, { signal });
 
     return restoreFileInput;
+}
+
+export function setupExportImage(editor: Editor, signal: AbortSignal): void {
+    const button = document.getElementById("export-image");
+    if (!button) return;
+
+    const t = (key: string) => i18next.t(key, { ns: "common" });
+
+    button.addEventListener("click", () => {
+        void (async () => {
+            button.setAttribute("disabled", "true");
+            try {
+                const dataUrl = await exportWorkspacePngDataUrl(editor.canvas);
+                downloadDataUrl(buildHackCableExportFilename("png"), dataUrl);
+            } catch (error) {
+                const empty = error instanceof Error && error.message === "empty";
+                alert(empty ? t("web.exportEmpty") : t("web.exportFailed"));
+            } finally {
+                button.removeAttribute("disabled");
+            }
+        })();
+    }, { signal });
 }
 
 export function setupLanguageSelect(hackCable: HackCable, signal: AbortSignal): void {

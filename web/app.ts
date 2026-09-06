@@ -5,6 +5,7 @@ import { HackCable, initHackCableI18n } from "../src/main";
 import { isMinimapVisible, setMinimapVisible } from "../src/editor/canvas-minimap";
 import { setCatalogAutoCollapsePreference } from "../src/panels/catalog";
 import { normalizeHackCableLanguage } from "../src/ui/i18n/languages";
+import { applyWireRouterToCanvas } from "../src/editor/connection-router-preference";
 import {
     applyA11ySettings,
     normalizeA11ySettings,
@@ -12,10 +13,12 @@ import {
     writeA11ySettings,
 } from "./a11y-settings";
 import { setupA11yPanel } from "./a11y-panel";
+import { paintBeforeHeavyWork, showBootProgress } from "./boot-progress";
 import { applyWebDemoUiI18n, resolveUiLanguage } from "./demo-utils";
 import {
     setupCatalogUpdate,
     setupCatalogUrlSync,
+    setupExportImage,
     setupLanguageSelect,
     setupMinimapToggle,
     setupSaveRestore,
@@ -62,7 +65,16 @@ export async function mountWebDemoApp(): Promise<() => void> {
 
     await initHackCableI18n(lang, debugI18n);
 
-    const hackCable = new HackCable(mountingDiv, lang);
+    const boot = showBootProgress();
+    await paintBeforeHeavyWork();
+
+    let hackCable: HackCable;
+    try {
+        hackCable = await HackCable.create(mountingDiv, lang, (progress) => boot.update(progress));
+    } finally {
+        boot.close();
+    }
+
     applyWebDemoUiI18n();
 
     const syncUrl = () => {
@@ -76,12 +88,20 @@ export async function mountWebDemoApp(): Promise<() => void> {
 
     setupCatalogUpdate(hackCable, signal);
     const restoreFileInput = setupSaveRestore(hackCable.editor, signal);
+    setupExportImage(hackCable.editor, signal);
     setupLanguageSelect(hackCable, signal);
     setupMinimapToggle(hackCable, signal);
     setupUndoRedo(hackCable.editor, signal);
     setupCatalogUrlSync(hackCable);
 
-    const refreshA11yI18n = setupA11yPanel(signal, () => syncUrl());
+    let lastWireRouter = a11y.wireRouter;
+    const refreshA11yI18n = setupA11yPanel(signal, (settings) => {
+        if (settings.wireRouter !== lastWireRouter) {
+            lastWireRouter = settings.wireRouter;
+            applyWireRouterToCanvas(hackCable.editor.canvas, settings.wireRouter);
+        }
+        syncUrl();
+    });
 
     const languageSelect = document.getElementById("language-select");
     languageSelect?.addEventListener("change", () => {

@@ -18,6 +18,8 @@ import {
     fritzingDisplaySizeFromInches,
     fritzingPortDiameter,
 } from "./coordinate-port-locator";
+import { resolvePortConnectionDirection } from "./port-connection-direction";
+import { getConnectionWireLabelText } from "./connection-label";
 import { css, unitToPx } from "../utils/dom";
 import type { Port } from "draw2d-types";
 
@@ -35,6 +37,8 @@ export type WiringData = {
     fromPortName: string;
     targetFigure: string;
     targetPortName: string;
+    /** Texte du label sur le fil (optionnel). */
+    label?: string;
 };
 
 /** Pastille draw2d avec API étendue non couverte par draw2d-types. */
@@ -45,6 +49,7 @@ type HybridDraw2dPort = Port & {
     setVisible(visible: boolean): void;
     getDiameter?: () => number;
     getWidth?: () => number;
+    getConnectionDirection?: (peerPort?: unknown) => number;
     on(event: "connect" | "disconnect", handler: () => void): void;
 };
 
@@ -65,6 +70,8 @@ function wireHybridPort(port: HybridDraw2dPort, diameter: number, alpha = 0.8): 
     port.setCoronaWidth(coronaForDiameter(diameter));
     port.on("connect", () => port.setVisible(false));
     port.on("disconnect", () => port.setVisible(true));
+    // Bord le plus proche (pas le bug draw2d « intérieur → haut/bas »).
+    port.getConnectionDirection = () => resolvePortConnectionDirection(port);
 }
 
 /**
@@ -205,6 +212,8 @@ export class ComponentFigure extends draw2d.shape.basic.Rectangle {
         const canvas = this.getCanvas?.();
         const zoom = canvas && typeof canvas.getZoom === "function" ? canvas.getZoom() : 1;
         syncFigurePortHitTargets(this, zoom);
+        // Ports Fritzing prêts → table MCU peut se mettre à jour.
+        canvas?.fire?.("figure:ports", { figure: this });
     }
 
     private async loadFritzingSvg(component: FritzingComponentInfo, wrapper: HTMLElement): Promise<void> {
@@ -261,6 +270,15 @@ export class ComponentFigure extends draw2d.shape.basic.Rectangle {
 
     public onUnselected(): void {
         // Réservé pour un futur surlignage de sélection.
+    }
+
+    public getOverlayElement(): HTMLElement {
+        return this.overlay;
+    }
+
+    /** Métadonnées catalogue du composant (Wokwi ou Fritzing). */
+    public getComponentInfo(): CatalogComponentInfo {
+        return this.component;
     }
 
     public toFront(): void {
@@ -363,12 +381,14 @@ export class ComponentFigure extends draw2d.shape.basic.Rectangle {
         for (const sourcePort of this.hybridPorts.data as Port[]) {
             for (const connection of sourcePort.getConnections().data) {
                 if (connection.sourcePort !== sourcePort) continue;
+                const labelText = getConnectionWireLabelText(connection);
                 wiringData.push({
                     svgPath: connection.getVertices().data,
                     fromFigure: this.getId(),
                     fromPortName: sourcePort.getLocator().portId,
                     targetFigure: connection.getTarget().getParent().getId(),
                     targetPortName: connection.getTarget().getLocator().portId,
+                    ...(labelText ? { label: labelText } : {}),
                 });
             }
         }

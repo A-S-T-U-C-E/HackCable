@@ -20,6 +20,20 @@ export function downloadJsonFile(filename: string, data: unknown): void {
     const blob = new Blob([JSON.stringify(data, null, 2)], {
         type: "application/json;charset=utf-8",
     });
+    downloadBlob(filename, blob);
+}
+
+export function downloadDataUrl(filename: string, dataUrl: string): void {
+    const a = document.createElement("a");
+    a.href = dataUrl;
+    a.download = filename;
+    a.rel = "noopener";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+}
+
+export function downloadBlob(filename: string, blob: Blob): void {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -31,10 +45,19 @@ export function downloadJsonFile(filename: string, data: unknown): void {
     URL.revokeObjectURL(url);
 }
 
+export function downloadTextFile(filename: string, text: string, mime = "text/plain;charset=utf-8"): void {
+    downloadBlob(filename, new Blob([text], { type: mime }));
+}
+
 /** Nom de fichier de sauvegarde avec extension .hackcable. */
 export function buildHackCableSaveFilename(date = new Date()): string {
     const day = date.toISOString().slice(0, 10);
     return `hackcable-${day}.hackcable`;
+}
+
+export function buildHackCableExportFilename(ext: "png" | "svg", date = new Date()): string {
+    const day = date.toISOString().slice(0, 10);
+    return `hackcable-${day}.${ext}`;
 }
 
 export function resolveUiLanguage(): HackCableLanguage {
@@ -58,6 +81,7 @@ export function applyWebDemoUiI18n(): void {
     setBtn("update-catalog", "web.updateCatalog");
     setBtn("save", "web.save");
     setBtn("restore", "web.restore");
+    setBtn("export-image", "web.exportImage");
     setBtn("undo", "web.undo");
     setBtn("redo", "web.redo");
     setBtn("a11y-open", "a11y.open");

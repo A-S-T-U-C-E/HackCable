@@ -9,7 +9,14 @@ import {
     hitConnectionSegment,
     removeConnectionSegment,
     splitConnectionSegment,
+    supportsOrthogonalSegmentEdit,
 } from "./connection-router";
+import {
+    addConnectionWireLabel,
+    getConnectionWireLabel,
+    removeConnectionWireLabel,
+} from "./connection-label";
+import { downloadWorkspaceSvg } from "./workspace-export";
 import { tr } from "../ui/i18n/translate";
 
 type Removable = { kind: "component"; target: ComponentFigure } | { kind: "connection"; target: unknown };
@@ -101,7 +108,8 @@ export function setupDraw2dContextMenu(canvas: any): () => void {
             });
         } else if (onConnection) {
             const conn = onConnection as Parameters<typeof hitConnectionSegment>[0] &
-                Parameters<typeof canRemoveConnectionSegment>[0] & {
+                Parameters<typeof canRemoveConnectionSegment>[0] &
+                Parameters<typeof supportsOrthogonalSegmentEdit>[0] & {
                     getCanvas?: () => { setCurrentSelection?: (f: unknown) => void };
                 };
             const segment = hitConnectionSegment(conn, canvasX, canvasY);
@@ -110,7 +118,22 @@ export function setupDraw2dContextMenu(canvas: any): () => void {
                 deleteFigureWithUndo(onConnection);
             });
 
-            if (segment) {
+            const hasLabel = Boolean(getConnectionWireLabel(onConnection));
+            if (hasLabel) {
+                addItem(tr("web.ctxEditLabel"), () => {
+                    const label = getConnectionWireLabel(onConnection);
+                    label?.editor?.start?.(label);
+                });
+                addItem(tr("web.ctxRemoveLabel"), () => {
+                    removeConnectionWireLabel(onConnection);
+                });
+            } else {
+                addItem(tr("web.ctxAddLabel"), () => {
+                    addConnectionWireLabel(onConnection);
+                });
+            }
+
+            if (segment && supportsOrthogonalSegmentEdit(conn)) {
                 addItem(tr("web.ctxAddSegment"), () => {
                     splitConnectionSegment(onConnection, segment.index, canvasX, canvasY);
                     const host = conn.getCanvas?.();
@@ -136,6 +159,17 @@ export function setupDraw2dContextMenu(canvas: any): () => void {
 
         addItem(tr("canvas.zoomToFit"), () => {
             canvas.zoomToFit();
+        });
+
+        addItem(tr("web.ctxExportSvg"), () => {
+            void (async () => {
+                try {
+                    await downloadWorkspaceSvg(canvas);
+                } catch (error) {
+                    const empty = error instanceof Error && error.message === "empty";
+                    alert(empty ? tr("web.exportEmpty") : tr("web.exportFailed"));
+                }
+            })();
         });
 
         menu.hidden = false;

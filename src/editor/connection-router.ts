@@ -3,6 +3,12 @@
  * @see https://freegroup.github.io/draw2d/#/examples/connection_segment_handling
  */
 import draw2d from "draw2d";
+import { segmentMatchesExitDirection } from "./port-connection-direction";
+import {
+    createWireRouterInstance,
+    getPreferredWireRouterId,
+    registerBridgedInteractiveRouterFactory,
+} from "./connection-router-preference";
 
 type Point2 = { x: number; y: number };
 type IntersectionPoint = Point2 & {
@@ -22,9 +28,71 @@ type WiringConnection = {
         getSize: () => number;
         get: (i: number) => Point2;
     };
+    getSource?: () => { getConnectionDirection: (peer: unknown) => number };
+    getTarget?: () => { getConnectionDirection: (peer: unknown) => number };
     svgPathString: string;
-    _routingMetaData?: { routedByUserInteraction?: boolean };
+    routingRequired?: boolean;
+    _routingMetaData?: {
+        routedByUserInteraction?: boolean;
+        fromDir?: number;
+        toDir?: number;
+    };
 };
+
+type VertexList = {
+    getSize: () => number;
+    get: (i: number) => Point2;
+};
+
+/**
+ * Si la sortie du port ne correspond plus au premier/dernier segment
+ * (ex. pastille latérale routée vers le bas), repasser en autoroute.
+ * @returns true si un recalcul a été demandé
+ */
+export function ensureOrthogonalPortExits(conn: WiringConnection): boolean {
+    const meta = conn._routingMetaData;
+    if (!meta?.routedByUserInteraction) return false;
+    const source = conn.getSource?.();
+    const target = conn.getTarget?.();
+    if (!source || !target) return false;
+
+    const verts = conn.getVertices();
+    if (!verts || verts.getSize() < 2) return false;
+
+    const fromDir = source.getConnectionDirection(target);
+    const toDir = target.getConnectionDirection(source);
+    const n = verts.getSize();
+    const startOk = segmentMatchesExitDirection(verts.get(0), verts.get(1), fromDir);
+    const endOk = segmentMatchesExitDirection(verts.get(n - 1), verts.get(n - 2), toDir);
+    if (startOk && endOk) return false;
+
+    meta.routedByUserInteraction = false;
+    conn.routingRequired = true;
+    return true;
+}
+
+function clearUserRoutingIfStubMismatch(
+    conn: WiringConnection,
+    oldVertices?: VertexList | null,
+): void {
+    const meta = conn._routingMetaData;
+    if (!meta?.routedByUserInteraction) return;
+    const source = conn.getSource?.();
+    const target = conn.getTarget?.();
+    if (!source || !target) return;
+
+    const verts = oldVertices && oldVertices.getSize() > 0 ? oldVertices : conn.getVertices();
+    if (!verts || verts.getSize() < 2) return;
+
+    const fromDir = source.getConnectionDirection(target);
+    const toDir = target.getConnectionDirection(source);
+    const n = verts.getSize();
+    const startOk = segmentMatchesExitDirection(verts.get(0), verts.get(1), fromDir);
+    const endOk = segmentMatchesExitDirection(verts.get(n - 1), verts.get(n - 2), toDir);
+    if (!startOk || !endOk) {
+        meta.routedByUserInteraction = false;
+    }
+}
 
 const BRIDGE_HALF = 7;
 const BRIDGE_HUMP = 6;
@@ -154,6 +222,13 @@ export const BridgedInteractiveManhattanRouter =
     draw2d.layout.connection.InteractiveManhattanConnectionRouter.extend({
         NAME: "hackCable.BridgedInteractiveManhattanRouter",
 
+        route(conn: WiringConnection, routingHints: { oldVertices?: VertexList }) {
+            const hints = routingHints ?? {};
+            clearUserRoutingIfStubMismatch(conn, hints.oldVertices);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            return (this as any)._super(conn, hints);
+        },
+
         _paint(conn: WiringConnection) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             paintConnectionWithBridges(conn, () => (this as any)._super(conn));
@@ -164,10 +239,20 @@ export const BridgedInteractiveManhattanRouter =
 export function markConnectionUserRouted(conn: {
     _routingMetaData?: { routedByUserInteraction?: boolean; fromDir?: number; toDir?: number };
 }): void {
+    ensureRoutingMetaData(conn);
+    conn._routingMetaData!.routedByUserInteraction = true;
+}
+
+/** draw2d.splitSegment exige `_routingMetaData` (créé par InteractiveManhattan.onInstall). */
+export function ensureRoutingMetaData(conn: {
+    _routingMetaData?: { routedByUserInteraction?: boolean; fromDir?: number; toDir?: number };
+}): void {
     if (!conn._routingMetaData) {
-        conn._routingMetaData = { routedByUserInteraction: true, fromDir: -1, toDir: -1 };
-    } else {
-        conn._routingMetaData.routedByUserInteraction = true;
+        conn._routingMetaData = {
+            routedByUserInteraction: false,
+            fromDir: -1,
+            toDir: -1,
+        };
     }
 }
 
@@ -187,11 +272,23 @@ export function hitConnectionSegment(
     return conn.hitSegment(x, y) ?? null;
 }
 
+/** Routeurs Manhattan interactifs : édition de segments (split / remove). */
+export function supportsOrthogonalSegmentEdit(conn: {
+    getRouter?: () => { canRemoveSegmentAt?: (c: unknown, index: number) => boolean; NAME?: string };
+}): boolean {
+    const router = conn.getRouter?.();
+    if (!router) return false;
+    if (typeof router.canRemoveSegmentAt === "function") return true;
+    const name = String(router.NAME ?? "");
+    return name.includes("InteractiveManhattan");
+}
+
 /** Peut-on supprimer le segment (règles InteractiveManhattan) ? */
 export function canRemoveConnectionSegment(
     conn: { getRouter?: () => { canRemoveSegmentAt?: (c: unknown, index: number) => boolean } },
     segmentIndex: number,
 ): boolean {
+    if (!supportsOrthogonalSegmentEdit(conn)) return false;
     const router = conn.getRouter?.();
     if (!router || typeof router.canRemoveSegmentAt !== "function") return false;
     return router.canRemoveSegmentAt(conn, segmentIndex) === true;
@@ -204,22 +301,26 @@ export function splitConnectionSegment(
     x: number,
     y: number,
 ): void {
+    ensureRoutingMetaData(conn as WiringConnection);
     segmentPolicy.splitSegment(conn, segmentIndex, x, y);
     markConnectionUserRouted(conn as WiringConnection);
 }
 
 /** Supprime un segment orthogonal. */
 export function removeConnectionSegment(conn: unknown, segmentIndex: number): void {
+    ensureRoutingMetaData(conn as WiringConnection);
     segmentPolicy.removeSegment(conn, segmentIndex);
     markConnectionUserRouted(conn as WiringConnection);
 }
 
-/** Crée une connexion câblage Manhattan interactive + ponts. */
+/** Crée une connexion câblage avec le routeur préféré. */
 export function createWiringConnection(): InstanceType<typeof draw2d.Connection> {
     return new draw2d.Connection({
-        router: new BridgedInteractiveManhattanRouter(),
+        router: createWireRouterInstance(getPreferredWireRouterId()),
         stroke: 2,
         color: "#2c70ff",
         radius: 3,
     });
 }
+
+registerBridgedInteractiveRouterFactory(() => new BridgedInteractiveManhattanRouter());

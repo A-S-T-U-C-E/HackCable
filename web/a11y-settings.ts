@@ -1,8 +1,16 @@
 /**
- * @file Options d’accessibilité (labels, police, interligne, focus, couleur UI).
+ * @file Options d’accessibilité (labels, police, interligne, focus, couleur UI, routeur).
  */
+import {
+    DEFAULT_WIRE_ROUTER,
+    normalizeWireRouterId,
+    setPreferredWireRouterId,
+    type WireRouterId,
+} from "../src/editor/connection-router-preference";
+
 export type A11yLabelMode = "icons" | "text" | "both";
 export type A11yTextAlign = "start" | "justify";
+export type { WireRouterId };
 
 export interface A11ySettings {
     labels: A11yLabelMode;
@@ -12,6 +20,8 @@ export interface A11ySettings {
     align: A11yTextAlign;
     strongFocus: boolean;
     accent: string;
+    /** Algorithme de tracé des fils (draw2d connection router). */
+    wireRouter: WireRouterId;
 }
 
 export const A11Y_STORAGE_KEY = "hackCable-a11y-settings";
@@ -35,6 +45,7 @@ export const DEFAULT_A11Y_SETTINGS: A11ySettings = {
     align: "start",
     strongFocus: false,
     accent: "#2c70ff",
+    wireRouter: DEFAULT_WIRE_ROUTER,
 };
 
 function clamp(n: number, min: number, max: number): number {
@@ -72,6 +83,7 @@ export function normalizeA11ySettings(partial: Partial<A11ySettings> | null | un
         align: isAlign(base.align) ? base.align : DEFAULT_A11Y_SETTINGS.align,
         strongFocus: Boolean(base.strongFocus),
         accent: normalizeAccent(String(base.accent ?? DEFAULT_A11Y_SETTINGS.accent)),
+        wireRouter: normalizeWireRouterId(base.wireRouter),
     };
 }
 
@@ -177,6 +189,8 @@ export function applyA11ySettings(settings: A11ySettings): void {
     root.dataset.a11yLabels = s.labels;
     root.dataset.a11yStrongFocus = s.strongFocus ? "true" : "false";
     root.dataset.a11yAlign = s.align;
+    root.dataset.a11yWireRouter = s.wireRouter;
+    setPreferredWireRouterId(s.wireRouter);
 
     document.dispatchEvent(new CustomEvent("hackcable:a11y-changed", { detail: s }));
 }
@@ -208,6 +222,9 @@ export function parseA11yFromUrlParams(params: URLSearchParams): Partial<A11ySet
     const accent = params.get("accent") ?? params.get("color") ?? params.get("couleur");
     if (accent) partial.accent = decodeURIComponent(accent.startsWith("#") ? accent : `#${accent}`);
 
+    const wireRouter = params.get("router") ?? params.get("wireRouter") ?? params.get("wirerouter");
+    if (wireRouter) partial.wireRouter = normalizeWireRouterId(decodeURIComponent(wireRouter));
+
     return partial;
 }
 
@@ -220,4 +237,5 @@ export function writeA11yToUrlParams(params: URLSearchParams, settings: A11ySett
     params.set("align", s.align);
     params.set("focus", s.strongFocus ? "1" : "0");
     params.set("accent", s.accent.replace(/^#/, ""));
+    params.set("router", s.wireRouter);
 }

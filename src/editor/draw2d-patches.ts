@@ -2,6 +2,7 @@
  * @file Correctifs draw2d (bugs command stack / vertices).
  */
 import draw2d from "draw2d";
+import { ensureOrthogonalPortExits, markConnectionUserRouted } from "./connection-router";
 
 let patched = false;
 
@@ -59,15 +60,30 @@ export function patchDraw2dCommandStack(): void {
     const MoveVertex = draw2d.command.CommandMoveVertex;
     if (MoveVertex?.prototype) {
         const mvProto = MoveVertex.prototype as {
-            redo: (this: { newPoint: { x: number; y: number } | null }) => void;
+            redo: (this: { newPoint: { x: number; y: number } | null; line?: unknown }) => void;
             newPoint: { x: number; y: number } | null;
+            line?: unknown;
         };
         const originalMvRedo = mvProto.redo;
-        mvProto.redo = function (this: { newPoint: { x: number; y: number } | null }) {
+        mvProto.redo = function (this: { newPoint: { x: number; y: number } | null; line?: unknown }) {
             if (this.newPoint == null) return;
             originalMvRedo.call(this);
+            if (this.line) markConnectionUserRouted(this.line);
         };
     }
+
+    // Édition libre des sommets (VertexSelectionFeedbackPolicy) : conserver le tracé.
+    const markLineAfterRedo = (Ctor: { prototype?: { redo?: (this: { line?: unknown }) => void } } | undefined) => {
+        if (!Ctor?.prototype?.redo) return;
+        const proto = Ctor.prototype;
+        const originalRedo = proto.redo!;
+        proto.redo = function (this: { line?: unknown }) {
+            originalRedo.call(this);
+            if (this.line) markConnectionUserRouted(this.line);
+        };
+    };
+    markLineAfterRedo(draw2d.command.CommandAddVertex);
+    markLineAfterRedo(draw2d.command.CommandRemoveVertex);
 
     // InteractiveManhattanConnectionRouter.route contient un `debugger` si oldVertices manque.
     const Interactive = draw2d.layout.connection.InteractiveManhattanConnectionRouter;
@@ -94,6 +110,24 @@ export function patchDraw2dCommandStack(): void {
     if (Ortho?.prototype) {
         Ortho.prototype.onRightMouseDown = function onRightMouseDown() {
             // no-op — segments gérés via canvas-context-menu.ts
+        };
+
+        // Sortie non orthogonale (port latéral → segment vertical) : recalcule avant les poignées.
+        const origOnSelect = Ortho.prototype.onSelect;
+        Ortho.prototype.onSelect = function onSelect(
+            this: unknown,
+            canvas: unknown,
+            connection: {
+                routingRequired?: boolean;
+                repaint?: () => void;
+                _routingMetaData?: { routedByUserInteraction?: boolean };
+            },
+            isPrimarySelection: boolean,
+        ) {
+            if (ensureOrthogonalPortExits(connection as Parameters<typeof ensureOrthogonalPortExits>[0])) {
+                connection.repaint?.();
+            }
+            return origOnSelect.call(this, canvas, connection, isPrimarySelection);
         };
     }
 }

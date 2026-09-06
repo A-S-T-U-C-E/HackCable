@@ -10,6 +10,7 @@ import {
     readA11ySettings,
     writeA11ySettings,
 } from "./a11y-settings";
+import { WIRE_ROUTER_OPTIONS } from "../src/editor/connection-router-preference";
 
 type OnChange = (settings: A11ySettings) => void;
 
@@ -161,6 +162,20 @@ export function setupA11yPanel(signal: AbortSignal, onChange: OnChange): () => v
         accentInput.id = "a11y-accent";
         accentInput.value = settings.accent;
 
+        // Wire router (draw2d connection algorithms)
+        const routerLabel = document.createElement("label");
+        routerLabel.htmlFor = "a11y-wire-router";
+        routerLabel.textContent = t("a11y.wireRouter");
+        const routerSelect = document.createElement("select");
+        routerSelect.id = "a11y-wire-router";
+        for (const option of WIRE_ROUTER_OPTIONS) {
+            const opt = document.createElement("option");
+            opt.value = option.id;
+            opt.textContent = t(option.labelKey);
+            if (settings.wireRouter === option.id) opt.selected = true;
+            routerSelect.appendChild(opt);
+        }
+
         const commit = () => {
             settings = normalizeA11ySettings({
                 labels: labelsSelect.value as A11ySettings["labels"],
@@ -170,6 +185,7 @@ export function setupA11yPanel(signal: AbortSignal, onChange: OnChange): () => v
                 align: alignSelect.value as A11ySettings["align"],
                 strongFocus: focusInput.checked,
                 accent: accentInput.value,
+                wireRouter: routerSelect.value as A11ySettings["wireRouter"],
             });
             sizeValue.textContent = `${settings.fontSize}px`;
             lhValue.textContent = settings.lineHeight.toFixed(2);
@@ -185,6 +201,7 @@ export function setupA11yPanel(signal: AbortSignal, onChange: OnChange): () => v
         alignSelect.addEventListener("change", commit);
         focusInput.addEventListener("change", commit);
         accentInput.addEventListener("input", commit);
+        routerSelect.addEventListener("change", commit);
 
         const actions = document.createElement("div");
         actions.className = "hackCable-a11y-actions";
@@ -216,6 +233,7 @@ export function setupA11yPanel(signal: AbortSignal, onChange: OnChange): () => v
             fieldRow(alignLabel, alignSelect),
             focusWrap,
             fieldRow(accentLabel, accentInput),
+            fieldRow(routerLabel, routerSelect),
             actions,
         );
 

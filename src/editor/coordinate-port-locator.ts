@@ -24,8 +24,9 @@ export function fritzingDisplaySize(viewBoxWidth: number, viewBoxHeight: number)
 /** Port positionné en coordonnées absolues (composants Wokwi). */
 export class CoordinatePortLocator extends draw2d.layout.locator.PortLocator {
     public readonly portId: string;
-    private readonly x: number;
-    private readonly y: number;
+    /** Coordonnées locales (avant rotation) pour la direction de sortie des fils. */
+    public readonly x: number;
+    public readonly y: number;
 
     constructor(portId: string, x: number, y: number) {
         super();
@@ -43,8 +44,9 @@ export class CoordinatePortLocator extends draw2d.layout.locator.PortLocator {
 /** Port positionné en % de la largeur/hauteur du composant (composants Fritzing). */
 export class PercentPortLocator extends draw2d.layout.locator.PortLocator {
     public readonly portId: string;
-    private readonly xPercent: number;
-    private readonly yPercent: number;
+    /** Position relative (%) pour la direction de sortie des fils. */
+    public readonly xPercent: number;
+    public readonly yPercent: number;
 
     constructor(portId: string, xPercent: number, yPercent: number) {
         super();

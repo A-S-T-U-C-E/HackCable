@@ -47,3 +47,8 @@ Build ou serveur de dev pour la page web :
 
 - `build:web`
 - `serve:web`
+
+## Documentation
+
+- [Algorithmes de tracé des fils](docs/wire-routers.md) — différences entre les routeurs draw2d (Manhattan, ponts, labyrinthe, etc.)
+- [API table des broches MCU](docs/mcu-pin-api.md) — broches connectées ou non, pour logiciels tiers (µcBlockly…)
