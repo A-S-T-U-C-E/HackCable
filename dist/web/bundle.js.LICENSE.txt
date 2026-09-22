@@ -3082,6 +3082,17 @@
  * Copyright (c) 2021, Clément Grennerat
  * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
  *
+ * @file Feedback de sélection (fourmis bleues) compatible rotation pure.
+ *
+ * draw2d.Rectangle applique un scale à 90°/270° qui garde l’AABB largeur×hauteur.
+ * Après rotation réelle du composant, ce cadre restait « à plat » à l’ancien emplacement.
+ */
+
+/**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
  * @file Figure draw2d pour un composant catalogue (overlay Wokwi ou SVG Fritzing).
  *
  * Responsabilités :
@@ -3174,18 +3185,6 @@
  * - `CoordinatePortLocator` (Wokwi, px absolus)
  * - `PercentPortLocator` (Fritzing, % largeur/hauteur)
  * - Conversion pouces physiques → pixels canvas
- */
-
-/**
- * @license GPL-3.0-or-later
- * Copyright (c) 2021, Clément Grennerat
- * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
- *
- * @file Menu contextuel (clic droit) sur le canvas draw2d.
- *
- * Responsabilités :
- * - Afficher actions figure / fil / plan (supprimer, label, etc.)
- * - Positionner le menu hors overflow du viewport
  */
 
 /**
