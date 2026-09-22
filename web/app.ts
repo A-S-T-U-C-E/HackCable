@@ -14,14 +14,7 @@ import { HackCable, initHackCableI18n } from "../src/main";
 import { isMinimapVisible, setMinimapVisible } from "../src/editor/canvas-minimap";
 import { setCatalogAutoCollapsePreference } from "../src/panels/catalog";
 import { normalizeHackCableLanguage } from "../src/ui/i18n/languages";
-import { createWiringConnection } from "../src/editor/connection-router";
-import {
-    addConnectionWireLabel,
-    getConnectionWireLabel,
-    removeConnectionWireLabel,
-} from "../src/editor/connection-label";
 import { applyWireRouterToCanvas } from "../src/editor/connection-router-preference";
-import type { ComponentFigure } from "../src/editor/component-figure";
 import {
     applyA11ySettings,
     normalizeA11ySettings,
@@ -113,132 +106,6 @@ export async function mountWebDemoApp(): Promise<() => void> {
     setupMinimapToggle(hackCable, signal);
     setupUndoRedo(hackCable.editor, signal);
     setupCatalogUrlSync(hackCable);
-
-    // Hook réservé à `scripts/record-demo.mjs` (?record=1) : câblage fiable + liste des ports.
-    if (new URLSearchParams(window.location.search).get("record") === "1") {
-        (window as unknown as { __hackCableRecord?: unknown }).__hackCableRecord = {
-            listFigures() {
-                return hackCable.editor.canvas.getFigures().data
-                    .filter((f: unknown): f is ComponentFigure =>
-                        typeof (f as ComponentFigure).getComponentInfo === "function")
-                    .map((figure) => {
-                        const info = figure.getComponentInfo();
-                        const ports = figure.getHybridPorts().map((port) => {
-                            const abs = port.getAbsoluteX && port.getAbsoluteY
-                                ? { x: port.getAbsoluteX(), y: port.getAbsoluteY() }
-                                : { x: 0, y: 0 };
-                            return {
-                                name: port.getLocator?.()?.portId ?? port.getName?.() ?? "",
-                                canvasX: abs.x,
-                                canvasY: abs.y,
-                            };
-                        });
-                        return {
-                            id: figure.getId(),
-                            componentId: info.id,
-                            name: info.name,
-                            x: figure.getX(),
-                            y: figure.getY(),
-                            ports,
-                        };
-                    });
-            },
-            connect(fromFigureId: string, fromPort: string, toFigureId: string, toPort: string) {
-                const canvas = hackCable.editor.canvas;
-                const sourceFigure = canvas.getFigure(fromFigureId) as ComponentFigure | null;
-                const targetFigure = canvas.getFigure(toFigureId) as ComponentFigure | null;
-                if (!sourceFigure || !targetFigure) return null;
-                const sourcePort = sourceFigure.getPortByName(fromPort);
-                const targetPort = targetFigure.getPortByName(toPort);
-                if (!sourcePort || !targetPort) return null;
-                const con = createWiringConnection();
-                con.setSource(sourcePort);
-                con.setTarget(targetPort);
-                canvas.add(con);
-                return con.getId?.() ?? true;
-            },
-            clearDanglingConnections() {
-                const canvas = hackCable.editor.canvas;
-                const lines = [...(canvas.getLines?.().data ?? [])];
-                for (const line of lines) {
-                    const src = line.getSource?.();
-                    const tgt = line.getTarget?.();
-                    if (!src || !tgt) {
-                        canvas.remove(line);
-                    }
-                }
-            },
-            canvasToPage(canvasX: number, canvasY: number) {
-                const canvas = hackCable.editor.canvas;
-                const doc = canvas.fromCanvasToDocumentCoordinate(canvasX, canvasY);
-                return { x: doc.getX?.() ?? doc.x, y: doc.getY?.() ?? doc.y };
-            },
-            figurePageCenter(figureId: string) {
-                const canvas = hackCable.editor.canvas;
-                const figure = canvas.getFigure(figureId) as ComponentFigure | null;
-                if (!figure) return null;
-                const cx = figure.getAbsoluteX() + figure.getWidth() / 2;
-                const cy = figure.getAbsoluteY() + figure.getHeight() / 2;
-                const doc = canvas.fromCanvasToDocumentCoordinate(cx, cy);
-                return { x: doc.getX?.() ?? doc.x, y: doc.getY?.() ?? doc.y };
-            },
-            /** Point page sur le plus long segment d’une connexion (clic droit fil). */
-            connectionClickPage(connectionIndex = 0) {
-                const canvas = hackCable.editor.canvas;
-                const lines = canvas.getLines?.().data ?? [];
-                const line = lines[connectionIndex];
-                if (!line) return null;
-                const verts = line.getVertices?.();
-                if (!verts || verts.getSize() < 2) return null;
-                let best = { len: -1, x: 0, y: 0, canvasX: 0, canvasY: 0 };
-                for (let i = 0; i < verts.getSize() - 1; i++) {
-                    const a = verts.get(i);
-                    const b = verts.get(i + 1);
-                    const dx = b.x - a.x;
-                    const dy = b.y - a.y;
-                    const len = Math.hypot(dx, dy);
-                    if (len > best.len) {
-                        const canvasX = a.x + dx * 0.5;
-                        const canvasY = a.y + dy * 0.5;
-                        best = { len, canvasX, canvasY, x: 0, y: 0 };
-                    }
-                }
-                const doc = canvas.fromCanvasToDocumentCoordinate(best.canvasX, best.canvasY);
-                return {
-                    x: doc.getX?.() ?? doc.x,
-                    y: doc.getY?.() ?? doc.y,
-                    canvasX: best.canvasX,
-                    canvasY: best.canvasY,
-                    id: line.getId?.() ?? String(connectionIndex),
-                };
-            },
-            connectionCount() {
-                return hackCable.editor.canvas.getLines?.().data?.length ?? 0;
-            },
-            setWireLabel(connectionIndex: number, text: string, startEdit = false) {
-                const lines = hackCable.editor.canvas.getLines?.().data ?? [];
-                const line = lines[connectionIndex];
-                if (!line) return false;
-                addConnectionWireLabel(line, text, { startEdit });
-                return true;
-            },
-            removeWireLabel(connectionIndex: number) {
-                const lines = hackCable.editor.canvas.getLines?.().data ?? [];
-                const line = lines[connectionIndex];
-                if (!line) return false;
-                return removeConnectionWireLabel(line);
-            },
-            startWireLabelEdit(connectionIndex: number) {
-                const lines = hackCable.editor.canvas.getLines?.().data ?? [];
-                const line = lines[connectionIndex];
-                if (!line) return false;
-                const label = getConnectionWireLabel(line);
-                if (!label?.editor?.start) return false;
-                label.editor.start(label);
-                return true;
-            },
-        };
-    }
 
     let lastWireRouter = a11y.wireRouter;
     const refreshA11yI18n = setupA11yPanel(signal, (settings) => {

@@ -12,9 +12,7 @@
     "build:web": "webpack --mode=production --config ./webpack.config.web.js",
     "serve:web": "npx webpack serve --mode=development --config ./webpack.config.web.js",
     "docs": "node scripts/generate-docs.mjs",
-    "docs:watch": "node --watch-path=src scripts/generate-docs.mjs",
-    "demo:record": "node scripts/record-demo.mjs",
-    "demo:record:ctx": "node scripts/record-demo-context-menu.mjs"
+    "docs:watch": "node --watch-path=src scripts/generate-docs.mjs"
   },
   "exports": {
     ".": "./dist/src/bundle.js"
@@ -49,7 +47,6 @@
     "draw2d-types": "^1.0.3",
     "html-loader": "^5.1.0",
     "html-webpack-plugin": "^5.6.8",
-    "playwright": "^1.63.0",
     "style-loader": "^4.0.0",
     "stylus": "^0.64.0",
     "stylus-loader": "^9.0.0",

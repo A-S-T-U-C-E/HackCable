@@ -50,7 +50,7 @@ Démo en ligne : [a-s-t-u-c-e.github.io/HackCable](https://a-s-t-u-c-e.github.io
 | Broches MCU connectées ? | `src/editor/mcu-pin/` + [mcu-pin-api.md](mcu-pin-api.md) |
 | Tracé des fils | `src/editor/connection-router*.ts` + [wire-routers.md](wire-routers.md) |
 | Catalogue Wokwi / Fritzing | `src/panels/` |
-| Démos vidéo | [demo/README.md](demo/README.md) + `docs/demo/*.mp4` |
+| Démos vidéo | [demo/README.md](demo/README.md) (PeerTube) |
 | Page démo | `web/` |
 | Traductions | `src/ui/i18n/*.json` |
 

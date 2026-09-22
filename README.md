@@ -1,13 +1,20 @@
 # HackCable
 
-<p align="center">
-  <img src="web/assets/icon.png" alt="Logo HackCable" width="128" height="128" />
-</p>
+<table>
+  <tr>
+    <td width="148" valign="middle">
+      <img src="web/assets/icon.png" alt="Logo HackCable" width="128" height="128" />
+    </td>
+    <td valign="middle">
 
 Éditeur de câblage électronique (Arduino, ESP32, et catalogue Fritzing) : placez des composants, tirez des fils, exportez le schéma.
 
 **Dépôt de ce fork :** [github.com/A-S-T-U-C-E/HackCable](https://github.com/A-S-T-U-C-E/HackCable)  
 **Démo en ligne :** [a-s-t-u-c-e.github.io/HackCable](https://a-s-t-u-c-e.github.io/HackCable/)
+
+</td>
+  </tr>
+</table>
 
 ## Origine (projet amont)
 
@@ -56,17 +63,12 @@ Documentation API (JSDoc → Markdown/HTML) :
 - `docs` — génère `docs/api/`
 - `docs:watch` — régénère à chaque changement sous `src/`
 
-Démos vidéo (Playwright, serveur `:9000` requis) :
-
-- `demo:record` — scénario découverte
-- `demo:record:ctx` — menu contextuel
-
 ## Démo vidéo
 
-- [1. Découverte](docs/demo/1.decouverte.mp4) — catalogue, placement, câblage  
-- [2. Survol des fonctions](docs/demo/2.survol_de_fonctions.mp4) — menu contextuel et actions du plan  
+- [Découverte du logiciel](https://tube-sciences-technologies.apps.education.fr/w/1Yh5aTkkDMhW3VFuWXPmm3) — catalogue, placement, câblage  
+- [Quelques fonctions essentielles](https://tube-sciences-technologies.apps.education.fr/w/ow3MJ9848d1KwZnhZNAFPE) — menu contextuel et actions du plan  
 
-Détails et régénération : [docs/demo/README.md](docs/demo/README.md).
+Plus de détails : [docs/demo/README.md](docs/demo/README.md).
 
 ## Documentation
 
