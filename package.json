@@ -1,7 +1,7 @@
 {
   "name": "hackcable",
   "version": "1.0.0",
-  "description": "Arduino and ESP32 Components wiring",
+  "description": "Arduino and ESP32 components wiring editor",
   "main": "dist/src/bundle.js",
   "types": "dist/types/src/main.d.ts",
   "scripts": {

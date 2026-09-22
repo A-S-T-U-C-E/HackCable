@@ -34,7 +34,10 @@ npm run docs:watch
 ```
 
 Génère la référence dans `docs/api/` (Markdown par module + `index.html`), à partir des JSDoc `@param` / `@returns`.
-Le dossier `docs/api/` est ignoré par git (régénérable).
+Le dossier `docs/api/` est ignoré par git (régénérable).  
+Entrée documentée : [api-reference.md](api-reference.md).
+
+Démo en ligne : [a-s-t-u-c-e.github.io/HackCable](https://a-s-t-u-c-e.github.io/HackCable/).
 
 ## Où chercher quoi
 
@@ -47,6 +50,7 @@ Le dossier `docs/api/` est ignoré par git (régénérable).
 | Broches MCU connectées ? | `src/editor/mcu-pin/` + [mcu-pin-api.md](mcu-pin-api.md) |
 | Tracé des fils | `src/editor/connection-router*.ts` + [wire-routers.md](wire-routers.md) |
 | Catalogue Wokwi / Fritzing | `src/panels/` |
+| Démos vidéo | [demo/README.md](demo/README.md) + `docs/demo/*.mp4` |
 | Page démo | `web/` |
 | Traductions | `src/ui/i18n/*.json` |
 
@@ -101,4 +105,6 @@ connection-router.ts           ← Manhattan interactif + ponts (défaut)
 
 - [Architecture](architecture.md)
 - [API broches MCU](mcu-pin-api.md)
+- [Référence API générée](api-reference.md) (`npm run docs`)
 - [Routeurs de fils](wire-routers.md)
+- [Démos vidéo](demo/README.md)
