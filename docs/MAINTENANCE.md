@@ -42,6 +42,7 @@ Le dossier `docs/api/` est ignoré par git (régénérable).
 | --- | --- |
 | Monter l’app / API publique | `src/main.ts` → classe `HackCable` |
 | Canvas + zoom + sauvegarde | `src/editor/editor.ts`, `src/editor/canvas.ts` |
+| Raccourcis clavier (utilisateur) | [keyboard-shortcuts.md](keyboard-shortcuts.md) + `src/editor/canvas-context-menu.ts`, `web/demo-handlers.ts` |
 | Composant sur le plan | `src/editor/component-figure.ts` |
 | Broches MCU connectées ? | `src/editor/mcu-pin/` + [mcu-pin-api.md](mcu-pin-api.md) |
 | Tracé des fils | `src/editor/connection-router*.ts` + [wire-routers.md](wire-routers.md) |

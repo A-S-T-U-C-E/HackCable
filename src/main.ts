@@ -141,40 +141,43 @@ export class HackCable {
     }
 
     private setupResizer() {
-        const resizerCanvas = document.querySelector('.resizerCanvas') as HTMLElement;
-        const sideBar = document.querySelector('.hackCable-sideBar') as HTMLElement;
-        const editor = document.querySelector('.hackCable-editor') as HTMLElement;
+        const resizerCanvas = document.querySelector('.resizerCanvas') as HTMLElement | null;
+        const sideBar = document.querySelector('.hackCable-sideBar') as HTMLElement | null;
 
-        if (resizerCanvas && sideBar && editor) {
-            let isResizing = false;
-            let startX = 0;
-            let startWidth = 0;
+        if (!resizerCanvas || !sideBar) return;
 
-            resizerCanvas.addEventListener('mousedown', (e) => {
-                const sideBarEl = document.querySelector('.hackCable-sideBar');
-                if (sideBarEl?.classList.contains('is-catalog-collapsed')) return;
-                isResizing = true;
-                startX = e.clientX;
-                startWidth = sideBar.offsetWidth;
-                document.body.classList.add('resizing');
-            });
+        let isResizing = false;
+        let startX = 0;
+        let startWidth = 0;
 
-            document.addEventListener('mousemove', (e) => {
-                if (!isResizing) return;
-                if (sideBar.classList.contains('is-catalog-collapsed')) return;
+        const onMouseMove = (e: MouseEvent) => {
+            if (!isResizing) return;
+            if (sideBar.classList.contains('is-catalog-collapsed')) return;
 
-                const newWidth = startWidth + (e.clientX - startX);
-                if (newWidth >= 220) {
-                    sideBar.style.width = `${newWidth}px`;
-                }
-                e.preventDefault();
-            });
+            const newWidth = startWidth + (e.clientX - startX);
+            if (newWidth >= 220) {
+                sideBar.style.width = `${newWidth}px`;
+            }
+            e.preventDefault();
+        };
 
-            document.addEventListener('mouseup', () => {
-                isResizing = false;
-                document.body.classList.remove('resizing');
-            });
-        }
+        const onMouseUp = () => {
+            if (!isResizing) return;
+            isResizing = false;
+            document.body.classList.remove('resizing');
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+        };
+
+        resizerCanvas.addEventListener('mousedown', (e) => {
+            if (sideBar.classList.contains('is-catalog-collapsed')) return;
+            isResizing = true;
+            startX = e.clientX;
+            startWidth = sideBar.offsetWidth;
+            document.body.classList.add('resizing');
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        });
     }
 
     /** Panneau catalogue (navigation, recherche, vignettes). */

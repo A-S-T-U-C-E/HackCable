@@ -2,7 +2,7 @@
   "name": "hackcable",
   "version": "1.0.0",
   "description": "Arduino and ESP32 Components wiring",
-  "main": "dist/bundle.js",
+  "main": "dist/src/bundle.js",
   "types": "dist/types/src/main.d.ts",
   "scripts": {
     "type-check": "tsc --noEmit",
@@ -12,7 +12,9 @@
     "build:web": "webpack --mode=production --config ./webpack.config.web.js",
     "serve:web": "npx webpack serve --mode=development --config ./webpack.config.web.js",
     "docs": "node scripts/generate-docs.mjs",
-    "docs:watch": "node --watch-path=src scripts/generate-docs.mjs"
+    "docs:watch": "node --watch-path=src scripts/generate-docs.mjs",
+    "demo:record": "node scripts/record-demo.mjs",
+    "demo:record:ctx": "node scripts/record-demo-context-menu.mjs"
   },
   "exports": {
     ".": "./dist/src/bundle.js"
@@ -35,13 +37,11 @@
     "xmldom": "npm:@xmldom/xmldom@^0.9.0"
   },
   "devDependencies": {
-    "@babel/core": "^8.0.1",
-    "@babel/plugin-transform-runtime": "^8.0.1",
+    "@babel/core": "^8.0.6",
     "@babel/polyfill": "^7.12.1",
-    "@babel/preset-env": "^8.0.2",
+    "@babel/preset-env": "^8.0.6",
     "@babel/preset-typescript": "8.0.1",
     "@types/jquery": "^4.0.1",
-    "@types/react": "^19.2.18",
     "babel-loader": "^10.1.1",
     "buffer": "^6.0.3",
     "copy-webpack-plugin": "^14.0.0",
@@ -49,24 +49,20 @@
     "draw2d-types": "^1.0.3",
     "html-loader": "^5.1.0",
     "html-webpack-plugin": "^5.6.8",
+    "playwright": "^1.63.0",
     "style-loader": "^4.0.0",
     "stylus": "^0.64.0",
     "stylus-loader": "^9.0.0",
     "typescript": "7.0.2",
-    "webpack": "5.110.3",
+    "webpack": "5.111.1",
     "webpack-cli": "^7.2.3",
     "webpack-dev-server": "^6.0.0"
   },
   "dependencies": {
     "@wokwi/elements": "^1.9.2",
-    "class": "^0.1.4",
     "draw2d": "^1.0.38",
     "i18next": "^26.4.2",
     "jquery": "^4.0.0",
-    "jquery-ui": "^1.14.2",
-    "pathfinding": "^0.4.18",
-    "raphael": "^2.3.0",
-    "rgbcolor": "^1.0.1",
-    "shifty": "^3.0.6"
+    "jquery-ui": "^1.14.2"
   }
 }

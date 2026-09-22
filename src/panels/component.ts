@@ -64,7 +64,7 @@ import {
 } from "@wokwi/elements";
 import { tr } from "../ui/i18n/translate";
 import { dedupeCatalogAgainstWokwi } from "./catalog-dedupe";
-import { getStoredFritzingComponents } from "./fritzing-sync";
+import { getStoredFritzingComponents } from "./fritzing-catalog-storage";
 import type { FritzingComponentInfo } from "./fritzing-types";
 import {
     type FritzingCategory,
@@ -73,7 +73,6 @@ import { scaleToCatalogPreview } from "../editor/canvas-scale";
 import { fritzingDisplaySizeFromInches } from "../editor/coordinate-port-locator";
 import { measureWokwiSvgSize } from "../utils/dom";
 export type { FritzingComponentInfo } from "./fritzing-types";
-export { syncFritzingCatalog } from "./fritzing-sync";
 
 export declare type WokwiComponent =
     | AnalogJoystickElement

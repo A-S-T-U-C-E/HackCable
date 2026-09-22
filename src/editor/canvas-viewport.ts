@@ -95,15 +95,6 @@ export function getCanvasLogicalBounds(canvas: Canvas): ContentBounds {
 }
 
 /**
- * Bornes monde utilisées pour la projection minicarte.
- * @param canvas - Instance canvas draw2d.
- * @returns Rectangle monde en coordonnées logiques.
- */
-export function getMinimapWorldBounds(canvas: Canvas): ContentBounds {
-    return getCanvasLogicalBounds(canvas);
-}
-
-/**
  * Positionne le scroll du viewport (avec clamp aux limites).
  * @param canvas - Instance canvas draw2d.
  * @param scrollLeft - Défilement horizontal en pixels CSS.

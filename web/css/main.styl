@@ -80,14 +80,9 @@ html
             select
                 min-width 7.5rem
 
-        .hackCable-app-minimap-toggle
-            min-height 36px
-            padding 4px 8px
-
     &[data-a11y-labels="text"]
         // Spécificité ≥ toolbar (sinon display:inline-flex gagne)
         .hackCable-app-header .hackCable-app-toolbar-group button .hackCable-btn-icon
-        .hackCable-app-header .hackCable-app-toolbar-group .hackCable-app-minimap-toggle .hackCable-btn-icon
         .hackCable-app-header .hackCable-app-toolbar-group .hackCable-app-language .hackCable-btn-icon
             display none
 
@@ -181,43 +176,15 @@ header.hackCable-app-header
                 opacity 0.45
                 cursor default
 
-        .hackCable-app-minimap-toggle
-            display inline-flex
-            align-items center
-            gap 6px
-            min-height 24px
-            padding 2px 4px
-            cursor pointer
-            user-select none
-            color var(--hc-btn-fg)
+        button#show-minimap
+        button.hackCable-app-minimap-btn
+            &[aria-pressed="true"]
+            &.is-active
+                background var(--hc-accent)
+                color #ffffff
 
-            input[type="checkbox"]
-                width 16px
-                height 16px
-                margin 0
-                accent-color var(--hc-accent)
-                cursor pointer
-
-                &:focus-visible
-                    outline var(--hc-focus-outline-width) solid var(--hc-accent)
-                    outline-offset var(--hc-focus-outline-offset)
-
-            .hackCable-btn-icon
-                display inline-flex
-                align-items center
-                justify-content center
-                width 1.25em
-                height 1.25em
-                font-size var(--hc-btn-icon-size)
-                color var(--hc-btn-fg)
-
-            .hackCable-btn-svg
-                width 1.25em
-                height 1.25em
-
-            span#show-minimap-label
-                font-size var(--hc-ui-font-size)
-                line-height var(--hc-ui-line-height)
+                &:hover:not(:disabled)
+                    background var(--hc-accent-strong, #2c70ff)
 
         .hackCable-app-language
             display inline-flex
@@ -484,7 +451,7 @@ footer
         color #c8cdd6
 
     .hackCable-about-body
-        // liens / licence sous les rangées icône+texte
+        margin 0
 
     .hackCable-about-links
         margin 0 0 12px

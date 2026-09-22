@@ -13,7 +13,6 @@ import type { HackCableLanguage } from "../src/ui/i18n/languages";
 import { normalizeHackCableLanguage } from "../src/ui/i18n/languages";
 import {
     type A11ySettings,
-    normalizeA11ySettings,
     parseA11yFromUrlParams,
     readA11ySettings,
     writeA11yToUrlParams,
@@ -123,5 +122,3 @@ export function writeUrlDemoOptions(state: DemoOptionsState): void {
     const next = `${url.pathname}${params.toString() ? `?${params.toString()}` : ""}${url.hash}`;
     window.history.replaceState(null, "", next);
 }
-
-export { normalizeA11ySettings };

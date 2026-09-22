@@ -19,7 +19,6 @@ import {
     ComponentElement,
     catalogComponentById,
     getCatalogComponents,
-    getComponentById,
     isWokwiComponent,
     type CatalogComponentInfo,
 } from "./component";
@@ -179,14 +178,14 @@ export class Catalog {
         return sideBar instanceof HTMLElement ? sideBar : null;
     }
 
-    private usedCategories(): FritzingCategory[] {
-        const categories = new Set(this.visibleElements().map((element) => element.category));
+    private usedCategoriesWithCounts(): Array<{ category: FritzingCategory; count: number }> {
+        const counts = new Map<FritzingCategory, number>();
+        for (const element of this.visibleElements()) {
+            counts.set(element.category, (counts.get(element.category) ?? 0) + 1);
+        }
         return FRITZING_CATEGORIES
-            .filter((category) => categories.has(category) && isBreadboardCatalogCategory(category));
-    }
-
-    private categoryCount(category: FritzingCategory): number {
-        return this.visibleElements().filter((element) => element.category === category).length;
+            .filter((category) => (counts.get(category) ?? 0) > 0 && isBreadboardCatalogCategory(category))
+            .map((category) => ({ category, count: counts.get(category) ?? 0 }));
     }
 
     private visibleElements(): ComponentElement[] {
@@ -485,16 +484,7 @@ export class Catalog {
         });
     }
 
-    private rebuildNavCategoryList(): void {
-        if (!this.nav) return;
-        const list = this.nav.querySelector(".hackCable-catalog-nav-list");
-        if (!(list instanceof HTMLUListElement)) {
-            this.buildCategoryNav();
-            return;
-        }
-
-        list.innerHTML = "";
-        const listId = "hackCable-catalog-list";
+    private appendCategoryNavItems(list: HTMLUListElement, listId: string): void {
         const appendItem = (button: HTMLButtonElement) => {
             const item = document.createElement("li");
             item.setAttribute("role", "none");
@@ -509,16 +499,27 @@ export class Catalog {
             listId,
         ));
 
-        for (const category of this.usedCategories()) {
-            const count = this.categoryCount(category);
+        for (const { category, count } of this.usedCategoriesWithCounts()) {
+            const label = tr(fritzingCategoryI18nKey(category));
             appendItem(this.createNavButton(
                 category,
-                tr(fritzingCategoryI18nKey(category)),
-                `${tr(fritzingCategoryI18nKey(category))} (${count})`,
+                label,
+                `${label} (${count})`,
                 categoryDomId(category),
             ));
         }
+    }
 
+    private rebuildNavCategoryList(): void {
+        if (!this.nav) return;
+        const list = this.nav.querySelector(".hackCable-catalog-nav-list");
+        if (!(list instanceof HTMLUListElement)) {
+            this.buildCategoryNav();
+            return;
+        }
+
+        list.innerHTML = "";
+        this.appendCategoryNavItems(list, "hackCable-catalog-list");
         this.setActiveCategory(this.activeCategory);
         this.syncNavExpandedState();
     }
@@ -534,32 +535,7 @@ export class Catalog {
         const list = document.createElement("ul");
         list.className = "hackCable-catalog-nav-list";
         list.setAttribute("role", "list");
-
-        const listId = "hackCable-catalog-list";
-        const appendItem = (button: HTMLButtonElement) => {
-            const item = document.createElement("li");
-            item.setAttribute("role", "none");
-            item.appendChild(button);
-            list.appendChild(item);
-        };
-
-        appendItem(this.createNavButton(
-            "",
-            tr("catalog.navAll"),
-            tr("catalog.filterAll"),
-            listId,
-        ));
-
-        for (const category of this.usedCategories()) {
-            const count = this.categoryCount(category);
-            appendItem(this.createNavButton(
-                category,
-                tr(fritzingCategoryI18nKey(category)),
-                `${tr(fritzingCategoryI18nKey(category))} (${count})`,
-                categoryDomId(category),
-            ));
-        }
-
+        this.appendCategoryNavItems(list, "hackCable-catalog-list");
         this.nav.appendChild(list);
 
         const footer = document.createElement("div");
@@ -590,43 +566,34 @@ export class Catalog {
         reportCatalogBoot(onProgress, "ready", 1, 1);
     }
 
-    /**
-     * Reconstruit le catalogue après un changement de locale (sans attendre).
-     */
-    rebuildFromLocale(): void {
-        void this.rebuildFromLocaleAsync();
-    }
+/**
+ * Reconstruit le catalogue après un changement de locale.
+ * @param onProgress - Callback optionnel de progression du rebuild.
+ */
+async rebuildFromLocaleAsync(onProgress?: CatalogBootProgressCallback): Promise<void> {
+    await this.rebuildKeepingListState(onProgress);
+}
 
-    /**
-     * Reconstruit le catalogue après un changement de locale.
-     * @param onProgress - Callback optionnel de progression du rebuild.
-     */
-    async rebuildFromLocaleAsync(onProgress?: CatalogBootProgressCallback): Promise<void> {
-        await this.buildAsync(onProgress);
-        this.setListOpen(this.listOpen);
-    }
+/**
+ * Reconstruit le catalogue après une sync Fritzing.
+ * @param onProgress - Callback optionnel de progression du rebuild.
+ */
+async rebuildFromCatalogAsync(onProgress?: CatalogBootProgressCallback): Promise<void> {
+    await this.rebuildKeepingListState(onProgress);
+}
 
-    /**
-     * Reconstruit le catalogue après une sync Fritzing (sans attendre).
-     */
-    rebuildFromCatalog(): void {
-        void this.rebuildFromCatalogAsync();
-    }
-
-    /**
-     * Reconstruit le catalogue après une sync Fritzing.
-     * @param onProgress - Callback optionnel de progression du rebuild.
-     */
-    async rebuildFromCatalogAsync(onProgress?: CatalogBootProgressCallback): Promise<void> {
-        await this.buildAsync(onProgress);
-        this.setListOpen(this.listOpen);
-    }
+private async rebuildKeepingListState(onProgress?: CatalogBootProgressCallback): Promise<void> {
+    await this.buildAsync(onProgress);
+    this.setListOpen(this.listOpen);
+}
 
     private mountComponentCard(element: ComponentElement, container: HTMLElement): void {
         const div = document.createElement("div");
         div.setAttribute("class", "hackCable-catalog-element");
         div.setAttribute("title", element.description);
-        div.innerHTML = "<h3>" + element.name + "</h3>";
+        const title = document.createElement("h3");
+        title.textContent = element.name;
+        div.appendChild(title);
         container.appendChild(div);
 
         const previewNode = element.previewNode;
@@ -638,9 +605,7 @@ export class Catalog {
         });
 
         previewNode.addEventListener("dblclick", () => {
-            const componentInfo = catalogComponentById[element.componentId] ?? getComponentById(element.componentId);
-            if (!componentInfo) return;
-            const figure = new ComponentFigure(componentInfo);
+            const figure = new ComponentFigure(element.componentInfo);
             const { x, y } = snapPointToCanvasGrid(100, 100);
             addFigureWithUndo(this.hackCable.editor.canvas, figure, x, y);
             this.collapseFlyout();

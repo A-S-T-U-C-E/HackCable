@@ -220,15 +220,6 @@ export function getUiAccentPalette(accentHex = DEFAULT_A11Y_SETTINGS.accent): {
 }
 
 /**
- * Lit la couleur d’accent active depuis les variables CSS du document.
- * @returns Palette d’accent dérivée de `--hc-accent` ou de la valeur par défaut.
- */
-export function readAccentFromDocument(): ReturnType<typeof getUiAccentPalette> {
-    const fromCss = getComputedStyle(document.documentElement).getPropertyValue("--hc-accent").trim();
-    return getUiAccentPalette(fromCss || DEFAULT_A11Y_SETTINGS.accent);
-}
-
-/**
  * Applique les réglages via variables CSS et attributs sur `<html>`.
  * @param settings - Réglages d’accessibilité à appliquer au DOM.
  */

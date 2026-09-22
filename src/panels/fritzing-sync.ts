@@ -38,7 +38,7 @@ import {
     type FritzingSyncResult,
 } from "./fritzing-types";
 
-export { getStoredFritzingComponents, loadFritzingCatalog, saveFritzingCatalog } from "./fritzing-catalog-storage";
+export { getStoredFritzingComponents } from "./fritzing-catalog-storage";
 
 async function buildCategoryMaps(fzbXml: string): Promise<FritzingCategoryMaps> {
     const baseMaps = parseCoreFzb(fzbXml);

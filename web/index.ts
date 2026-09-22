@@ -12,8 +12,6 @@
 import "./css/main.styl";
 import { mountWebDemoApp } from "./app";
 
-console.log("Running HackCable web interface");
-
 let disposeWebDemo: (() => void) | undefined;
 
 /** Démarre ou redémarre la démo web (nettoyage HMR inclus). */

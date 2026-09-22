@@ -40,15 +40,6 @@ export function normalizeHackCableLanguage(raw: string | null | undefined): Hack
 }
 
 /**
- * Vérifie si une chaîne est un code langue HackCable supporté.
- * @param value - Code à tester.
- * @returns `true` si le code fait partie de {@link HACKCABLE_LANGUAGES}.
- */
-export function isHackCableLanguage(value: string): value is HackCableLanguage {
-    return (HACKCABLE_LANGUAGES as readonly string[]).includes(value);
-}
-
-/**
  * Retourne l’attribut BCP 47 pour `<html lang>`.
  * @param language - Code HackCable ou alias.
  * @returns Code langue HTML (ex. `fr`, `en`).

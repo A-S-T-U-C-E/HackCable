@@ -67,5 +67,9 @@ export function findMcuPinStatus(
     figureId: string,
     pinKeyOrLabel: string,
 ): McuPinStatus | undefined {
-    return indexMcuPinConnectionTable(table).get(figureId)?.get(pinKeyOrLabel);
+    const board = table.find((b) => b.figureId === figureId);
+    if (!board) return undefined;
+    return board.pins.find(
+        (p) => p.pinKey === pinKeyOrLabel || p.pinLabel === pinKeyOrLabel,
+    );
 }

@@ -8,6 +8,9 @@ dist/
 # Generated API docs (npm run docs)
 docs/api/
 
+# Playwright temp frames
+docs/demo/_raw/
+
 # IDE files
 .vscode/
 .idea/

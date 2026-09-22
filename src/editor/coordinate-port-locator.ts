@@ -40,6 +40,39 @@ export function fritzingDisplaySize(viewBoxWidth: number, viewBoxHeight: number)
     );
 }
 
+type SizedParent = {
+    getWidth: () => number;
+    getHeight: () => number;
+};
+
+/**
+ * Place un port en coordonnées parent en appliquant uniquement la rotation
+ * (sans le scale draw2d à 90°/270° qui déforme les composants allongés).
+ * @param port - Port draw2d (ou figure avec `getParent` / `setPosition`).
+ * @param x - X locale avant rotation.
+ * @param y - Y locale avant rotation.
+ */
+export function applyPortRotationOnly(
+    port: { getParent: () => SizedParent & { getRotationAngle?: () => number }; setPosition: (x: number, y: number) => void },
+    x: number,
+    y: number,
+): void {
+    const parent = port.getParent();
+    const halfW = parent.getWidth() / 2;
+    const halfH = parent.getHeight() / 2;
+    const rotAngle = ((Number(parent.getRotationAngle?.() ?? 0) || 0) % 360 + 360) % 360;
+    if (rotAngle === 0) {
+        port.setPosition(x, y);
+        return;
+    }
+    const rad = (rotAngle * Math.PI) / 180;
+    const cos = Math.cos(rad);
+    const sin = Math.sin(rad);
+    const lx = x - halfW;
+    const ly = y - halfH;
+    port.setPosition(lx * cos - ly * sin + halfW, lx * sin + ly * cos + halfH);
+}
+
 /** Port positionné en coordonnées absolues (composants Wokwi). */
 export class CoordinatePortLocator extends draw2d.layout.locator.PortLocator {
     public readonly portId: string;
@@ -67,7 +100,7 @@ export class CoordinatePortLocator extends draw2d.layout.locator.PortLocator {
      */
     public relocate(index: unknown, figure: unknown): void {
         super.relocate(index, figure);
-        this.applyConsiderRotation(figure, this.x, this.y);
+        applyPortRotationOnly(figure as Parameters<typeof applyPortRotationOnly>[0], this.x, this.y);
     }
 }
 
@@ -96,9 +129,15 @@ export class PercentPortLocator extends draw2d.layout.locator.PortLocator {
      * @param _index - Index draw2d (non utilisé).
      * @param figure - Port draw2d avec accès au parent.
      */
-    public relocate(_index: unknown, figure: { getParent: () => { getWidth: () => number; getHeight: () => number } }): void {
+    public relocate(
+        _index: unknown,
+        figure: {
+            getParent: () => { getWidth: () => number; getHeight: () => number; getRotationAngle?: () => number };
+            setPosition: (x: number, y: number) => void;
+        },
+    ): void {
         const parent = figure.getParent();
-        this.applyConsiderRotation(
+        applyPortRotationOnly(
             figure,
             (parent.getWidth() / 100) * this.xPercent,
             (parent.getHeight() / 100) * this.yPercent,

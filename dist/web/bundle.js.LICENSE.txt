@@ -2970,6 +2970,19 @@
  * Copyright (c) 2021, Clément Grennerat
  * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
  *
+ * @file Canvas draw2d principal : viewport, zoom, overlay HTML et politiques d’édition.
+ *
+ * Responsabilités :
+ * - Installer pan / zoom / snap / connexions
+ * - Overlay HTML des composants sous le SVG draw2d
+ * - Drop catalogue → `ComponentFigure`, grille et monde extensible
+ */
+
+/**
+ * @license GPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ *
  * @file Catalogue de composants Wokwi et Fritzing (types, registre, éléments UI).
  *
  * Responsabilités :
@@ -3036,18 +3049,6 @@
  * Responsabilités :
  * - Demander le mode `EditorLoadMode`
  * - Accessibilité dialog / focus
- */
-
-/**
- * @license GPL-3.0-or-later
- * Copyright (c) 2021, Clément Grennerat
- * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
- *
- * @file Dialogue « À propos » (style µcBlockly) : projet, icônes, crédits Fritzing.
- *
- * Responsabilités :
- * - Construire le `<dialog>` et les rangées logo + texte
- * - Liens fork / upstream / Fritzing / Wokwi
  */
 
 /**
@@ -3336,7 +3337,7 @@
  *
  * Responsabilités :
  * - Installer la ConnectionCreatePolicy draw2d
- * - Restreindre le démarrage de fil aux pastilles hybrides
+ * - Créer des connexions via `createWiringConnection`
  */
 
 /**
@@ -3351,18 +3352,6 @@
  * - Conserver le tracé manuel après déplacement des composants
  *
  * @see https://freegroup.github.io/draw2d/#/examples/connection_vertex
- */
-
-/**
- * @license GPL-3.0-or-later
- * Copyright (c) 2021, Clément Grennerat
- * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
- *
- * @file Requêtes simples sur une table MCU déjà construite.
- *
- * Responsabilités :
- * - Indexer / chercher une broche par id
- * - Savoir si une broche est connectée
  */
 
 /**

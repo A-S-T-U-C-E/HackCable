@@ -43,44 +43,40 @@ export function downloadJsonFile(filename: string, data: unknown): void {
 
 /**
  * Déclenche le téléchargement d’une data URL.
- * @param filename - Nom du fichier de destination.
+ * @param filename - Nom de fichier de destination.
  * @param dataUrl - URL de données (ex. PNG en base64).
  */
 export function downloadDataUrl(filename: string, dataUrl: string): void {
-    const a = document.createElement("a");
-    a.href = dataUrl;
-    a.download = filename;
-    a.rel = "noopener";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+    triggerDownload(filename, dataUrl);
 }
 
 /**
  * Déclenche le téléchargement d’un blob via un lien temporaire.
- * @param filename - Nom du fichier de destination.
+ * @param filename - Nom de fichier de destination.
  * @param blob - Contenu binaire à télécharger.
  */
 export function downloadBlob(filename: string, blob: Blob): void {
     const url = URL.createObjectURL(blob);
+    try {
+        triggerDownload(filename, url);
+    } finally {
+        URL.revokeObjectURL(url);
+    }
+}
+
+/**
+ * Crée un lien temporaire et déclenche le téléchargement.
+ * @param filename - Nom de fichier proposé au navigateur.
+ * @param href - URL (blob: ou data:).
+ */
+function triggerDownload(filename: string, href: string): void {
     const a = document.createElement("a");
-    a.href = url;
+    a.href = href;
     a.download = filename;
     a.rel = "noopener";
     document.body.appendChild(a);
     a.click();
     a.remove();
-    URL.revokeObjectURL(url);
-}
-
-/**
- * Télécharge un fichier texte brut.
- * @param filename - Nom du fichier de destination.
- * @param text - Contenu textuel.
- * @param mime - Type MIME du blob (défaut : `text/plain;charset=utf-8`).
- */
-export function downloadTextFile(filename: string, text: string, mime = "text/plain;charset=utf-8"): void {
-    downloadBlob(filename, new Blob([text], { type: mime }));
 }
 
 /**
@@ -135,6 +131,20 @@ export function applyWebDemoUiI18n(): void {
     setBtn("redo", "web.redo");
     setBtn("a11y-open", "a11y.open");
     setBtn("about-open", "about.open");
+    setBtn("show-minimap", "web.showMinimap");
+
+    const withShortcut = (id: string, shortcut: string) => {
+        const el = document.getElementById(id);
+        if (!(el instanceof HTMLElement)) return;
+        const base = el.getAttribute("aria-label") || el.title || "";
+        const titled = `${base} (${shortcut})`;
+        el.title = titled;
+        el.setAttribute("aria-label", titled);
+    };
+    withShortcut("save", "Alt+S");
+    withShortcut("restore", "Alt+O");
+    withShortcut("undo", "Ctrl+Z");
+    withShortcut("redo", "Ctrl+Y");
 
     const a11yOpen = document.getElementById("a11y-open");
     if (a11yOpen instanceof HTMLButtonElement) {
@@ -150,9 +160,6 @@ export function applyWebDemoUiI18n(): void {
 
     const languageLabel = document.getElementById("language-select-label");
     if (languageLabel) languageLabel.textContent = t("web.languageLabel");
-
-    const minimapLabel = document.getElementById("show-minimap-label");
-    if (minimapLabel) minimapLabel.textContent = t("web.showMinimap");
 
     const languageSelect = document.getElementById("language-select");
     if (languageSelect instanceof HTMLSelectElement) {

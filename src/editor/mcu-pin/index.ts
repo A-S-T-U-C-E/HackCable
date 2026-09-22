@@ -29,8 +29,6 @@ export type {
 } from "./types";
 
 export { buildMcuPinConnectionTable } from "./build-table";
-export { listMcuPinDescriptors } from "./list-pins";
-export { collectPeerConnections, resolvePeerPortLabel } from "./port-connections";
 export {
     findMcuPinStatus,
     indexMcuPinConnectionTable,

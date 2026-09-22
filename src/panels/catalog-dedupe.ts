@@ -171,6 +171,10 @@ export function dedupeCatalogAgainstWokwi<W extends WokwiDedupeSource>(
     wokwi: W[],
     fritzing: FritzingComponentInfo[],
 ): Array<W | FritzingComponentInfo> {
-    const kept = fritzing.filter((part) => !isFritzingDuplicateOfWokwi(part, wokwi));
+    const wokwiKeys = [...new Set(wokwi.flatMap(keysForWokwi))];
+    const kept = fritzing.filter((part) => {
+        const candidates = candidateKeys(part);
+        return !wokwiKeys.some((key) => candidates.some((candidate) => matchesKey(candidate, key)));
+    });
     return [...wokwi, ...kept];
 }

@@ -36,9 +36,6 @@ export const FRITZING_SVG_DPI = 90;
 /** DPI Illustrator pour les SVG exportés en px (fritzing-app `IllustratorDPI`). */
 export const ILLUSTRATOR_SVG_DPI = 72;
 
-/** @deprecated Utiliser {@link FRITZING_SVG_DPI} ou {@link ILLUSTRATOR_SVG_DPI}. */
-export const FRITZING_VIEWBOX_DPI = ILLUSTRATOR_SVG_DPI;
-
 function chopTrailingNonDigits(value: string): string {
     let s = value;
     while (s.length > 0) {

@@ -15,8 +15,8 @@ import type { Canvas } from "./canvas";
 import { ComponentFigure } from "./component-figure";
 import { CANVAS_GRID_SIZE } from "./canvas-scale";
 import {
+    getCanvasLogicalBounds,
     getEditorViewport,
-    getMinimapWorldBounds,
     getViewportState,
     scrollViewportToCanvasCenter,
 } from "./canvas-viewport";
@@ -302,7 +302,7 @@ export function setupCanvasMinimap(canvas: Canvas): () => void {
     };
 
     const render = () => {
-        const world = getMinimapWorldBounds(canvas);
+        const world = getCanvasLogicalBounds(canvas);
         const transform = computeMinimapTransform(world);
         const view = getViewportState(canvas);
         lastTransform = transform;

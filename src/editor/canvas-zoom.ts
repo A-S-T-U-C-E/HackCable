@@ -64,10 +64,21 @@ export function getFiguresContentBounds(canvas: Canvas): ContentBounds | null {
         const y = figure.getY();
         const w = figure.getWidth();
         const h = figure.getHeight();
-        minX = Math.min(minX, x);
-        minY = Math.min(minY, y);
-        maxX = Math.max(maxX, x + w);
-        maxY = Math.max(maxY, y + h);
+        const angle = ((Number(figure.getRotationAngle()) || 0) % 360 + 360) % 360;
+        // À 90°/270°, l’emprise écran est HxW (plus de scale draw2d compensatoire).
+        if (angle === 90 || angle === 270) {
+            const cx = x + w / 2;
+            const cy = y + h / 2;
+            minX = Math.min(minX, cx - h / 2);
+            minY = Math.min(minY, cy - w / 2);
+            maxX = Math.max(maxX, cx + h / 2);
+            maxY = Math.max(maxY, cy + w / 2);
+        } else {
+            minX = Math.min(minX, x);
+            minY = Math.min(minY, y);
+            maxX = Math.max(maxX, x + w);
+            maxY = Math.max(maxY, y + h);
+        }
     }
 
     const width = maxX - minX;

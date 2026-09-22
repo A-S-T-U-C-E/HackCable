@@ -7,7 +7,7 @@
  *
  * Responsabilités :
  * - Installer la ConnectionCreatePolicy draw2d
- * - Restreindre le démarrage de fil aux pastilles hybrides
+ * - Créer des connexions via `createWiringConnection`
  */
 import draw2d from "draw2d";
 import { createWiringConnection } from "./connection-router";

@@ -16,15 +16,15 @@ import { CANVAS_PX_PER_MM } from "../editor/canvas-scale";
  * @param element - Élément cible.
  * @param style - Propriétés CSS à appliquer.
  */
-export function css(element: HTMLElement, style: any) {
-
-    Object.keys(style).forEach((key: any) => {
-        if (key in element.style) {
-            if (typeof style[key] == 'number')
-                element.style[key] = style[key] + 'px';
-            else element.style[key] = style[key];
-        }
-    });
+export function css(
+    element: HTMLElement,
+    style: Partial<Record<keyof CSSStyleDeclaration & string, string | number>>,
+): void {
+    for (const [key, value] of Object.entries(style)) {
+        if (value === undefined || !(key in element.style)) continue;
+        (element.style as unknown as Record<string, string>)[key] =
+            typeof value === "number" ? `${value}px` : value;
+    }
 }
 /**
  * Convertit une longueur CSS (mm, px ou nombre) en pixels canvas.

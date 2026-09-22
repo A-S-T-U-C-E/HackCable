@@ -31,8 +31,6 @@ import {
     zoomToFitCanvas,
 } from "./canvas-zoom";
 
-const DEFAULT_ZOOM_LEVEL = DEFAULT_ZOOM;
-
 export class Canvas extends draw2d.Canvas {
 
     private selected: any = null;
@@ -69,7 +67,7 @@ export class Canvas extends draw2d.Canvas {
         this.on("select", (_emitter: any, event: any) => this.onSelectionChange(event.figure));
         this.on("zoom", () => this.onZoomChange());
 
-        this.setZoom(DEFAULT_ZOOM_LEVEL)
+        this.setZoom(DEFAULT_ZOOM)
 
         // Add drag and drop event listeners to the canvas
         const htmlElement = this.html[0] ?? this.html;
@@ -196,6 +194,10 @@ export class Canvas extends draw2d.Canvas {
     /**
      * Sur grand écran, le monde fixe 1500×1000 laisse du blanc hors grille.
      * On agrandit la taille logique pour que CSS (logical/zoom) couvre au moins le viewport.
+     *
+     * Important : ne pas passer par `setDimension()` draw2d — il fait `paper.setSize`
+     * puis `setZoom(zoomFactor)` qui no-op si le facteur est inchangé, laissant viewBox
+     * et overlays désynchronisés (pastilles/fils à une échelle, composants HTML à une autre).
      */
     private ensureWorldCoversViewport(): void {
         const viewport = getEditorViewport();
@@ -219,23 +221,37 @@ export class Canvas extends draw2d.Canvas {
         const newH = Math.max(curH, needH);
         this.initialWidth = newW;
         this.initialHeight = newH;
-        this.setDimension(newW, newH);
+
+        const paper = (this as unknown as {
+            paper?: { setSize?: (w: number, h: number) => void };
+        }).paper;
+        paper?.setSize?.(newW, newH);
     }
 
-    private onZoomChange() {
-        this.ensureWorldCoversViewport();
+    /**
+     * Réapplique le modèle WheelZoomPolicy : viewBox = monde logique, SVG/CSS = monde/zoom,
+     * overlay HTML scale(1/zoom). À appeler après tout changement de zoom ou de taille du monde.
+     */
+    private applyZoomSurface(): void {
         const zoom = Math.max(0.01, this.getZoom());
-        // WheelZoomPolicy : viewBox fixe, SVG = initial/zoom. Aligner le div canvas
-        // pour que la zone scrollable couvre bien le dessin.
         const initialW = Number(this.initialWidth) || CANVAS_WORLD_WIDTH;
         const initialH = Number(this.initialHeight) || CANVAS_WORLD_HEIGHT;
         const cssW = initialW / zoom;
         const cssH = initialH / zoom;
-        const canvasEl = this.html?.[0] ?? this.html;
+
+        const paper = (this as unknown as {
+            paper?: { setViewBox?: (x: number, y: number, w: number, h: number) => void };
+        }).paper;
+        paper?.setViewBox?.(0, 0, initialW, initialH);
+
+        const html = this.html as { find?: (sel: string) => { attr: (a: Record<string, number>) => void }; 0?: HTMLElement };
+        html?.find?.("svg").attr({ width: cssW, height: cssH });
+
+        const canvasEl = html?.[0] ?? (this.html as unknown as HTMLElement);
         if (canvasEl instanceof HTMLElement) {
             css(canvasEl, { width: `${cssW}px`, height: `${cssH}px` });
         }
-        // Overlay en coords logiques, scale(1/zoom) pour coller au SVG redimensionné.
+
         css(this.overlayContainer, {
             transform: `scale(${1 / zoom})`,
             width: `${zoom * 100}%`,
@@ -244,7 +260,29 @@ export class Canvas extends draw2d.Canvas {
         if (this.overlayContainer instanceof HTMLElement) {
             this.overlayContainer.style.pointerEvents = "none";
         }
+    }
+
+    private onZoomChange() {
+        this.ensureWorldCoversViewport();
+        this.applyZoomSurface();
         this.syncAllPortHitTargets();
+        this.refreshSelectionFeedback();
+    }
+
+    /** Recale le cadre de sélection après zoom (rotation / AABB). */
+    private refreshSelectionFeedback(): void {
+        const selection = this.getSelection?.();
+        const primary =
+            (typeof this.getPrimarySelection === "function" ? this.getPrimarySelection() : null)
+            ?? selection?.getPrimary?.()
+            ?? selection?.primary
+            ?? null;
+        if (!primary) return;
+        const policies = (primary as { editPolicy?: { each: (fn: (i: number, p: { moved?: (c: unknown, f: unknown) => void }) => void) => void } }).editPolicy;
+        if (!policies || typeof policies.each !== "function") return;
+        policies.each((_i, policy) => {
+            policy.moved?.(this, primary);
+        });
     }
     private onSelectionChange(selected: any) {
         if (this.selected != selected) {
@@ -256,7 +294,7 @@ export class Canvas extends draw2d.Canvas {
     /** Vide le canvas et réinitialise le zoom à 100 %. */
     public clear() {
         super.clear();
-        this.setZoom(DEFAULT_ZOOM_LEVEL);
+        this.setZoom(DEFAULT_ZOOM);
     }
 
     private snapSelectedFigureToGrid(): void {

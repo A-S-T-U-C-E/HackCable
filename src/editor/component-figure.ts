@@ -29,6 +29,7 @@ import {
 } from "./coordinate-port-locator";
 import { resolvePortConnectionDirection } from "./port-connection-direction";
 import { getConnectionWireLabelText } from "./connection-label";
+import { rotationAwareAntSelectionPolicy } from "./rotation-aware-selection-policy";
 import { css, measureWokwiSvgSize } from "../utils/dom";
 import type { Port } from "draw2d-types";
 
@@ -133,7 +134,7 @@ export class ComponentFigure extends draw2d.shape.basic.Rectangle {
         this.setStroke(0);
         this.setResizeable(false);
         this.setDraggable(true);
-        this.installEditPolicy(new draw2d.policy.figure.AntSelectionFeedbackPolicy());
+        this.installEditPolicy(new rotationAwareAntSelectionPolicy());
 
         this.overlay = isWokwiComponent(component)
             ? this.createWokwiOverlay(component)
@@ -366,7 +367,7 @@ export class ComponentFigure extends draw2d.shape.basic.Rectangle {
     }
 
     /**
-     * Teste si un point canvas touche la figure (AABB corrigé pour la rotation).
+     * Teste si un point canvas touche la figure (AABB locale après rotation inverse).
      * @param x - Abscisse logique du point.
      * @param y - Ordonnée logique du point.
      * @param corona - Marge de tolérance optionnelle.
@@ -384,17 +385,8 @@ export class ComponentFigure extends draw2d.shape.basic.Rectangle {
 
         const cx = this.getAbsoluteX() + w / 2;
         const cy = this.getAbsoluteY() + h / 2;
-        let lx = x - cx;
-        let ly = y - cy;
-
-        // Inverse du scale draw2d appliqué après rotation à 90/270.
-        if (angle === 90 || angle === 270) {
-            const ratio = h / w;
-            if (ratio > 0 && Number.isFinite(ratio)) {
-                lx /= ratio;
-                ly *= ratio;
-            }
-        }
+        const lx = x - cx;
+        const ly = y - cy;
 
         const rad = (-angle * Math.PI) / 180;
         const cos = Math.cos(rad);
@@ -404,6 +396,18 @@ export class ComponentFigure extends draw2d.shape.basic.Rectangle {
         const pad = typeof corona === "number" ? corona : 0;
 
         return Math.abs(rx) <= w / 2 + pad && Math.abs(ry) <= h / 2 + pad;
+    }
+
+    /**
+     * Rotation Raphael pure — sans le scale draw2d à 90°/270° qui déforme les pièces.
+     * @returns this
+     */
+    public applyTransformation(): this {
+        const shape = (this as unknown as { shape?: { transform: (ts: string) => void } }).shape;
+        if (!shape) return this;
+        const angle = Number(this.getRotationAngle()) || 0;
+        shape.transform(angle ? `R${angle}` : "");
+        return this;
     }
 
     /**
@@ -418,19 +422,12 @@ export class ComponentFigure extends draw2d.shape.basic.Rectangle {
         const w = this.getWidth();
         const h = this.getHeight();
 
-        // Même convention que draw2d.Rectangle.applyTransformation / PortLocator.
-        let transform = angle === 0 ? "none" : `rotate(${angle}deg)`;
-        if (angle === 90 || angle === 270) {
-            const ratio = h / Math.max(w, 0.0001);
-            transform = `rotate(${angle}deg) scale(${ratio}, ${1 / ratio})`;
-        }
-
         css(this.overlay, {
             top,
             left,
             width: w,
             height: h,
-            transform,
+            transform: angle === 0 ? "none" : `rotate(${angle}deg)`,
             transformOrigin: "center center",
         });
     }

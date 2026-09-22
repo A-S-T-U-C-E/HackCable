@@ -55,6 +55,8 @@ Documentation API (JSDoc → Markdown/HTML) :
 
 ## Documentation
 
+- [Raccourcis clavier](docs/keyboard-shortcuts.md) — guide utilisateur (Alt+O, Alt+S, menu contextuel…)
+- [Démo vidéo](docs/demo/README.md) — mise à jour catalogue, Arduino Uno, LED + résistance (`npm run demo:record`)
 - [Guide de maintenance](docs/MAINTENANCE.md) — pour contribuer / s’y retrouver
 - [Architecture](docs/architecture.md) — aperçu des modules
 - [Algorithmes de tracé des fils](docs/wire-routers.md) — différences entre les routeurs draw2d

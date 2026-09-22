@@ -118,14 +118,37 @@ export function setupSaveRestore(editor: Editor, signal: AbortSignal): HTMLInput
 
     const tWarn = (key: string) => i18next.t(key, { ns: "common" });
 
-    save?.addEventListener("click", () => {
+    const doSave = () => {
         const data = editor.getEditorSaveData();
         downloadJsonFile(buildHackCableSaveFilename(), data);
-    }, { signal });
+    };
 
-    restore?.addEventListener("click", () => {
+    const doOpen = () => {
         restoreFileInput.value = "";
         restoreFileInput.click();
+    };
+
+    save?.addEventListener("click", doSave, { signal });
+    restore?.addEventListener("click", doOpen, { signal });
+
+    const isEditableTarget = (target: EventTarget | null): boolean => {
+        if (!(target instanceof HTMLElement)) return false;
+        const tag = target.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return true;
+        return target.isContentEditable;
+    };
+
+    document.addEventListener("keydown", (event) => {
+        if (!event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+        if (isEditableTarget(event.target)) return;
+        const key = event.key.toLowerCase();
+        if (key === "s") {
+            event.preventDefault();
+            doSave();
+        } else if (key === "o") {
+            event.preventDefault();
+            doOpen();
+        }
     }, { signal });
 
     restoreFileInput.addEventListener("change", () => {
@@ -217,19 +240,26 @@ export function setupLanguageSelect(hackCable: HackCable, signal: AbortSignal): 
 }
 
 /**
- * Branche la case à cocher d’affichage de la minimap.
+ * Branche le bouton d’affichage de la minimap (état `aria-pressed`).
  * @param hackCable - Instance HackCable pour synchroniser l’URL.
  * @param signal - Signal d’annulation pour retirer l’écouteur.
  */
 export function setupMinimapToggle(hackCable: HackCable, signal: AbortSignal): void {
-    const checkbox = document.getElementById("show-minimap");
-    if (!(checkbox instanceof HTMLInputElement)) return;
+    const button = document.getElementById("show-minimap");
+    if (!(button instanceof HTMLButtonElement)) return;
 
-    checkbox.checked = isMinimapVisible();
-    setMinimapVisible(checkbox.checked);
+    const syncPressed = (visible: boolean) => {
+        button.setAttribute("aria-pressed", visible ? "true" : "false");
+        button.classList.toggle("is-active", visible);
+    };
 
-    checkbox.addEventListener("change", () => {
-        setMinimapVisible(checkbox.checked);
+    syncPressed(isMinimapVisible());
+    setMinimapVisible(isMinimapVisible());
+
+    button.addEventListener("click", () => {
+        const next = button.getAttribute("aria-pressed") !== "true";
+        setMinimapVisible(next);
+        syncPressed(next);
         syncDemoUrl(hackCable);
     }, { signal });
 }

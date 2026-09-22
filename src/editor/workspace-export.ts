@@ -186,10 +186,6 @@ async function drawComponentOverlays(
         if (angle !== 0) {
             ctx.translate(x + w / 2, y + h / 2);
             ctx.rotate((angle * Math.PI) / 180);
-            if (angle === 90 || angle === 270) {
-                const ratio = h / Math.max(w, 0.0001);
-                ctx.scale(ratio, 1 / ratio);
-            }
             ctx.drawImage(source, -w / 2, -h / 2, w, h);
         } else {
             ctx.drawImage(source, x, y, w, h);
