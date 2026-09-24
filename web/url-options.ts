@@ -1,5 +1,5 @@
 /**
- * @license GPL-3.0-or-later
+ * @license AGPL-3.0-or-later
  * Copyright (c) 2021, Clément Grennerat
  * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
  *

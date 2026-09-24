@@ -81,4 +81,8 @@ Plus de détails : [docs/demo/README.md](docs/demo/README.md).
 
 ## Licence
 
-[GPL-3.0-or-later](LICENSE) — Copyright (c) 2021, Clément Grennerat ; contributions du fork A-S-T-U-C-E.
+[AGPL-3.0-or-later](LICENSE) — Copyright (c) 2021 Clément Grennerat ; contributions du fork A-S-T-U-C-E / Sébastien Canet (2024–2026).
+
+Copyleft renforcé (clause réseau AGPL §13) : une version modifiée proposée en service web doit offrir le **code source correspondant** aux utilisateurs. Voir [NOTICE](NOTICE) et [docs/COPYLEFT.md](docs/COPYLEFT.md).
+
+Notes de version : [CHANGELOG.md](CHANGELOG.md).

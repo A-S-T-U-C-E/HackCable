@@ -1,5 +1,5 @@
 /**
- * @license GPL-3.0-or-later
+ * @license AGPL-3.0-or-later
  * Copyright (c) 2021, Clément Grennerat
  * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
  *
@@ -420,7 +420,7 @@ function collectExports(source) {
 function renderModuleMarkdown(id, entries) {
   const lines = [
     `<!--`,
-    `  Licence : GPL-3.0-or-later — Copyright (c) 2021, Clément Grennerat`,
+    `  Licence : AGPL-3.0-or-later — Copyright (c) 2021, Clément Grennerat`,
     `  Fork A-S-T-U-C-E : https://github.com/A-S-T-U-C-E/HackCable`,
     `  Généré par : npm run docs`,
     `-->`,
@@ -502,7 +502,7 @@ function renderIndexHtml(modules) {
 </head>
 <body>
   <h1>HackCable — Documentation API</h1>
-  <p class="meta">Licence <strong>GPL-3.0-or-later</strong> · générée par <code>npm run docs</code> · ${new Date().toISOString().slice(0, 10)}</p>
+  <p class="meta">Licence <strong>AGPL-3.0-or-later</strong> · générée par <code>npm run docs</code> · ${new Date().toISOString().slice(0, 10)}</p>
   <p>Documentation extraite des JSDoc TypeScript (<code>@param</code>, <code>@returns</code>).</p>
   <ul>
 ${items}
@@ -540,7 +540,7 @@ function main() {
   fs.writeFileSync(path.join(OUT, "index.html"), renderIndexHtml(modules), "utf8");
   fs.writeFileSync(
     path.join(OUT, "README.md"),
-    `# Documentation API HackCable\n\nLicence **GPL-3.0-or-later**.\n\nGénérée par \`npm run docs\`.\n\nOuvrir [index.html](./index.html).\n`,
+    `# Documentation API HackCable\n\nLicence **AGPL-3.0-or-later**.\n\nGénérée par \`npm run docs\`.\n\nOuvrir [index.html](./index.html).\n`,
     "utf8",
   );
 

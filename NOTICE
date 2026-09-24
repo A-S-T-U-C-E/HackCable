@@ -1,0 +1,41 @@
+HackCable
+==========
+
+Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
+
+This product includes software developed for the A-S-T-U-C-E fork of HackCable:
+  https://github.com/A-S-T-U-C-E/HackCable
+
+Original project:
+  https://github.com/ClementGre/HackCable
+
+License
+-------
+HackCable is licensed under the GNU Affero General Public License v3.0 or later
+(AGPL-3.0-or-later). See the file LICENSE.
+
+Third-party components (examples; not exhaustive)
+-------------------------------------------------
+- Draw2D — its own license terms
+- @wokwi/elements — MIT (Wokwi)
+- Fritzing breadboard parts — GPL (Fritzing project and contributors)
+- i18next, jQuery, jQuery UI — their respective licenses
+
+Network / SaaS (AGPL §13)
+-------------------------
+If you convey a modified version of HackCable to users over a network
+(web application, embedded widget, hosted IDE such as µcBlockly, etc.),
+you must provide those users with a clear opportunity to receive the
+Corresponding Source of your modified version, at no charge, through
+some standard or customary means of facilitating copying of software.
+
+For unmodified builds of this repository, pointing users to
+https://github.com/A-S-T-U-C-E/HackCable satisfies that offer.
+Modified deployments must point to *their* Corresponding Source.
+
+Attribution
+-----------
+Retain this NOTICE, the LICENSE file, and copyright headers in source
+files. Keep user-visible credit (About dialog or equivalent) to
+Clément Grennerat and to A-S-T-U-C-E / Sébastien Canet when the software
+is redistributed or offered as a network service.

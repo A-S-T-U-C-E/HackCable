@@ -4,7 +4,7 @@ HackCable entretient, pour chaque **microcontrôleur / carte programmable** sur 
 
 Destiné aux logiciels tiers (ex. **µcBlockly**) qui doivent savoir quelles GPIO / alimentations sont déjà câblées.
 
-Licence : GPL-3.0-or-later.
+Licence : AGPL-3.0-or-later.
 
 ## Cartes concernées
 

@@ -36,4 +36,4 @@ Fichier utilisateur : extension `.hackcable` (JSON).
 
 ## Licence
 
-GPL-3.0-or-later — voir `LICENSE` à la racine.
+AGPL-3.0-or-later — voir `LICENSE`, `NOTICE` et [COPYLEFT.md](COPYLEFT.md).

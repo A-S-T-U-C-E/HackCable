@@ -110,8 +110,10 @@
     "linkFritzing": "موقع Fritzing",
     "linkFritzingGitHub": "شفرة مصدر Fritzing",
     "linkWokwi": "Wokwi",
-    "linkLicense": "نص رخصة GNU GPL v3",
-    "license": "يُوزَّع HackCable بموجب رخصة GNU GPL الإصدار 3 أو أحدث (GPL-3.0-or-later): يمكنك استخدامه وتعديله وإعادة توزيعه وفق الشروط نفسها. أجزاء Fritzing تبقى تحت رخصة GPL الخاصة بها.",
+    "linkLicense": "نص رخصة GNU AGPL v3",
+    "linkSource": "الشيفرة المصدرية المقابلة (AGPL §13)",
+    "linkNotice": "NOTICE — الإسنادات",
+    "license": "يُوزَّع HackCable بموجب رخصة GNU Affero GPL الإصدار 3 أو أحدث (AGPL-3.0-or-later): يمكنك استخدامه وتعديله وإعادة توزيعه وفق الشروط نفسها. إذا قدّمت نسخة معدّلة كخدمة شبكية (موقع، بيئة مدمجة…)، يجب توفير الشيفرة المصدرية المقابلة للمستخدمين. أجزاء Fritzing تبقى تحت رخصة GPL الخاصة بها.",
     "close": "إغلاق"
   },
   "a11y": {

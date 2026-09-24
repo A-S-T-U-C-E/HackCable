@@ -110,8 +110,10 @@
     "linkFritzing": "Sitio web de Fritzing",
     "linkFritzingGitHub": "Código fuente de Fritzing",
     "linkWokwi": "Wokwi",
-    "linkLicense": "Texto de la licencia GNU GPL v3",
-    "license": "HackCable se distribuye bajo la GNU GPL versión 3 o posterior (GPL-3.0-or-later): puede usarlo, modificarlo y redistribuirlo en los mismos términos. Las piezas Fritzing siguen bajo su propia licencia GPL.",
+    "linkLicense": "Texto de la licencia GNU AGPL v3",
+    "linkSource": "Código fuente correspondiente (AGPL §13)",
+    "linkNotice": "NOTICE — atribuciones",
+    "license": "HackCable se distribuye bajo la GNU Affero GPL versión 3 o posterior (AGPL-3.0-or-later): puede usarlo, modificarlo y redistribuirlo en los mismos términos. Si ofrece una versión modificada como servicio en red (sitio, IDE embebido…), debe facilitar el código fuente correspondiente a los usuarios. Las piezas Fritzing siguen bajo su propia licencia GPL.",
     "close": "Cerrar"
   },
   "a11y": {

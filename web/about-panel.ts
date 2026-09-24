@@ -1,23 +1,24 @@
 /**
- * @license GPL-3.0-or-later
+ * @license AGPL-3.0-or-later
  * Copyright (c) 2021, Clément Grennerat
  * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
  *
- * @file Dialogue « À propos » (style µcBlockly) : projet, version, crédits, GPL.
+ * @file Dialogue « À propos » (style µcBlockly) : projet, version, crédits, AGPL.
  *
  * Responsabilités :
  * - Construire le `<dialog>` (logo, version, copyright, liens)
- * - Liens fork / upstream / Fritzing / Wokwi / texte GPL
+ * - Liens fork / upstream / Fritzing / Wokwi / AGPL / offre de source (§13)
  */
 import i18next from "i18next";
 import pkg from "../package.json";
 
 const HACKCABLE_UPSTREAM = "https://github.com/ClementGre/HackCable";
 const HACKCABLE_FORK = "https://github.com/A-S-T-U-C-E/HackCable";
+const HACKCABLE_NOTICE = `${HACKCABLE_FORK}/blob/main/NOTICE`;
 const FRITZING_SITE = "https://fritzing.org/";
 const FRITZING_GITHUB = "https://github.com/fritzing/fritzing-app";
 const WOKWI_SITE = "https://wokwi.com/";
-const GPL_V3 = "https://www.gnu.org/licenses/gpl-3.0.html";
+const AGPL_V3 = "https://www.gnu.org/licenses/agpl-3.0.html";
 
 /**
  * Traduit une clé i18n du namespace `common`.
@@ -139,11 +140,13 @@ export function setupAboutPanel(signal: AbortSignal): () => void {
         };
 
         addLink("about.linkFork", HACKCABLE_FORK);
+        addLink("about.linkSource", HACKCABLE_FORK);
+        addLink("about.linkNotice", HACKCABLE_NOTICE);
         addLink("about.linkUpstream", HACKCABLE_UPSTREAM);
         addLink("about.linkFritzing", FRITZING_SITE);
         addLink("about.linkFritzingGitHub", FRITZING_GITHUB);
         addLink("about.linkWokwi", WOKWI_SITE);
-        addLink("about.linkLicense", GPL_V3);
+        addLink("about.linkLicense", AGPL_V3);
 
         const license = document.createElement("p");
         license.className = "hackCable-about-license";

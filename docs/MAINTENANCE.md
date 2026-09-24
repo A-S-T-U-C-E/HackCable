@@ -1,11 +1,11 @@
 # Guide de maintenance (néophyte)
 
-Licence du projet : **GPL-3.0-or-later** (`LICENSE`).  
+Licence du projet : **AGPL-3.0-or-later** (`LICENSE`, `NOTICE`, [COPYLEFT.md](COPYLEFT.md)).  
 En-tête recommandé en tête de chaque fichier source (bibliothèque `src/` et démo `web/`) :
 
 ```ts
 /**
- * @license GPL-3.0-or-later
+ * @license AGPL-3.0-or-later
  * Copyright (c) 2021, Clément Grennerat
  * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
  *
@@ -104,6 +104,7 @@ connection-router.ts           ← Manhattan interactif + ponts (défaut)
 ## Documentation à jour
 
 - [Architecture](architecture.md)
+- [Copyleft / AGPL](COPYLEFT.md)
 - [API broches MCU](mcu-pin-api.md)
 - [Référence API générée](api-reference.md) (`npm run docs`)
 - [Routeurs de fils](wire-routers.md)

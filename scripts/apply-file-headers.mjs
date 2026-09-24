@@ -1,5 +1,5 @@
 /**
- * Script : applique les en-têtes GPL développés sur src/ et web/.
+ * Script : applique les en-têtes AGPL développés sur src/ et web/.
  * Usage : node scripts/apply-file-headers.mjs
  *
  * Mettre à jour la carte META ci-dessous quand un fichier source est ajouté.
@@ -462,7 +462,7 @@ const META = {
 
 function makeHeader(meta) {
   const out = ["/**"];
-  out.push(" * @license GPL-3.0-or-later");
+  out.push(" * @license AGPL-3.0-or-later");
   out.push(" * Copyright (c) 2021, Clément Grennerat");
   out.push(" * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable");
   out.push(" *");

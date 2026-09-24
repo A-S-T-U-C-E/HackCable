@@ -18,14 +18,16 @@
     ".": "./dist/src/bundle.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "LICENSE",
+    "NOTICE"
   ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/A-S-T-U-C-E/HackCable.git"
   },
-  "author": "Clément Grennerat",
-  "license": "GPL-3.0-or-later",
+  "author": "Clément Grennerat; Sébastien Canet / A-S-T-U-C-E",
+  "license": "AGPL-3.0-or-later",
   "bugs": {
     "url": "https://github.com/A-S-T-U-C-E/HackCable/issues"
   },
