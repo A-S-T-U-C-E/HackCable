@@ -9,7 +9,76 @@
  * - Layout barre latérale / flyout catalogue
  * - Canvas, minicarte, zoom, overlays Wokwi/Fritzing
  * - Menu contextuel
+ * - Thèmes sombre / clair (variables CSS, RGAA)
  */
+
+// Jetons chrome bibliothèque (sombre = défaut ; clair via data-ui-theme)
+:root
+  --hc-sidebar-bg #424B5A
+  --hc-nav-bg #30343F
+  --hc-card-bg #30343F
+  --hc-card-fg #c9c9c9
+  --hc-card-border transparent
+  --hc-panel-fg #f2f4f8
+  --hc-panel-muted #c5ccd8
+  --hc-panel-label #d8dee8
+  // #c5ccd8 / #424B5A ≈ 4,7:1 (texte / placeholder RGAA)
+  --hc-placeholder #c5ccd8
+  --hc-overlay-bg rgba(48, 52, 63, 0.92)
+  --hc-overlay-border #6a7385
+  --hc-overlay-shadow 0 4px 14px rgba(0, 0, 0, 0.25)
+  --hc-overlay-shadow-strong 0 6px 18px rgba(0, 0, 0, 0.4)
+  --hc-resizer-bg #222222
+  --hc-missing-bg #252932
+  --hc-missing-border #5a6270
+  --hc-missing-fg #7a8494
+  --hc-minimap-figure #424b5a
+  --hc-ctx-bg #30343F
+  --hc-ctx-border #1a1d24
+  --hc-ctx-fg #e8e8e8
+  --hc-ctx-shortcut #9aa3b2
+  --hc-ctx-hover #424B5A
+  --hc-ctx-shadow 0 6px 20px rgba(0, 0, 0, 0.35)
+  --hc-text-strong #ffffff
+
+html[data-ui-theme="light"]
+  --hc-sidebar-bg #e8eaef
+  --hc-nav-bg #f4f5f7
+  --hc-card-bg #ffffff
+  --hc-card-fg #2a303c
+  --hc-card-border #c9ced8
+  --hc-panel-fg #1a1d24
+  --hc-panel-muted #3d4450
+  --hc-panel-label #2a303c
+  // #5a6270 / #e4e7ec ≈ 5,5:1
+  --hc-placeholder #5a6270
+  --hc-overlay-bg rgba(255, 255, 255, 0.96)
+  --hc-overlay-border #9aa3b2
+  --hc-overlay-shadow 0 4px 14px rgba(30, 34, 42, 0.16)
+  --hc-overlay-shadow-strong 0 6px 18px rgba(30, 34, 42, 0.22)
+  --hc-resizer-bg #c9ced8
+  --hc-missing-bg #e8eaef
+  --hc-missing-border #6b7382
+  --hc-missing-fg #5a6270
+  --hc-minimap-figure #3d4450
+  --hc-ctx-bg #ffffff
+  --hc-ctx-border #c9ced8
+  --hc-ctx-fg #1a1d24
+  --hc-ctx-shortcut #5a6270
+  --hc-ctx-hover #e4e7ec
+  --hc-ctx-shadow 0 6px 20px rgba(30, 34, 42, 0.16)
+  // Réutilise les jetons chrome web si absents (intégration standalone)
+  --hc-btn-bg #e4e7ec
+  --hc-btn-bg-hover #d5dae3
+  --hc-btn-fg #1a1d24
+  --hc-header-bg #f4f5f7
+  --hc-divider #c9ced8
+  --hc-input-border #b8bec9
+  --hc-surface #ffffff
+  --hc-text #1a1d24
+  --hc-text-muted #3d4450
+  --hc-text-strong #111318
+
 .hackCable-root
   flex 1 1 0
   min-height 0
@@ -24,10 +93,11 @@
   font-size var(--hc-ui-font-size, 13px)
   line-height var(--hc-ui-line-height, 1.35)
   text-align var(--hc-ui-text-align, start)
+  color var(--hc-panel-fg, #f2f4f8)
 
   p, h1, h2, h3, h4, select
     font-family var(--hc-ui-font, Rubik, sans-serif)
-    color #c9c9c9
+    color var(--hc-card-fg, #c9c9c9)
 
   h3
     font-weight 400
@@ -46,7 +116,7 @@
     min-height 0
     width 320px
     min-width 220px
-    background-color #424B5A
+    background-color var(--hc-sidebar-bg, #424B5A)
     display flex
     flex-direction row
     flex-shrink 0
@@ -89,8 +159,8 @@
       height 100%
       box-sizing border-box
       padding 0
-      background #30343F
-      border-right 1px solid #1a1d24
+      background var(--hc-nav-bg, #30343F)
+      border-right 1px solid var(--hc-divider, #1a1d24)
       overflow hidden
       display flex
       flex-direction column
@@ -98,23 +168,24 @@
       .hackCable-catalog-search
         flex 0 0 auto
         padding 6px 4px 4px
-        border-bottom 1px solid #1a1d24
+        border-bottom 1px solid var(--hc-divider, #1a1d24)
 
         .hackCable-catalog-search-input
           width 100%
           box-sizing border-box
           min-height 36px
           padding 6px 8px
-          border 1px solid #1a1d24
+          border 1px solid var(--hc-input-border, #1a1d24)
           border-radius 4px
-          background #424B5A
-          color #f2f4f8
+          background var(--hc-btn-bg, #424B5A)
+          color var(--hc-panel-fg, #f2f4f8)
           font-family var(--hc-ui-font, Rubik, sans-serif)
           font-size 12px
           line-height 1.3
 
           &::placeholder
-            color #a8b0bf
+            color var(--hc-placeholder, #a8b0bf)
+            opacity 1
 
           &:focus-visible
             outline var(--hc-focus-outline-width, 2px) solid var(--hc-accent, #2c70ff)
@@ -140,8 +211,8 @@
         padding 10px 6px
         border 1px solid transparent
         border-radius 4px
-        background #424B5A
-        color #f2f4f8
+        background var(--hc-btn-bg, #424B5A)
+        color var(--hc-panel-fg, #f2f4f8)
         font-family var(--hc-ui-font, Rubik, sans-serif)
         font-size var(--hc-ui-font-size, 13px)
         font-weight 600
@@ -156,8 +227,8 @@
         flex-shrink 0
 
         &:hover
-          background #556075
-          color #ffffff
+          background var(--hc-btn-bg-hover, #556075)
+          color var(--hc-text-strong, #ffffff)
 
         &:focus-visible
           outline var(--hc-focus-outline-width, 2px) solid var(--hc-accent, #2c70ff)
@@ -165,16 +236,16 @@
 
         &.is-active,
         &[aria-current="true"]
-          background #556075
-          color #ffffff
+          background var(--hc-btn-bg-hover, #556075)
+          color var(--hc-text-strong, #ffffff)
           border-color var(--hc-accent, #2c70ff)
           box-shadow inset 3px 0 0 var(--hc-accent, #2c70ff)
 
       .hackCable-catalog-auto-collapse
         flex 0 0 auto
         padding 6px 4px 8px
-        border-top 1px solid #1a1d24
-        background #30343F
+        border-top 1px solid var(--hc-divider, #1a1d24)
+        background var(--hc-nav-bg, #30343F)
 
         .hackCable-catalog-auto-collapse-btn
           width 100%
@@ -182,8 +253,8 @@
           padding 8px 6px
           border 1px solid transparent
           border-radius 4px
-          background #424B5A
-          color #f2f4f8
+          background var(--hc-btn-bg, #424B5A)
+          color var(--hc-panel-fg, #f2f4f8)
           font-family var(--hc-ui-font, Rubik, sans-serif)
           font-size var(--hc-ui-font-size, 13px)
           font-weight 600
@@ -196,21 +267,21 @@
           cursor pointer
 
           &:hover
-            background #556075
-            color #ffffff
+            background var(--hc-btn-bg-hover, #556075)
+            color var(--hc-text-strong, #ffffff)
 
           &:focus-visible
             outline var(--hc-focus-outline-width, 2px) solid var(--hc-accent, #2c70ff)
             outline-offset 1px
 
           &[aria-pressed="true"]
-            background #556075
-            color #ffffff
+            background var(--hc-btn-bg-hover, #556075)
+            color var(--hc-text-strong, #ffffff)
             border-color var(--hc-accent, #2c70ff)
             box-shadow inset 0 -3px 0 var(--hc-accent, #2c70ff)
 
           &[aria-pressed="false"]
-            color #c5ccd8
+            color var(--hc-panel-muted, #c5ccd8)
 
     .hackCable-catalog-list
       flex 1 1 0
@@ -223,7 +294,7 @@
 
       .hackCable-catalog-search-empty
         margin 16px 8px
-        color #c5ccd8
+        color var(--hc-panel-muted, #c5ccd8)
         font-family var(--hc-ui-font, Rubik, sans-serif)
         font-size var(--hc-ui-font-size, 13px)
         text-align center
@@ -247,10 +318,11 @@
           line-height var(--hc-ui-line-height, 1.35)
           text-transform uppercase
           letter-spacing .03em
-          color #d8dee8
-          background #30343F
+          color var(--hc-panel-label, #d8dee8)
+          background var(--hc-card-bg, #30343F)
           border-radius 4px
           text-align left
+          border 1px solid var(--hc-card-border, transparent)
 
         .hackCable-catalog-section-grid
           display flex
@@ -262,10 +334,10 @@
         display block
         overflow hidden
         border-radius 5px
-        background: #30343F
+        background var(--hc-card-bg, #30343F)
         padding 10px
         margin-bottom 5px
-        border 1px solid transparent
+        border 1px solid var(--hc-card-border, transparent)
         transition border-color .12s ease, box-shadow .12s ease
 
         &:hover,
@@ -278,6 +350,7 @@
           font-family var(--hc-ui-font, Rubik, sans-serif)
           font-size 0.95em
           line-height var(--hc-ui-line-height, 1.35)
+          color var(--hc-card-fg, #c9c9c9)
 
         .hackCable-fritzing-preview,
         .hackCable-catalog-preview
@@ -300,8 +373,8 @@
 
         .hackCable-fritzing-preview.is-missing
           min-height 48px
-          background #252932
-          border 1px dashed #5a6270
+          background var(--hc-missing-bg, #252932)
+          border 1px dashed var(--hc-missing-border, #5a6270)
           border-radius 4px
           position relative
 
@@ -314,7 +387,7 @@
             justify-content center
             font-family Rubik, sans-serif
             font-size 1.4em
-            color #7a8494
+            color var(--hc-missing-fg, #7a8494)
 
   .hackCable-fritzing-overlay
     position absolute
@@ -330,7 +403,7 @@
   .resizerCanvas
     width 5px
     height 100%
-    background-color #222
+    background-color var(--hc-resizer-bg, #222)
     cursor ew-resize
     flex-shrink 0
     transition background-color .15s ease
@@ -369,9 +442,9 @@
       box-sizing border-box
       padding 4px
       border-radius 8px
-      background rgba(48, 52, 63, 0.92)
-      border 2px solid #6a7385
-      box-shadow 0 4px 14px rgba(0, 0, 0, 0.25)
+      background var(--hc-overlay-bg, rgba(48, 52, 63, 0.92))
+      border 2px solid var(--hc-overlay-border, #6a7385)
+      box-shadow var(--hc-overlay-shadow, 0 4px 14px rgba(0, 0, 0, 0.25))
       cursor grab
       user-select none
       touch-action none
@@ -386,7 +459,7 @@
       &.is-moving
         cursor grabbing
         border-color var(--hc-accent, #2c70ff)
-        box-shadow 0 6px 18px rgba(0, 0, 0, 0.4)
+        box-shadow var(--hc-overlay-shadow-strong, 0 6px 18px rgba(0, 0, 0, 0.4))
 
       .hackCable-canvas-minimap-surface
         display block
@@ -407,24 +480,24 @@
       gap 4px
       padding 4px
       border-radius 8px
-      background rgba(48, 52, 63, 0.92)
-      border 1px solid #1a1d24
-      box-shadow 0 4px 14px rgba(0, 0, 0, 0.25)
+      background var(--hc-overlay-bg, rgba(48, 52, 63, 0.92))
+      border 1px solid var(--hc-overlay-border, #1a1d24)
+      box-shadow var(--hc-overlay-shadow, 0 4px 14px rgba(0, 0, 0, 0.25))
 
       .hackCable-canvas-zoom-btn
         width 36px
         height 36px
         border none
         border-radius 6px
-        background #424B5A
-        color #e8e8e8
+        background var(--hc-btn-bg, #424B5A)
+        color var(--hc-btn-fg, #e8e8e8)
         cursor pointer
         padding 0
         font-family var(--hc-ui-font, Rubik, sans-serif)
         line-height 1
 
         &:hover
-          background #556075
+          background var(--hc-btn-bg-hover, #556075)
 
         &:focus-visible
           outline var(--hc-focus-outline-width, 2px) solid var(--hc-accent, #2c70ff)
@@ -505,13 +578,14 @@
   min-width 160px
   padding 4px 0
   margin 0
-  background #30343F
-  border 1px solid #1a1d24
+  background var(--hc-ctx-bg, #30343F)
+  border 1px solid var(--hc-ctx-border, #1a1d24)
   border-radius 6px
-  box-shadow 0 6px 20px rgba(0, 0, 0, 0.35)
+  box-shadow var(--hc-ctx-shadow, 0 6px 20px rgba(0, 0, 0, 0.35))
   font-family var(--hc-ui-font, Rubik, sans-serif)
   font-size var(--hc-ui-font-size, 13px)
   line-height var(--hc-ui-line-height, 1.35)
+  color var(--hc-ctx-fg, #e8e8e8)
 
   .hackCable-ctx-menu-item
     display flex
@@ -524,7 +598,7 @@
     border none
     border-left 3px solid transparent
     background transparent
-    color #e8e8e8
+    color var(--hc-ctx-fg, #e8e8e8)
     font-size inherit
     font-family inherit
     line-height inherit
@@ -537,12 +611,12 @@
 
     .hackCable-ctx-menu-shortcut
       flex 0 0 auto
-      color #9aa3b2
+      color var(--hc-ctx-shortcut, #9aa3b2)
       font-size 0.92em
       letter-spacing 0.02em
 
     &:hover
-      background #424B5A
+      background var(--hc-ctx-hover, #424B5A)
 
     &:disabled
       opacity 0.45
@@ -553,7 +627,7 @@
 
     &:focus-visible
       outline none
-      background #424B5A
+      background var(--hc-ctx-hover, #424B5A)
       border-left-color var(--hc-accent, #2c70ff)
       box-shadow inset 0 0 0 2px var(--hc-accent-soft, rgba(44, 112, 255, 0.18))
 

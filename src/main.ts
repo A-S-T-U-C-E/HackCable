@@ -43,6 +43,17 @@ export type {
     McuPinStatus,
     McuPinTableChangeListener,
 } from "./editor/mcu-pin";
+export {
+    buildVelxioVlx,
+    buildWokwiDiagram,
+    resolveWokwiElementTag,
+} from "./editor/sim-circuit-export";
+export type {
+    SimCircuitExportResult,
+    VelxioVlxPayload,
+    WokwiDiagram,
+    WokwiDiagramPart,
+} from "./editor/sim-circuit-export";
 
 import './jquery-ui-draggable';
 

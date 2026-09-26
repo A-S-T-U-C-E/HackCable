@@ -29,6 +29,7 @@ import {
     setupCatalogUpdate,
     setupCatalogUrlSync,
     setupExportImage,
+    setupExportSimCircuits,
     setupLanguageSelect,
     setupMinimapToggle,
     setupSaveRestore,
@@ -102,6 +103,7 @@ export async function mountWebDemoApp(): Promise<() => void> {
     setupCatalogUpdate(hackCable, signal);
     const restoreFileInput = setupSaveRestore(hackCable.editor, signal);
     setupExportImage(hackCable.editor, signal);
+    setupExportSimCircuits(hackCable.editor, signal);
     setupLanguageSelect(hackCable, signal);
     setupMinimapToggle(hackCable, signal);
     setupUndoRedo(hackCable.editor, signal);

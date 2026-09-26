@@ -25,7 +25,55 @@
     --hc-btn-bg #424B5A
     --hc-btn-bg-hover #556075
     --hc-btn-fg #e8e8e8
+    --hc-btn-fg-disabled #9aa3b2
     --hc-btn-icon-size 1.15em
+    --hc-page-bg #1a1d24
+    --hc-page-fg #e8e8e8
+    --hc-surface #30343F
+    --hc-surface-border #1a1d24
+    --hc-text-strong #ffffff
+    --hc-text #e8e8e8
+    --hc-text-muted #c8cdd6
+    --hc-text-subtle #aeb6c2
+    --hc-text-faint #8b93a1
+    --hc-text-label #d8dee8
+    --hc-text-value #c5ccd8
+    --hc-divider #000000
+    --hc-input-border #1a1d24
+    --hc-backdrop rgba(0, 0, 0, 0.45)
+    --hc-backdrop-strong rgba(20, 22, 28, 0.55)
+    --hc-boot-backdrop rgba(20, 22, 28, 0.72)
+    --hc-shadow 0 12px 40px rgba(0, 0, 0, 0.45)
+    --hc-shadow-soft 0 10px 28px rgba(0, 0, 0, 0.4)
+    --hc-logo-bg #1a1d24
+    --hc-track-bg #1a1d24
+
+html[data-ui-theme="light"]
+    --hc-header-bg #f4f5f7
+    --hc-btn-bg #e4e7ec
+    --hc-btn-bg-hover #d5dae3
+    --hc-btn-fg #1a1d24
+    --hc-btn-fg-disabled #6b7382
+    --hc-page-bg #e8eaef
+    --hc-page-fg #1a1d24
+    --hc-surface #ffffff
+    --hc-surface-border #c9ced8
+    --hc-text-strong #111318
+    --hc-text #1a1d24
+    --hc-text-muted #3d4450
+    --hc-text-subtle #5a6270
+    --hc-text-faint #6b7382
+    --hc-text-label #2a303c
+    --hc-text-value #4a5260
+    --hc-divider #c9ced8
+    --hc-input-border #b8bec9
+    --hc-backdrop rgba(30, 34, 42, 0.35)
+    --hc-backdrop-strong rgba(30, 34, 42, 0.4)
+    --hc-boot-backdrop rgba(232, 234, 239, 0.88)
+    --hc-shadow 0 12px 36px rgba(30, 34, 42, 0.18)
+    --hc-shadow-soft 0 10px 24px rgba(30, 34, 42, 0.14)
+    --hc-logo-bg #e8eaef
+    --hc-track-bg #d5dae3
 
 p, h1, h2, h3, h4, label, button, select, input
     font-family var(--hc-ui-font)
@@ -98,8 +146,8 @@ body
     font-family var(--hc-ui-font)
     font-size var(--hc-ui-font-size)
     line-height var(--hc-ui-line-height)
-    color #e8e8e8
-    background #1a1d24
+    color var(--hc-page-fg)
+    background var(--hc-page-bg)
     
     &.resizing
         user-select none
@@ -109,9 +157,8 @@ header.hackCable-app-header
     flex-shrink 0
     min-height 36px
     background-color var(--hc-header-bg)
-    border-bottom 1px solid black
+    border-bottom 1px solid var(--hc-divider)
     z-index 100
-
     .hackCable-app-toolbar
         display flex
         align-items center
@@ -162,6 +209,19 @@ header.hackCable-app-header
                 width 1.25em
                 height 1.25em
 
+            .hackCable-btn-favicon
+                display block
+                width 1.25em
+                height 1.25em
+                object-fit contain
+                border-radius 2px
+                pointer-events none
+                user-select none
+
+            // Favicon Wokwi (PNG noir) : inverser sur thème sombre
+            .hackCable-btn-favicon--wokwi
+                filter invert(1)
+
             .hackCable-btn-label
                 line-height inherit
 
@@ -173,8 +233,12 @@ header.hackCable-app-header
                 outline-offset var(--hc-focus-outline-offset)
 
             &:disabled
-                opacity 0.45
+                opacity 1
+                color var(--hc-btn-fg-disabled, #8b93a1)
                 cursor default
+
+                .hackCable-btn-svg
+                    opacity 1
 
         button#show-minimap
         button.hackCable-app-minimap-btn
@@ -216,7 +280,7 @@ header.hackCable-app-header
                 min-width 9.5rem
                 min-height 24px
                 padding 0 28px 0 10px
-                border 1px solid #1a1d24
+                border 1px solid var(--hc-input-border)
                 border-radius 4px
                 background-color var(--hc-btn-bg)
                 color var(--hc-btn-fg)
@@ -238,6 +302,12 @@ header.hackCable-app-header
                     outline-offset var(--hc-focus-outline-offset)
                     border-color var(--hc-accent)
 
+html[data-ui-theme="light"]
+    header.hackCable-app-header
+        .hackCable-app-toolbar-group
+            .hackCable-btn-favicon--wokwi
+                filter none
+
 main
     box-sizing border-box
     flex 1
@@ -255,7 +325,7 @@ footer
     flex-shrink 0
     height 20px
     background-color var(--hc-header-bg)
-    border-top 1px solid black
+    border-top 1px solid var(--hc-divider)
 
 // Panneau accessibilité
 .hackCable-a11y-dialog
@@ -264,23 +334,23 @@ footer
     padding 0
     max-width unquote("min(420px, calc(100vw - 24px))")
     width 100%
-    background #30343F
-    color #e8e8e8
-    box-shadow 0 12px 40px rgba(0, 0, 0, 0.45)
+    background var(--hc-surface)
+    color var(--hc-text)
+    box-shadow var(--hc-shadow)
     font-family var(--hc-ui-font)
     font-size var(--hc-ui-font-size)
     line-height var(--hc-ui-line-height)
     text-align var(--hc-ui-text-align)
 
     &::backdrop
-        background rgba(0, 0, 0, 0.45)
+        background var(--hc-backdrop)
 
     .hackCable-a11y-dialog-title
         margin 0
         padding 14px 16px 8px
         font-size 1.15em
         font-weight 600
-        color #fff
+        color var(--hc-text-strong)
 
     .hackCable-a11y-form
         display flex
@@ -295,13 +365,13 @@ footer
         align-items center
 
         label
-            color #d8dee8
+            color var(--hc-text-label)
 
         select, input[type="color"]
             width 100%
             box-sizing border-box
             min-height 28px
-            border 1px solid #1a1d24
+            border 1px solid var(--hc-input-border)
             border-radius 4px
             background var(--hc-btn-bg)
             color var(--hc-btn-fg)
@@ -334,7 +404,7 @@ footer
         .hackCable-a11y-value
             min-width 3.2rem
             text-align end
-            color #c5ccd8
+            color var(--hc-text-value)
             font-variant-numeric tabular-nums
 
     .hackCable-a11y-check
@@ -343,7 +413,7 @@ footer
         gap 8px
         min-height 28px
         cursor pointer
-        color #d8dee8
+        color var(--hc-text-label)
 
         input
             width 16px
@@ -389,31 +459,31 @@ footer
     border none
     border-radius 10px
     padding 20px 22px
-    background #30343F
-    color #e8e8e8
+    background var(--hc-surface)
+    color var(--hc-text)
     font-family var(--hc-ui-font)
     font-size var(--hc-ui-font-size)
     line-height var(--hc-ui-line-height)
-    box-shadow 0 12px 36px rgba(0, 0, 0, 0.45)
+    box-shadow var(--hc-shadow)
 
     &::backdrop
-        background rgba(0, 0, 0, 0.45)
+        background var(--hc-backdrop)
 
     .hackCable-about-dialog-title
         margin 0 0 6px
         font-size 1.2em
         font-weight 600
-        color #fff
+        color var(--hc-text-strong)
 
     .hackCable-about-version
         margin 0 0 4px
         font-size 0.92em
-        color #aeb6c2
+        color var(--hc-text-subtle)
 
     .hackCable-about-copyright
         margin 0 0 14px
         font-size 0.85em
-        color #8b93a1
+        color var(--hc-text-faint)
 
     .hackCable-about-row
         display flex
@@ -435,7 +505,7 @@ footer
         height 64px
         object-fit contain
         border-radius 12px
-        background #1a1d24
+        background var(--hc-logo-bg)
         padding 6px
         box-sizing border-box
 
@@ -448,7 +518,7 @@ footer
         margin 0
         flex 1 1 auto
         min-width 0
-        color #c8cdd6
+        color var(--hc-text-muted)
 
     .hackCable-about-body
         margin 0
@@ -456,7 +526,7 @@ footer
     .hackCable-about-links
         margin 0 0 12px
         padding-left 1.2em
-        color #c8cdd6
+        color var(--hc-text-muted)
 
         a
             color var(--hc-accent)
@@ -495,7 +565,7 @@ footer
     position fixed
     inset 0
     z-index 210000
-    background rgba(20, 22, 28, 0.55)
+    background var(--hc-backdrop-strong)
     display flex
     align-items center
     justify-content center
@@ -506,10 +576,10 @@ footer
     box-sizing border-box
     padding 18px 20px
     border-radius 8px
-    background #30343F
-    border 1px solid #1a1d24
-    box-shadow 0 10px 28px rgba(0, 0, 0, 0.4)
-    color #e8e8e8
+    background var(--hc-surface)
+    border 1px solid var(--hc-surface-border)
+    box-shadow var(--hc-shadow-soft)
+    color var(--hc-text)
     font-family var(--hc-ui-font)
     font-size var(--hc-ui-font-size)
     line-height var(--hc-ui-line-height)
@@ -518,11 +588,11 @@ footer
         margin 0 0 8px
         font-size 1.15em
         font-weight 600
-        color #fff
+        color var(--hc-text-strong)
 
     p
         margin 0 0 16px
-        color #c8cdd6
+        color var(--hc-text-muted)
 
 .hackCable-load-merge-actions
     display flex
@@ -564,34 +634,34 @@ footer
     justify-content center
     padding 24px
     box-sizing border-box
-    background rgba(20, 22, 28, 0.72)
+    background var(--hc-boot-backdrop)
     font-family var(--hc-ui-font)
     font-size var(--hc-ui-font-size)
     line-height var(--hc-ui-line-height)
-    color #e8e8e8
+    color var(--hc-text)
 
 .hackCable-boot-progress-panel
     width unquote("min(360px, calc(100vw - 48px))")
     padding 20px 22px
     border-radius 8px
-    background #30343F
-    border 1px solid #1a1d24
-    box-shadow 0 12px 32px rgba(0, 0, 0, 0.45)
+    background var(--hc-surface)
+    border 1px solid var(--hc-surface-border)
+    box-shadow var(--hc-shadow)
 
 .hackCable-boot-progress-title
     margin 0 0 6px
     font-weight 600
     font-size 1.05em
-    color #fff
+    color var(--hc-text-strong)
 
 .hackCable-boot-progress-detail
     margin 0 0 14px
-    color #c8cdd6
+    color var(--hc-text-muted)
 
 .hackCable-boot-progress-track
     height 8px
     border-radius 999px
-    background #1a1d24
+    background var(--hc-track-bg)
     overflow hidden
 
 .hackCable-boot-progress-fill
@@ -604,5 +674,5 @@ footer
 .hackCable-boot-progress-percent
     margin 10px 0 0
     text-align end
-    color #aeb6c2
+    color var(--hc-text-subtle)
     font-variant-numeric tabular-nums

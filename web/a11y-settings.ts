@@ -3,7 +3,7 @@
  * Copyright (c) 2021, Clément Grennerat
  * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
  *
- * @file Options d’accessibilité (labels, police, interligne, focus, couleur UI, routeur).
+ * @file Options d’accessibilité (labels, police, interligne, focus, thème, couleur UI, routeur).
  *
  * Responsabilités :
  * - Lire / écrire localStorage
@@ -18,6 +18,7 @@ import {
 
 export type A11yLabelMode = "icons" | "text" | "both";
 export type A11yTextAlign = "start" | "justify";
+export type A11yUiTheme = "dark" | "light";
 export type { WireRouterId };
 
 export interface A11ySettings {
@@ -27,6 +28,8 @@ export interface A11ySettings {
     lineHeight: number;
     align: A11yTextAlign;
     strongFocus: boolean;
+    /** Thème chrome (toolbar / dialogues) : sombre (défaut) ou clair. */
+    uiTheme: A11yUiTheme;
     accent: string;
     /** Algorithme de tracé des fils (draw2d connection router). */
     wireRouter: WireRouterId;
@@ -52,6 +55,7 @@ export const DEFAULT_A11Y_SETTINGS: A11ySettings = {
     lineHeight: 1.35,
     align: "start",
     strongFocus: false,
+    uiTheme: "dark",
     accent: "#2c70ff",
     wireRouter: DEFAULT_WIRE_ROUTER,
 };
@@ -86,6 +90,15 @@ function isAlign(value: string): value is A11yTextAlign {
 }
 
 /**
+ * Vérifie si une chaîne est un thème d’interface valide.
+ * @param value - Valeur à tester.
+ * @returns Vrai si la valeur est un `A11yUiTheme`.
+ */
+function isUiTheme(value: string): value is A11yUiTheme {
+    return value === "dark" || value === "light";
+}
+
+/**
  * Normalise une couleur d’accent hexadécimale (#RGB ou #RRGGBB).
  * @param raw - Couleur brute saisie par l’utilisateur.
  * @returns Couleur hex normalisée ou valeur par défaut si invalide.
@@ -117,6 +130,7 @@ export function normalizeA11ySettings(partial: Partial<A11ySettings> | null | un
         lineHeight: clamp(Number(base.lineHeight) || DEFAULT_A11Y_SETTINGS.lineHeight, 1.1, 2.2),
         align: isAlign(base.align) ? base.align : DEFAULT_A11Y_SETTINGS.align,
         strongFocus: Boolean(base.strongFocus),
+        uiTheme: isUiTheme(String(base.uiTheme)) ? base.uiTheme : DEFAULT_A11Y_SETTINGS.uiTheme,
         accent: normalizeAccent(String(base.accent ?? DEFAULT_A11Y_SETTINGS.accent)),
         wireRouter: normalizeWireRouterId(base.wireRouter),
     };
@@ -245,6 +259,8 @@ export function applyA11ySettings(settings: A11ySettings): void {
     root.dataset.a11yStrongFocus = s.strongFocus ? "true" : "false";
     root.dataset.a11yAlign = s.align;
     root.dataset.a11yWireRouter = s.wireRouter;
+    root.dataset.uiTheme = s.uiTheme;
+    root.style.colorScheme = s.uiTheme;
     setPreferredWireRouterId(s.wireRouter);
 
     document.dispatchEvent(new CustomEvent("hackcable:a11y-changed", { detail: s }));
@@ -279,6 +295,9 @@ export function parseA11yFromUrlParams(params: URLSearchParams): Partial<A11ySet
     }
     if (params.has("nofocus")) partial.strongFocus = false;
 
+    const uiTheme = params.get("theme") ?? params.get("uiTheme") ?? params.get("uitheme");
+    if (uiTheme && isUiTheme(uiTheme)) partial.uiTheme = uiTheme;
+
     const accent = params.get("accent") ?? params.get("color") ?? params.get("couleur");
     if (accent) partial.accent = decodeURIComponent(accent.startsWith("#") ? accent : `#${accent}`);
 
@@ -301,6 +320,7 @@ export function writeA11yToUrlParams(params: URLSearchParams, settings: A11ySett
     params.set("lineheight", String(s.lineHeight));
     params.set("align", s.align);
     params.set("focus", s.strongFocus ? "1" : "0");
+    params.set("theme", s.uiTheme);
     params.set("accent", s.accent.replace(/^#/, ""));
     params.set("router", s.wireRouter);
 }

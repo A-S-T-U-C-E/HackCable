@@ -95,8 +95,12 @@
     "bootPhaseMount": "Building catalog view",
     "bootPhaseReady": "Ready",
     "exportImage": "Export image",
+    "exportWokwi": "Export Wokwi",
+    "exportVelxio": "Export Velxio",
     "exportEmpty": "The workspace is empty — nothing to export.",
-    "exportFailed": "Image export failed."
+    "exportFailed": "Image export failed.",
+    "exportSimSkippedFritzing": "{{count}} Fritzing part(s) skipped (not supported by Wokwi/Velxio).",
+    "exportSimSkippedUnsupported": "{{count}} part(s) skipped (unrecognized type)."
   },
   "about": {
     "title": "About HackCable",
@@ -130,6 +134,9 @@
     "alignStart": "Start-aligned",
     "alignJustify": "Justified",
     "strongFocus": "Stronger focus outline",
+    "theme": "Theme",
+    "themeDark": "Dark",
+    "themeLight": "Light",
     "accent": "Interface color",
     "wireRouter": "Wire routing",
     "routerManhattan": "Manhattan",

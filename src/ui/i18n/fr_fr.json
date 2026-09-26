@@ -95,8 +95,12 @@
     "bootPhaseMount": "Affichage du catalogue",
     "bootPhaseReady": "Prêt",
     "exportImage": "Exporter l’image",
+    "exportWokwi": "Exporter Wokwi",
+    "exportVelxio": "Exporter Velxio",
     "exportEmpty": "Le plan est vide — rien à exporter.",
-    "exportFailed": "Échec de l’export de l’image."
+    "exportFailed": "Échec de l’export de l’image.",
+    "exportSimSkippedFritzing": "{{count}} pièce(s) Fritzing omise(s) (non supportées par Wokwi/Velxio).",
+    "exportSimSkippedUnsupported": "{{count}} pièce(s) non exportée(s) (type non reconnu)."
   },
   "about": {
     "title": "À propos d’HackCable",
@@ -130,6 +134,9 @@
     "alignStart": "Aligné au début",
     "alignJustify": "Justifié",
     "strongFocus": "Contour de focus renforcé",
+    "theme": "Thème",
+    "themeDark": "Sombre",
+    "themeLight": "Clair",
     "accent": "Couleur d’interface",
     "wireRouter": "Tracé des fils",
     "routerManhattan": "Manhattan",

@@ -213,6 +213,51 @@ export function setupExportImage(editor: Editor, signal: AbortSignal): void {
 }
 
 /**
+ * Branche les exports schéma vers Wokwi (`diagram.json`) et Velxio (`.vlx`).
+ * @param editor - Éditeur source du câblage.
+ * @param signal - Signal d’annulation pour retirer les écouteurs.
+ */
+export function setupExportSimCircuits(editor: Editor, signal: AbortSignal): void {
+    const t = (key: string, opts?: Record<string, string | number>) =>
+        i18next.t(key, { ns: "common", ...opts });
+
+    const warnSkipped = (skippedFritzing: number, skippedUnsupported: number) => {
+        const parts: string[] = [];
+        if (skippedFritzing > 0) {
+            parts.push(t("web.exportSimSkippedFritzing", { count: skippedFritzing }));
+        }
+        if (skippedUnsupported > 0) {
+            parts.push(t("web.exportSimSkippedUnsupported", { count: skippedUnsupported }));
+        }
+        if (parts.length) alert(parts.join("\n"));
+    };
+
+    const wokwiBtn = document.getElementById("export-wokwi");
+    wokwiBtn?.addEventListener("click", () => {
+        const { diagram, exportedCount, skippedFritzing, skippedUnsupported } =
+            editor.exportWokwiDiagram();
+        if (exportedCount === 0) {
+            alert(t("web.exportEmpty"));
+            return;
+        }
+        downloadJsonFile(buildHackCableExportFilename("diagram.json"), diagram);
+        warnSkipped(skippedFritzing, skippedUnsupported);
+    }, { signal });
+
+    const velxioBtn = document.getElementById("export-velxio");
+    velxioBtn?.addEventListener("click", () => {
+        const { payload, exportedCount, skippedFritzing, skippedUnsupported } =
+            editor.exportVelxioVlx({ name: "HackCable export" });
+        if (exportedCount === 0) {
+            alert(t("web.exportEmpty"));
+            return;
+        }
+        downloadJsonFile(buildHackCableExportFilename("vlx"), payload);
+        warnSkipped(skippedFritzing, skippedUnsupported);
+    }, { signal });
+}
+
+/**
  * Branche le sélecteur de langue et synchronise l’URL.
  * @param hackCable - Instance HackCable pour changer la langue.
  * @param signal - Signal d’annulation pour retirer l’écouteur.

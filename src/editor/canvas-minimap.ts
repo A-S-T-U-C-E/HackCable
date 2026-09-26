@@ -130,7 +130,7 @@ function drawFigures(
         (figure: unknown) => figure instanceof ComponentFigure,
     ) as ComponentFigure[];
 
-    ctx.fillStyle = "#424b5a";
+    ctx.fillStyle = cssVar("--hc-minimap-figure", "#424b5a");
     for (const figure of figures) {
         const topLeft = worldToMinimap(transform, figure.getX(), figure.getY());
         ctx.fillRect(

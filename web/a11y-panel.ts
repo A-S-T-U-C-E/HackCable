@@ -6,7 +6,7 @@
  * @file Panneau d’options d’accessibilité (style µcBlockly).
  *
  * Responsabilités :
- * - UI labels / police / interligne / focus / accent / routeur
+ * - UI labels / police / interligne / focus / thème / accent / routeur
  * - Persister via `a11y-settings`
  */
 import i18next from "i18next";
@@ -178,6 +178,23 @@ export function setupA11yPanel(signal: AbortSignal, onChange: OnChange): () => v
         focusText.textContent = t("a11y.strongFocus");
         focusWrap.append(focusInput, focusText);
 
+        // UI theme (dark / light chrome)
+        const themeLabel = document.createElement("label");
+        themeLabel.htmlFor = "a11y-theme";
+        themeLabel.textContent = t("a11y.theme");
+        const themeSelect = document.createElement("select");
+        themeSelect.id = "a11y-theme";
+        for (const [value, key] of [
+            ["dark", "a11y.themeDark"],
+            ["light", "a11y.themeLight"],
+        ] as const) {
+            const opt = document.createElement("option");
+            opt.value = value;
+            opt.textContent = t(key);
+            if (settings.uiTheme === value) opt.selected = true;
+            themeSelect.appendChild(opt);
+        }
+
         // Accent color
         const accentLabel = document.createElement("label");
         accentLabel.htmlFor = "a11y-accent";
@@ -209,6 +226,7 @@ export function setupA11yPanel(signal: AbortSignal, onChange: OnChange): () => v
                 lineHeight: Number(lhInput.value),
                 align: alignSelect.value as A11ySettings["align"],
                 strongFocus: focusInput.checked,
+                uiTheme: themeSelect.value as A11ySettings["uiTheme"],
                 accent: accentInput.value,
                 wireRouter: routerSelect.value as A11ySettings["wireRouter"],
             });
@@ -225,6 +243,7 @@ export function setupA11yPanel(signal: AbortSignal, onChange: OnChange): () => v
         lhInput.addEventListener("input", commit);
         alignSelect.addEventListener("change", commit);
         focusInput.addEventListener("change", commit);
+        themeSelect.addEventListener("change", commit);
         accentInput.addEventListener("input", commit);
         routerSelect.addEventListener("change", commit);
 
@@ -257,6 +276,7 @@ export function setupA11yPanel(signal: AbortSignal, onChange: OnChange): () => v
             fieldRow(lhLabel, lhWrap),
             fieldRow(alignLabel, alignSelect),
             focusWrap,
+            fieldRow(themeLabel, themeSelect),
             fieldRow(accentLabel, accentInput),
             fieldRow(routerLabel, routerSelect),
             actions,

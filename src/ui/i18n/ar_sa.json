@@ -95,8 +95,12 @@
     "bootPhaseMount": "عرض الكتالوج",
     "bootPhaseReady": "جاهز",
     "exportImage": "تصدير الصورة",
+    "exportWokwi": "تصدير Wokwi",
+    "exportVelxio": "تصدير Velxio",
     "exportEmpty": "مساحة العمل فارغة — لا يوجد ما يُصدَّر.",
-    "exportFailed": "فشل تصدير الصورة."
+    "exportFailed": "فشل تصدير الصورة.",
+    "exportSimSkippedFritzing": "تم تخطي {{count}} قطعة Fritzing (غير مدعومة في Wokwi/Velxio).",
+    "exportSimSkippedUnsupported": "تم تخطي {{count}} قطعة (نوع غير معروف)."
   },
   "about": {
     "title": "حول HackCable",
@@ -130,6 +134,9 @@
     "alignStart": "محاذاة للبداية",
     "alignJustify": "ضبط كامل",
     "strongFocus": "حدود تركيز أقوى",
+    "theme": "السمة",
+    "themeDark": "داكن",
+    "themeLight": "فاتح",
     "accent": "لون الواجهة",
     "wireRouter": "مسار الأسلاك",
     "routerManhattan": "مانهاتن",

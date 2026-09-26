@@ -95,8 +95,10 @@ export function buildHackCableSaveFilename(date = new Date()): string {
  * @param date - Date utilisée pour le segment du nom (défaut : aujourd’hui).
  * @returns Nom de fichier `hackcable-YYYY-MM-DD.{ext}`.
  */
-export function buildHackCableExportFilename(ext: "png" | "svg", date = new Date()): string {
+export function buildHackCableExportFilename(ext: "png" | "svg" | "diagram.json" | "vlx", date = new Date()): string {
     const day = date.toISOString().slice(0, 10);
+    if (ext === "diagram.json") return `hackcable-${day}.diagram.json`;
+    if (ext === "vlx") return `hackcable-${day}.vlx`;
     return `hackcable-${day}.${ext}`;
 }
 
@@ -127,6 +129,8 @@ export function applyWebDemoUiI18n(): void {
     setBtn("save", "web.save");
     setBtn("restore", "web.restore");
     setBtn("export-image", "web.exportImage");
+    setBtn("export-wokwi", "web.exportWokwi");
+    setBtn("export-velxio", "web.exportVelxio");
     setBtn("undo", "web.undo");
     setBtn("redo", "web.redo");
     setBtn("a11y-open", "a11y.open");

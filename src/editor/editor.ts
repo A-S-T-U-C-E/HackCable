@@ -25,6 +25,7 @@ import {
     type McuPinStatus,
     type McuPinTableChangeListener,
 } from "./mcu-pin";
+import { buildVelxioVlx, buildWokwiDiagram } from "./sim-circuit-export";
 
 export type EditorSaveData = { figures: FigureData[]; connections: WiringData[] };
 
@@ -165,6 +166,22 @@ export class Editor {
             }
         });
         return data;
+    }
+
+    /**
+     * Exporte le schéma au format Wokwi `diagram.json`.
+     * @see ./sim-circuit-export.ts
+     */
+    public exportWokwiDiagram(options?: { author?: string; editor?: string }) {
+        return buildWokwiDiagram(this.getEditorSaveData(), options);
+    }
+
+    /**
+     * Exporte le schéma au format projet Velxio (`.vlx`).
+     * @see ./sim-circuit-export.ts
+     */
+    public exportVelxioVlx(options?: { name?: string }) {
+        return buildVelxioVlx(this.getEditorSaveData(), options);
     }
 
     /**
