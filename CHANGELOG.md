@@ -5,6 +5,20 @@ Tous les changements notables de ce fork sont documentés ici.
 Le format s’inspire de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/),
 et le projet suit le [versionnage sémantique](https://semver.org/lang/fr/).
 
+## [1.1.0] — 2026-09-27
+
+### Ajouté
+
+- Export du schéma vers **Wokwi** (`diagram.json`) et **Velxio** (`.vlx`) depuis la toolbar
+- **Thème clair** en complément du thème sombre, réglable dans le panneau Accessibilité
+  (persisté + synchro URL `theme=`)
+- Favicons officiels Wokwi / Velxio sur les boutons d’export
+
+### Modifié
+
+- Chrome UI (catalogue, zoom, minicarte, menus, dialogues) aligné sur le thème choisi
+- Contrastes toolbar / catalogue renforcés pour le **RGAA** (placeholders, icônes, états désactivés)
+
 ## [1.0.0] — 2026-09-25
 
 Première release stable du fork **A-S-T-U-C-E** : éditeur de câblage électronique
@@ -35,4 +49,5 @@ et démo en ligne.
 - Scripts Playwright de captation vidéo (`demo:record*`) et dépendance associée
 - Ancienne couche d’émulation AVR (retirée plus tôt dans l’historique du fork)
 
+[1.1.0]: https://github.com/A-S-T-U-C-E/HackCable/releases/tag/v1.1.0
 [1.0.0]: https://github.com/A-S-T-U-C-E/HackCable/releases/tag/v1.0.0
