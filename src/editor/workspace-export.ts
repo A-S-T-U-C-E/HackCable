@@ -123,6 +123,92 @@ function loadImage(src: string): Promise<HTMLImageElement> {
     });
 }
 
+/**
+ * CSS du shadow root Lit/Wokwi (adoptedStyleSheets + `<style>`).
+ * Sans ça, la sérialisation SVG→image perd `font-size: 2px` et les labels
+ * repassent au défaut navigateur (~16px) → textes énormes / superposés.
+ */
+function collectShadowCss(overlay: HTMLElement): string {
+    const root = overlay.shadowRoot;
+    if (!root) return "";
+    const chunks: string[] = [];
+    for (const sheet of root.adoptedStyleSheets ?? []) {
+        try {
+            for (const rule of sheet.cssRules) {
+                chunks.push(rule.cssText);
+            }
+        } catch {
+            // Feuille inaccessible — ignorer.
+        }
+    }
+    for (const el of root.querySelectorAll("style")) {
+        const text = el.textContent?.trim();
+        if (text) chunks.push(text);
+    }
+    return chunks.join("\n");
+}
+
+function hasFontSizeHint(el: Element): boolean {
+    return Boolean(
+        el.getAttribute("font-size")
+        || /(?:^|;)\s*font-size\s*:/i.test(el.getAttribute("style") ?? ""),
+    );
+}
+
+/**
+ * Enrobe les styles texte calculés sur le clone (filet si le CSS shadow
+ * n’a pas pu être injecté).
+ */
+function bakeTextPresentationAttributes(
+    sourceSvg: SVGSVGElement,
+    clone: SVGSVGElement,
+): void {
+    const srcNodes = sourceSvg.querySelectorAll("text, tspan");
+    const dstNodes = clone.querySelectorAll("text, tspan");
+    const n = Math.min(srcNodes.length, dstNodes.length);
+    for (let i = 0; i < n; i++) {
+        const src = srcNodes[i];
+        const dst = dstNodes[i];
+        if (!(src instanceof Element) || !(dst instanceof Element)) continue;
+        const cs = getComputedStyle(src);
+        if (!hasFontSizeHint(dst) && cs.fontSize) {
+            dst.setAttribute("font-size", cs.fontSize);
+        }
+        if (!dst.getAttribute("font-family") && cs.fontFamily) {
+            dst.setAttribute("font-family", cs.fontFamily);
+        }
+        if (!dst.getAttribute("font-weight") && cs.fontWeight) {
+            dst.setAttribute("font-weight", cs.fontWeight);
+        }
+    }
+}
+
+function prepareOverlaySvgClone(
+    sourceSvg: SVGSVGElement,
+    overlay: HTMLElement,
+    width: number,
+    height: number,
+): SVGSVGElement {
+    const clone = sourceSvg.cloneNode(true) as SVGSVGElement;
+    if (!clone.getAttribute("xmlns")) {
+        clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+    }
+    if (!clone.getAttribute("xmlns:xlink") && clone.querySelector("[href], use")) {
+        clone.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
+    }
+    clone.setAttribute("width", String(Math.max(1, Math.round(width))));
+    clone.setAttribute("height", String(Math.max(1, Math.round(height))));
+
+    const css = collectShadowCss(overlay);
+    if (css) {
+        const styleEl = document.createElementNS("http://www.w3.org/2000/svg", "style");
+        styleEl.textContent = css;
+        clone.insertBefore(styleEl, clone.firstChild);
+    }
+    bakeTextPresentationAttributes(sourceSvg, clone);
+    return clone;
+}
+
 async function rasterizeOverlay(
     overlay: HTMLElement,
     width: number,
@@ -147,12 +233,7 @@ async function rasterizeOverlay(
         ?? overlay.querySelector("svg");
     if (!(svg instanceof SVGSVGElement)) return null;
 
-    const clone = svg.cloneNode(true) as SVGSVGElement;
-    if (!clone.getAttribute("xmlns")) {
-        clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-    }
-    clone.setAttribute("width", String(Math.max(1, Math.round(width))));
-    clone.setAttribute("height", String(Math.max(1, Math.round(height))));
+    const clone = prepareOverlaySvgClone(svg, overlay, width, height);
     const xml = new XMLSerializer().serializeToString(clone);
     const url = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(xml)}`;
     try {
