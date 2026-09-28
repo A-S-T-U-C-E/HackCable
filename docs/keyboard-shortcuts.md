@@ -1,7 +1,7 @@
 <!--
-  Licence : AGPL-3.0-or-later — Copyright (c) 2021, Clément Grennerat
-  Fork A-S-T-U-C-E : https://github.com/A-S-T-U-C-E/HackCable
-  Sources : src/editor/canvas-context-menu.ts, web/demo-handlers.ts
+  Licence : AGPL-3.0-or-later
+  Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
+  https://github.com/A-S-T-U-C-E/HackCable
 -->
 
 # Raccourcis clavier

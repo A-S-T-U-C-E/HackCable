@@ -1,6 +1,7 @@
 <!--
-  Licence : AGPL-3.0-or-later — Copyright (c) 2021, Clément Grennerat
-  Fork A-S-T-U-C-E : https://github.com/A-S-T-U-C-E/HackCable
+  Licence : AGPL-3.0-or-later
+  Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
+  https://github.com/A-S-T-U-C-E/HackCable
 -->
 
 # Copyleft HackCable (AGPL-3.0-or-later)
@@ -25,8 +26,10 @@ L’**AGPL §13** comble ce trou : si des utilisateurs interagissent avec votre 
 
 ## Attribution
 
-Ne pas retirer les crédits utilisateur (dialogue « À propos ») à Clément Grennerat et A-S-T-U-C-E / Sébastien Canet.  
-Détails : [NOTICE](../NOTICE).
+- **Fichiers issus de** [ClementGre/HackCable](https://github.com/ClementGre/HackCable) : conserver `Copyright (c) 2021, Clément Grennerat` **et** ajouter le copyright du fork.
+- **Fichiers créés dans le fork** : copyright A-S-T-U-C-E / Sébastien Canet uniquement (pas de fausse attribution à Clément).
+- Ne pas retirer les crédits utilisateur (dialogue « À propos ») à Clément Grennerat et A-S-T-U-C-E / Sébastien Canet.
+- Détails : [NOTICE](../NOTICE), [MAINTENANCE.md](MAINTENANCE.md).
 
 ## Texte juridique
 

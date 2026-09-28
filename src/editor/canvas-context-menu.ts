@@ -1,14 +1,13 @@
 /**
  * @license AGPL-3.0-or-later
- * Copyright (c) 2021, Clément Grennerat
- * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
+ * https://github.com/A-S-T-U-C-E/HackCable
  *
- * @file Menu contextuel (clic droit) sur le canvas draw2d + raccourcis Alt.
+ * @file Menu contextuel (clic droit) sur le canvas draw2d.
  *
  * Responsabilités :
  * - Afficher actions figure / fil / plan (supprimer, label, etc.)
  * - Positionner le menu hors overflow du viewport
- * - Raccourcis clavier Alt+lettre pour les mêmes actions
  */
 import draw2d from "draw2d";
 import { deleteFigureWithUndo } from "./canvas-commands";

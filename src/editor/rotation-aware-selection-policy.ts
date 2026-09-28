@@ -1,12 +1,13 @@
 /**
  * @license AGPL-3.0-or-later
- * Copyright (c) 2021, Clément Grennerat
- * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
+ * https://github.com/A-S-T-U-C-E/HackCable
  *
  * @file Feedback de sélection (fourmis bleues) compatible rotation pure.
  *
- * draw2d.Rectangle applique un scale à 90°/270° qui garde l’AABB largeur×hauteur.
- * Après rotation réelle du composant, ce cadre restait « à plat » à l’ancien emplacement.
+ * Responsabilités :
+ * - Corriger le scale draw2d.Rectangle à 90°/270° qui cassait le cadre de sélection
+ * - Appliquer la transform de rotation au rectangle de sélection
  */
 import draw2d from "draw2d";
 

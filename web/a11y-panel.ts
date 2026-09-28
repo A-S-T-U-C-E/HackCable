@@ -1,12 +1,12 @@
 /**
  * @license AGPL-3.0-or-later
- * Copyright (c) 2021, Clément Grennerat
- * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
+ * https://github.com/A-S-T-U-C-E/HackCable
  *
  * @file Panneau d’options d’accessibilité (style µcBlockly).
  *
  * Responsabilités :
- * - UI labels / police / interligne / focus / thème / accent / routeur
+ * - UI labels / police / interligne / focus / accent / routeur
  * - Persister via `a11y-settings`
  */
 import i18next from "i18next";

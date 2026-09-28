@@ -1,13 +1,13 @@
 /**
  * @license AGPL-3.0-or-later
- * Copyright (c) 2021, Clément Grennerat
- * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
+ * https://github.com/A-S-T-U-C-E/HackCable
  *
- * @file Dialogue « À propos » (style µcBlockly) : projet, version, crédits, AGPL.
+ * @file Dialogue « À propos » (style µcBlockly) : projet, icônes, crédits Fritzing.
  *
  * Responsabilités :
- * - Construire le `<dialog>` (logo, version, copyright, liens)
- * - Liens fork / upstream / Fritzing / Wokwi / AGPL / offre de source (§13)
+ * - Construire le `<dialog>` et les rangées logo + texte
+ * - Liens fork / upstream / Fritzing / Wokwi
  */
 import i18next from "i18next";
 import pkg from "../package.json";

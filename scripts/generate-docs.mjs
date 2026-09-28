@@ -1,14 +1,14 @@
 /**
  * @license AGPL-3.0-or-later
- * Copyright (c) 2021, Clément Grennerat
- * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
+ * https://github.com/A-S-T-U-C-E/HackCable
  *
  * @file Génère la documentation API Markdown/HTML à partir des JSDoc TypeScript.
  *
  * Responsabilités :
- * - Parcourir `src/` (fichiers `.ts`)
+ * - Parcourir src/ (fichiers .ts)
  * - Extraire fonctions / classes / méthodes exportées + JSDoc (@param, @returns)
- * - Écrire `docs/api/` (Markdown + index HTML)
+ * - Écrire docs/api/ (Markdown + index HTML)
  *
  * Compatible TypeScript 7+ (pas d’API compilateur classique).
  * Usage : npm run docs
@@ -420,8 +420,9 @@ function collectExports(source) {
 function renderModuleMarkdown(id, entries) {
   const lines = [
     `<!--`,
-    `  Licence : AGPL-3.0-or-later — Copyright (c) 2021, Clément Grennerat`,
-    `  Fork A-S-T-U-C-E : https://github.com/A-S-T-U-C-E/HackCable`,
+    `  Licence : AGPL-3.0-or-later`,
+    `  Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E`,
+    `  https://github.com/A-S-T-U-C-E/HackCable`,
     `  Généré par : npm run docs`,
     `-->`,
     ``,

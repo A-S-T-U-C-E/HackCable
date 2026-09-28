@@ -1,11 +1,42 @@
 /**
- * Script : applique les en-têtes AGPL développés sur src/ et web/.
- * Usage : node scripts/apply-file-headers.mjs
+ * @license AGPL-3.0-or-later
+ * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
+ * https://github.com/A-S-T-U-C-E/HackCable
  *
- * Mettre à jour la carte META ci-dessous quand un fichier source est ajouté.
+ * @file Applique les en-têtes AGPL sur src/ et web/.
+ *
+ * Responsabilités :
+ * - Générer l’en-tête @license / copyright / @file
+ * - Distinguer fichiers issus de ClementGre/HackCable vs créés dans le fork
+ *
+ * Usage : node scripts/apply-file-headers.mjs
+ * Mettre à jour META (et UPSTREAM si héritage) quand un fichier source est ajouté.
  */
 import fs from "fs";
 import path from "path";
+
+/** Chemins présents dans ClementGre/HackCable (upstream/main) — garder le copyright d’origine. */
+const UPSTREAM = new Set([
+  "src/editor/canvas.ts",
+  "src/editor/component-figure.ts",
+  "src/editor/connections-policies.ts",
+  "src/editor/coordinate-port-locator.ts",
+  "src/editor/editor.ts",
+  "src/main.ts",
+  "src/panels/catalog.ts",
+  "src/panels/component.ts",
+  "src/types/draw2d.d.ts",
+  "src/types/types.d.ts",
+  "src/ui/css.styl",
+  "src/ui/i18n/i18n-loader.ts",
+  "src/utils/dom.ts",
+  "web/css/main.styl",
+  "web/index.ts",
+]);
+
+const UPSTREAM_COPYRIGHT = "Copyright (c) 2021, Clément Grennerat";
+const FORK_COPYRIGHT = "Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E";
+const FORK_URL = "https://github.com/A-S-T-U-C-E/HackCable";
 
 /** @type {Record<string, { file: string, duties: string[], notes?: string[], see?: string[] }>} */
 const META = {
@@ -195,6 +226,21 @@ const META = {
     see: [
       "https://freegroup.github.io/draw2d/#/examples/io_png_crop",
       "https://freegroup.github.io/draw2d/#/examples/io_svg_basic",
+    ],
+  },
+  "src/editor/sim-circuit-export.ts": {
+    file: "Conversion du schéma HackCable vers Wokwi `diagram.json` et Velxio `.vlx`.",
+    duties: [
+      "Mapper les composants Wokwi (tag `wokwi-*`) et ignorer Fritzing non supporté",
+      "Produire un `diagram.json` importable dans Wokwi",
+      "Produire un projet `.vlx` (format velxio-project) importable dans Velxio",
+    ],
+  },
+  "src/editor/rotation-aware-selection-policy.ts": {
+    file: "Feedback de sélection (fourmis bleues) compatible rotation pure.",
+    duties: [
+      "Corriger le scale draw2d.Rectangle à 90°/270° qui cassait le cadre de sélection",
+      "Appliquer la transform de rotation au rectangle de sélection",
     ],
   },
   "src/editor/mcu-pin/index.ts": {
@@ -460,11 +506,15 @@ const META = {
   },
 };
 
-function makeHeader(meta) {
+function makeHeader(relPath, meta) {
+  const key = relPath.replace(/\\/g, "/");
   const out = ["/**"];
   out.push(" * @license AGPL-3.0-or-later");
-  out.push(" * Copyright (c) 2021, Clément Grennerat");
-  out.push(" * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable");
+  if (UPSTREAM.has(key)) {
+    out.push(` * ${UPSTREAM_COPYRIGHT}`);
+  }
+  out.push(` * ${FORK_COPYRIGHT}`);
+  out.push(` * ${FORK_URL}`);
   out.push(" *");
   out.push(` * @file ${meta.file}`);
   out.push(" *");
@@ -490,7 +540,8 @@ function stripExistingHeader(text) {
 }
 
 function applyOne(relPath) {
-  const meta = META[relPath.replace(/\\/g, "/")];
+  const key = relPath.replace(/\\/g, "/");
+  const meta = META[key];
   if (!meta) {
     console.warn("NO META", relPath);
     return false;
@@ -498,7 +549,7 @@ function applyOne(relPath) {
   const abs = path.resolve(relPath);
   const raw = fs.readFileSync(abs, "utf8");
   const body = stripExistingHeader(raw);
-  const header = makeHeader(meta);
+  const header = makeHeader(key, meta);
   fs.writeFileSync(abs, header + body.replace(/^\r?\n*/, ""));
   return true;
 }

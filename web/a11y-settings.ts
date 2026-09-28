@@ -1,9 +1,9 @@
 /**
  * @license AGPL-3.0-or-later
- * Copyright (c) 2021, Clément Grennerat
- * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
+ * https://github.com/A-S-T-U-C-E/HackCable
  *
- * @file Options d’accessibilité (labels, police, interligne, focus, thème, couleur UI, routeur).
+ * @file Options d’accessibilité (labels, police, interligne, focus, couleur UI, routeur).
  *
  * Responsabilités :
  * - Lire / écrire localStorage

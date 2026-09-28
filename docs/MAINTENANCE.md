@@ -3,27 +3,37 @@
 Licence du projet : **AGPL-3.0-or-later** (`LICENSE`, `NOTICE`, [COPYLEFT.md](COPYLEFT.md)).  
 En-tête recommandé en tête de chaque fichier source (bibliothèque `src/` et démo `web/`) :
 
+**Fichier créé dans le fork A-S-T-U-C-E :**
+
 ```ts
 /**
  * @license AGPL-3.0-or-later
- * Copyright (c) 2021, Clément Grennerat
- * Fork / contributions : A-S-T-U-C-E — https://github.com/A-S-T-U-C-E/HackCable
+ * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
+ * https://github.com/A-S-T-U-C-E/HackCable
  *
  * @file Une phrase qui dit à quoi sert ce fichier.
  *
  * Responsabilités :
  * - Point fort n°1 (API, module ou comportement)
  * - Point fort n°2
- * - Point fort n°3
- *
- * Organisation :   // optionnel — quand le fichier oriente vers d’autres modules
- * - `autre.ts` → rôle
- *
- * @see docs/….md   // optionnel — doc ou exemple amont
  */
 ```
 
-Le script `scripts/apply-file-headers.mjs` régénère ces en-têtes à partir d’une carte fichier → méta (à mettre à jour si vous ajoutez un fichier).
+**Fichier issu du dépôt originel** ([ClementGre/HackCable](https://github.com/ClementGre/HackCable)) — même fortement modifié :
+
+```ts
+/**
+ * @license AGPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
+ * https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file …
+ */
+```
+
+Le script `scripts/apply-file-headers.mjs` régénère ces en-têtes à partir d’une carte fichier → méta  
+(et d’un ensemble `UPSTREAM` pour le copyright Clément). À mettre à jour si vous ajoutez un fichier.
 
 ## Documentation API
 
