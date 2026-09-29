@@ -26,6 +26,16 @@
 3. Sur `connect` / `disconnect`, `McuPinTableStore` invalide son cache.
 4. Un logiciel tiers appelle `hackCable.getMcuPinConnectionTable()`.
 
+## Simulation AVR
+
+Module `src/emulator/` + façade hôte sur `HackCable` :
+
+1. **Socle** — Compile sketch → HEX (`hexi.wokwi.com`) ou `loadBoardHex` ; un `AVRRunner` **par carte** ; exécution simultanée entrelacée
+2. **Bridge** — `SimulationBridge` : GPIO/ADC → LED, RGB, buzzer, 7-seg, barre LED, servo,
+   boutons, switch, pot (Uno/Nano)
+3. **API hôte** — `pushSketch` / `runSimulation` / `stopSimulation` (voir [simulation-api.md](simulation-api.md)) pour BlocklyDuino / µcBlockly
+4. **UI démo** — Compiler / Exécuter / Pause / Stop ; sketch par carte (menu contextuel Code)
+
 ## Persistance
 
 `Editor.getEditorSaveData()` / `loadEditorSaveData()` :

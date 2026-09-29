@@ -14,7 +14,7 @@
 import draw2d from "draw2d";
 import type { ElementPin } from "@wokwi/elements";
 import type { CatalogComponentInfo, WokwiComponent, WokwiComponentInfo } from "../panels/component";
-import { isWokwiComponent } from "../panels/component";
+import { isMicrocontrollerBoard, isWokwiComponent } from "../panels/component";
 import type { FritzingComponentInfo } from "../panels/fritzing-types";
 import {
     applySvgDisplaySize,
@@ -33,6 +33,7 @@ import { getConnectionWireLabelText } from "./connection-label";
 import { rotationAwareAntSelectionPolicy } from "./rotation-aware-selection-policy";
 import { css, measureWokwiSvgSize } from "../utils/dom";
 import type { Port } from "draw2d-types";
+import { DEFAULT_MCU_SKETCH } from "../emulator/default-sketch";
 
 export type FigureData = {
     componentId: number;
@@ -40,6 +41,8 @@ export type FigureData = {
     x: number;
     y: number;
     rotation?: number;
+    /** Sketch Arduino associé (cartes MCU uniquement). */
+    sketch?: string;
 };
 
 export type WiringData = {
@@ -121,6 +124,8 @@ export class ComponentFigure extends draw2d.shape.basic.Rectangle {
     private readonly component: CatalogComponentInfo;
     private readonly overlay: HTMLElement;
     private fritzingSvgLoading = false;
+    /** Sketch Arduino (MCU) ; `undefined` = utiliser le défaut Blink. */
+    private sketch: string | undefined;
 
     /**
      * Crée une figure draw2d pour un composant catalogue (Wokwi ou Fritzing).
@@ -337,6 +342,24 @@ export class ComponentFigure extends draw2d.shape.basic.Rectangle {
     }
 
     /**
+     * Sketch Arduino de cette instance (cartes MCU).
+     * @returns Code source ; défaut Blink D13 si jamais édité.
+     */
+    public getSketch(): string {
+        if (this.sketch !== undefined) return this.sketch;
+        if (isMicrocontrollerBoard(this.component)) return DEFAULT_MCU_SKETCH;
+        return "";
+    }
+
+    /**
+     * Associe un sketch Arduino à cette figure (persisté dans la sauvegarde).
+     * @param code - Source `.ino` / C++.
+     */
+    public setSketch(code: string): void {
+        this.sketch = code;
+    }
+
+    /**
      * Retourne les métadonnées catalogue du composant (Wokwi ou Fritzing).
      * @returns Entrée catalogue associée à cette figure.
      */
@@ -460,6 +483,7 @@ export class ComponentFigure extends draw2d.shape.basic.Rectangle {
             x: this.getX(),
             y: this.getY(),
             ...(angle !== 0 ? { rotation: angle } : {}),
+            ...(this.sketch !== undefined ? { sketch: this.sketch } : {}),
         };
     }
 

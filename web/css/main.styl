@@ -76,6 +76,98 @@ html[data-ui-theme="light"]
     --hc-logo-bg #e8eaef
     --hc-track-bg #d5dae3
 
+html[data-ui-theme="light"] .hackCable-sim-status-inline.is-error
+    color #b00020
+
+// Modale sketch MCU
+.hackCable-mcu-code-dialog
+    border none
+    border-radius 8px
+    padding 0
+    max-width unquote("min(640px, calc(100vw - 24px))")
+    width 100%
+    background var(--hc-surface)
+    color var(--hc-text)
+    box-shadow var(--hc-shadow)
+    font-family var(--hc-ui-font)
+    font-size var(--hc-ui-font-size)
+    line-height var(--hc-ui-line-height)
+
+    &::backdrop
+        background var(--hc-backdrop)
+
+    .hackCable-mcu-code-dialog-title
+        margin 0
+        padding 14px 16px 4px
+        font-size 1.15em
+        font-weight 600
+        color var(--hc-text-strong)
+
+    .hackCable-mcu-code-board
+        margin 0
+        padding 0 16px 8px
+        color var(--hc-text-muted)
+        font-size 0.95em
+
+    .hackCable-mcu-code-label
+        display block
+        padding 0 16px 6px
+        color var(--hc-text-label)
+
+    .hackCable-mcu-code-textarea
+        display block
+        width calc(100% - 32px)
+        margin 0 16px
+        min-height 16rem
+        max-height 50vh
+        resize vertical
+        box-sizing border-box
+        padding 8px 10px
+        border 1px solid var(--hc-input-border)
+        border-radius 4px
+        background var(--hc-page-bg)
+        color var(--hc-page-fg)
+        font-family ui-monospace, SFMono-Regular, Menlo, Consolas, monospace
+        font-size var(--hc-ui-font-size)
+        line-height var(--hc-ui-line-height)
+
+        &:focus-visible
+            outline var(--hc-focus-outline-width) solid var(--hc-accent)
+            outline-offset var(--hc-focus-outline-offset)
+
+    .hackCable-mcu-code-actions
+        display flex
+        justify-content flex-end
+        gap 8px
+        padding 12px 16px 16px
+
+    .hackCable-mcu-code-btn
+        border none
+        border-radius 4px
+        padding 6px 14px
+        min-height 32px
+        cursor pointer
+        font-family var(--hc-ui-font)
+        font-size var(--hc-ui-font-size)
+
+        &--secondary
+            background var(--hc-btn-bg)
+            color var(--hc-btn-fg)
+
+            &:hover
+                background var(--hc-btn-bg-hover)
+
+        &--primary
+            background var(--hc-accent)
+            color #fff
+
+            &:hover
+                filter brightness(1.08)
+
+        &:focus-visible
+            outline var(--hc-focus-outline-width) solid var(--hc-accent)
+            outline-offset var(--hc-focus-outline-offset)
+
 p, h1, h2, h3, h4, label, button, select, input
     font-family var(--hc-ui-font)
     color inherit
@@ -167,6 +259,19 @@ header.hackCable-app-header
         height 100%
         padding 4px 10px
         box-sizing border-box
+
+    .hackCable-sim-status-inline
+        max-width 18rem
+        overflow hidden
+        text-overflow ellipsis
+        white-space nowrap
+        font-size var(--hc-ui-font-size)
+        line-height var(--hc-ui-line-height)
+        color var(--hc-text-muted)
+        font-family var(--hc-ui-font)
+
+        &.is-error
+            color #e07070
 
     .hackCable-app-toolbar-group
         display flex

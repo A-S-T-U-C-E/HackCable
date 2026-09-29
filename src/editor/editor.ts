@@ -240,6 +240,9 @@ export class Editor {
             if (typeof figureData.rotation === "number" && figureData.rotation !== 0) {
                 figure.setRotationAngle(figureData.rotation);
             }
+            if (typeof figureData.sketch === "string") {
+                figure.setSketch(figureData.sketch);
+            }
         }
 
         for (const connectionData of data.connections) {

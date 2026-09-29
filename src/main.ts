@@ -21,8 +21,17 @@ import {
     type CatalogBootProgressCallback,
 } from "./panels/catalog-boot";
 import { Editor } from "./editor/editor";
+import { ComponentFigure } from "./editor/component-figure";
+import { EmulatorManager } from "./emulator/emulator-manager";
+import { SimulationBridge } from "./emulator/simulation-bridge";
+import type {
+    CompileBoardOptions,
+    PushSketchOptions,
+    PushSketchResult,
+    SimulatableBoardRef,
+} from "./emulator/simulation-host-types";
 import i18next, { type TFunction } from "i18next";
-import { refreshWokwiComponentMaps } from "./panels/component";
+import { isMicrocontrollerBoard, refreshWokwiComponentMaps } from "./panels/component";
 import { syncFritzingCatalog } from "./panels/fritzing-sync";
 import type { FritzingSyncProgress, FritzingSyncResult } from "./panels/fritzing-types";
 import { applyDocumentLocale, normalizeHackCableLanguage } from "./ui/i18n/languages";
@@ -55,12 +64,33 @@ export type {
     WokwiDiagram,
     WokwiDiagramPart,
 } from "./editor/sim-circuit-export";
+export {
+    AVRRunner,
+    EmulatorManager,
+    SimulationBridge,
+    compileToHex,
+    parseAvrHex,
+    resolveUnoAvrPin,
+} from "./emulator";
+export type {
+    AvrGpioListener,
+    AvrGpioPortName,
+    AvrPinRef,
+    CompileBoardOptions,
+    CompileResult,
+    ParsedAvrHex,
+    PushSketchOptions,
+    PushSketchResult,
+    SimulatableBoardRef,
+} from "./emulator";
 
 import './jquery-ui-draggable';
 
 export class HackCable {
     private readonly _catalog: Catalog;
     private readonly _editor: Editor;
+    private readonly _emulatorManager: EmulatorManager;
+    private readonly _simulationBridge: SimulationBridge;
 
     /**
      * Monte HackCable dans le DOM ; préférer {@link HackCable.create} pour un boot progressif.
@@ -90,6 +120,8 @@ export class HackCable {
         // Éditeur d’abord : le workspace (drop) est prêt pendant le montage du catalogue.
         this._editor = new Editor();
         this._catalog = new Catalog(this, { deferBuild: options?.deferCatalogBuild === true });
+        this._emulatorManager = new EmulatorManager();
+        this._simulationBridge = new SimulationBridge(this._editor, this._emulatorManager);
         this.setupResizer();
     }
 
@@ -200,6 +232,165 @@ export class HackCable {
     public get editor() {
         return this._editor;
     }
+    /**
+     * Simulation AVR (compile Hexi / load HEX / run / pause).
+     */
+    public get emulatorManager() {
+        return this._emulatorManager;
+    }
+
+    /**
+     * Pont GPIO ↔ overlays Wokwi (LED, boutons, LED13).
+     * Préférer {@link runSimulation} / {@link stopSimulation} qui gèrent le bridge.
+     */
+    public get simulationBridge() {
+        return this._simulationBridge;
+    }
+
+    // —— API hôte simulation (BlocklyDuino / µcBlockly…) ——————————————
+
+    /**
+     * Liste les cartes MCU présentes sur le plan (cibles pour `pushSketch`).
+     * @returns Références `figureId` + nom catalogue.
+     */
+    public listSimulatableBoards(): SimulatableBoardRef[] {
+        return this.listMcuFigures().map((figure) => {
+            const info = figure.getComponentInfo();
+            const fritzing = info.source === "fritzing";
+            return {
+                figureId: String(figure.getId()),
+                componentId: info.id,
+                boardName: info.name,
+                source: fritzing ? "fritzing" : "wokwi",
+            };
+        });
+    }
+
+    /**
+     * Lit le sketch Arduino associé à une carte.
+     * @param figureId - Id draw2d de la figure MCU.
+     * @returns Code source, ou `undefined` si la figure n’est pas une MCU.
+     */
+    public getBoardSketch(figureId: string): string | undefined {
+        const figure = this.resolveMcuFigure(figureId, { optional: true });
+        return figure?.getSketch();
+    }
+
+    /**
+     * Associe un sketch Arduino à une carte (persisté dans la sauvegarde).
+     * @param figureId - Id draw2d de la figure MCU.
+     * @param code - Source `.ino` / C++.
+     * @throws Si la carte est introuvable.
+     */
+    public setBoardSketch(figureId: string, code: string): void {
+        const figure = this.resolveMcuFigure(figureId);
+        figure.setSketch(code);
+    }
+
+    /**
+     * Injecte un sketch depuis un hôte externe (compile ± run).
+     *
+     * Exemple µcBlockly / BlocklyDuino :
+     * ```ts
+     * await hackCable.pushSketch(generatedArduinoCode, { run: true });
+     * // multi-cartes :
+     * await hackCable.pushSketch(code, { figureId: board.figureId, run: true });
+     * ```
+     *
+     * @param code - Source Arduino générée.
+     * @param options - Cible, compile, démarrage.
+     * @returns Carte touchée + résultat de compile + état running.
+     */
+    public async pushSketch(
+        code: string,
+        options: PushSketchOptions = {},
+    ): Promise<PushSketchResult> {
+        const saveSketch = options.saveSketch !== false;
+        const doCompile = options.compile !== false;
+        const doRun = options.run ?? doCompile;
+
+        const figure = this.resolveMcuFigure(options.figureId);
+        const figureId = String(figure.getId());
+        const boardName = figure.getComponentInfo().name;
+
+        if (saveSketch) {
+            figure.setSketch(code);
+        }
+
+        if (!doCompile) {
+            return { figureId, boardName, running: this.isSimulationRunning() };
+        }
+
+        const compile = await this._emulatorManager.compileAndLoadBoard(figureId, code);
+        const ok = Boolean(compile.hex?.trim());
+        if (!ok || !doRun) {
+            if (!ok) this.stopSimulation();
+            return { figureId, boardName, compile, running: false };
+        }
+
+        this.runSimulation();
+        return { figureId, boardName, compile, running: true };
+    }
+
+    /**
+     * Compile le sketch d’une carte (stocké ou fourni) sans forcément démarrer.
+     * @param options - `figureId` et/ou `code` de remplacement.
+     */
+    public async compileBoard(options: CompileBoardOptions = {}) {
+        const figure = this.resolveMcuFigure(options.figureId);
+        const figureId = String(figure.getId());
+        const code = options.code ?? figure.getSketch();
+        if (options.code !== undefined && options.saveSketch !== false) {
+            figure.setSketch(options.code);
+        }
+        const compile = await this._emulatorManager.compileAndLoadBoard(figureId, code);
+        return { figureId, boardName: figure.getComponentInfo().name, compile };
+    }
+
+    /**
+     * Charge un Intel HEX déjà compilé pour une carte (sans Hexi).
+     * @param figureId - Id draw2d de la figure MCU.
+     * @param hex - Firmware Intel HEX.
+     */
+    public loadBoardHex(figureId: string, hex: string): void {
+        this.resolveMcuFigure(figureId);
+        this._emulatorManager.loadCodeForBoard(figureId, hex);
+    }
+
+    /**
+     * Démarre (ou redémarre) la simulation et attache le bridge GPIO → overlays.
+     * @throws Si aucun firmware n’a été chargé.
+     */
+    public runSimulation(): void {
+        this._emulatorManager.run();
+        this._simulationBridge.attach();
+    }
+
+    /** Arrête la simulation et détache le bridge (éteint les overlays pilotés). */
+    public stopSimulation(): void {
+        this._emulatorManager.stop();
+        this._simulationBridge.detach();
+    }
+
+    /**
+     * Pause / reprise de toutes les cartes en cours.
+     * @param paused - `true` pour geler.
+     */
+    public setSimulationPaused(paused: boolean): void {
+        this._emulatorManager.setPaused(paused);
+    }
+
+    /** `true` si aucune simu active ou toutes les cartes en pause. */
+    public isSimulationPaused(): boolean {
+        return this._emulatorManager.isPaused();
+    }
+
+    /** `true` si le bridge est attaché et au moins un runner n’est pas en pause. */
+    public isSimulationRunning(): boolean {
+        return this._simulationBridge.isAttached
+            && this._emulatorManager.hasFirmware()
+            && !this._emulatorManager.isPaused();
+    }
 
     /**
      * Table des broches MCU connectées ou non — API pour intégrateurs (µcBlockly…).
@@ -245,5 +436,54 @@ export class HackCable {
      */
     public onMcuPinTableChange(listener: (table: ReturnType<Editor["getMcuPinConnectionTable"]>) => void) {
         return this._editor.onMcuPinTableChange(listener);
+    }
+
+    /** Figures MCU présentes sur le canvas. */
+    private listMcuFigures(): ComponentFigure[] {
+        const canvas = this._editor.canvas as unknown as {
+            getFigures?: () => { data?: unknown[] };
+        };
+        const out: ComponentFigure[] = [];
+        for (const fig of canvas.getFigures?.()?.data ?? []) {
+            if (fig instanceof ComponentFigure && isMicrocontrollerBoard(fig.getComponentInfo())) {
+                out.push(fig);
+            }
+        }
+        return out;
+    }
+
+    /**
+     * Résout une figure MCU par id, ou la première du plan.
+     * @param figureId - Id optionnel.
+     * @param opts - `optional: true` renvoie `undefined` au lieu de throw.
+     */
+    private resolveMcuFigure(
+        figureId?: string,
+        opts?: { optional?: boolean },
+    ): ComponentFigure;
+    private resolveMcuFigure(
+        figureId: string | undefined,
+        opts: { optional: true },
+    ): ComponentFigure | undefined;
+    private resolveMcuFigure(
+        figureId?: string,
+        opts?: { optional?: boolean },
+    ): ComponentFigure | undefined {
+        const boards = this.listMcuFigures();
+
+        if (figureId) {
+            const match = boards.find((f) => String(f.getId()) === figureId);
+            if (match) return match;
+            if (opts?.optional) return undefined;
+            throw new Error(`Carte MCU introuvable : figureId=${figureId}`);
+        }
+
+        if (boards.length === 0) {
+            if (opts?.optional) return undefined;
+            throw new Error(
+                "Aucune carte microcontrôleur sur le plan. Placez un Uno/Nano (ou passez figureId).",
+            );
+        }
+        return boards[0];
     }
 }

@@ -22,6 +22,9 @@ import { askLoadMergeChoice } from "./load-merge-dialog";
 import { exportWorkspacePngDataUrl } from "../src/editor/workspace-export";
 import { readA11ySettings } from "./a11y-settings";
 import { writeUrlDemoOptions } from "./url-options";
+import { createMcuCodeDialog } from "./mcu-code-dialog";
+import { ComponentFigure } from "../src/editor/component-figure";
+import { isMicrocontrollerBoard } from "../src/panels/component";
 
 /**
  * Synchronise l’URL avec l’état courant de la démo.
@@ -261,8 +264,13 @@ export function setupExportSimCircuits(editor: Editor, signal: AbortSignal): voi
  * Branche le sélecteur de langue et synchronise l’URL.
  * @param hackCable - Instance HackCable pour changer la langue.
  * @param signal - Signal d’annulation pour retirer l’écouteur.
+ * @param onAfterChange - Callback après changement de langue (dialogues, statut sim…).
  */
-export function setupLanguageSelect(hackCable: HackCable, signal: AbortSignal): void {
+export function setupLanguageSelect(
+    hackCable: HackCable,
+    signal: AbortSignal,
+    onAfterChange?: () => void,
+): void {
     const select = document.getElementById("language-select");
     if (!(select instanceof HTMLSelectElement)) return;
 
@@ -278,6 +286,7 @@ export function setupLanguageSelect(hackCable: HackCable, signal: AbortSignal): 
             localStorage.setItem("hackCable-webExample-language", code);
             await hackCable.changeLanguage(code);
             applyWebDemoUiI18n();
+            onAfterChange?.();
             syncSelect();
             syncDemoUrl(hackCable);
         })();
@@ -390,6 +399,213 @@ export function setupUndoRedo(editor: Editor, signal: AbortSignal): void {
     });
 
     refreshUndoRedoButtons(editor);
+}
+
+/**
+ * Branche Compile / Run / Pause / Stop + édition sketch via menu contextuel MCU.
+ * Compile et exécute **toutes** les cartes MCU du plan (runners en parallèle).
+ * @param hackCable - Instance HackCable (émulateur + bridge).
+ * @param signal - Signal d’annulation pour retirer les écouteurs.
+ * @returns Fonction de refresh i18n de la modale Code.
+ */
+export function setupSimulation(hackCable: HackCable, signal: AbortSignal): () => void {
+    const compileBtn = document.getElementById("sim-compile");
+    const runBtn = document.getElementById("sim-run");
+    const pauseBtn = document.getElementById("sim-pause");
+    const stopBtn = document.getElementById("sim-stop");
+    const statusEl = document.getElementById("sim-status");
+
+    if (!(compileBtn && runBtn && pauseBtn && stopBtn)) {
+        return () => undefined;
+    }
+
+    /** Dernière carte dont le Code a été ouvert (statut UI). */
+    let lastEditedBoardName = "";
+    let running = false;
+    let statusKey: string | null = null;
+    let statusVars: Record<string, unknown> | undefined;
+    let statusIsError = false;
+    let statusRaw: string | null = null;
+
+    const t = (k: string, vars?: Record<string, unknown>) =>
+        i18next.t(k, { ns: "common", ...vars });
+
+    const paintStatus = () => {
+        if (!(statusEl instanceof HTMLElement)) return;
+        const text = statusRaw ?? (statusKey ? t(statusKey, statusVars) : "");
+        statusEl.textContent = text;
+        statusEl.classList.toggle("is-error", statusIsError);
+        statusEl.title = text;
+    };
+
+    const setStatusKey = (
+        key: string,
+        vars?: Record<string, unknown>,
+        isError = false,
+    ) => {
+        statusKey = key;
+        statusVars = vars;
+        statusIsError = isError;
+        statusRaw = null;
+        paintStatus();
+    };
+
+    const setStatusRaw = (text: string, isError = false) => {
+        statusKey = null;
+        statusVars = undefined;
+        statusIsError = isError;
+        statusRaw = text;
+        paintStatus();
+    };
+
+    const refreshButtons = () => {
+        const firmwareReady = hackCable.emulatorManager.hasFirmware();
+        runBtn.toggleAttribute("disabled", !firmwareReady);
+        pauseBtn.toggleAttribute("disabled", !running);
+        stopBtn.toggleAttribute("disabled", !running);
+        const paused = hackCable.emulatorManager.isPaused();
+        setButtonLabelText(
+            pauseBtn,
+            paused && running ? t("web.simResume") : t("web.simPause"),
+        );
+        pauseBtn.setAttribute("aria-pressed", running && paused ? "true" : "false");
+    };
+
+    const listMcuFigures = (): ComponentFigure[] => {
+        const canvas = hackCable.editor.canvas as unknown as {
+            getFigures?: () => { data?: unknown[] };
+        };
+        const out: ComponentFigure[] = [];
+        for (const fig of canvas.getFigures?.()?.data ?? []) {
+            if (fig instanceof ComponentFigure && isMicrocontrollerBoard(fig.getComponentInfo())) {
+                out.push(fig);
+            }
+        }
+        return out;
+    };
+
+    const codeDialog = createMcuCodeDialog((figure) => {
+        lastEditedBoardName = figure.getComponentInfo().name;
+        refreshButtons();
+        setStatusKey("web.simCodeSaved", { board: lastEditedBoardName });
+    });
+
+    const openCodeFor = (figure: ComponentFigure) => {
+        if (!isMicrocontrollerBoard(figure.getComponentInfo())) return;
+        lastEditedBoardName = figure.getComponentInfo().name;
+        codeDialog.open(figure);
+    };
+
+    const onEditCodeDraw2d = (_emitter: unknown, payload: { figure?: ComponentFigure }) => {
+        const figure = payload?.figure;
+        if (figure instanceof ComponentFigure) openCodeFor(figure);
+    };
+
+    const onEditCodeDom = (ev: Event) => {
+        const figure = (ev as CustomEvent<{ figure?: ComponentFigure }>).detail?.figure;
+        if (figure instanceof ComponentFigure) openCodeFor(figure);
+    };
+
+    hackCable.editor.canvas.on("figure:editCode", onEditCodeDraw2d);
+    document.addEventListener("hackcable:edit-mcu-code", onEditCodeDom);
+
+    compileBtn.addEventListener("click", () => {
+        void (async () => {
+            const boards = listMcuFigures();
+            if (boards.length === 0) {
+                setStatusKey("web.simNoMcu", undefined, true);
+                return;
+            }
+            compileBtn.setAttribute("disabled", "true");
+            let okCount = 0;
+            let failCount = 0;
+            const errors: string[] = [];
+
+            for (let i = 0; i < boards.length; i++) {
+                const board = boards[i];
+                const name = board.getComponentInfo().name;
+                setStatusKey("web.simCompilingBoard", {
+                    board: `${name} (${i + 1}/${boards.length})`,
+                });
+                try {
+                    const result = await hackCable.emulatorManager.compileAndLoadBoard(
+                        String(board.getId()),
+                        board.getSketch(),
+                    );
+                    const err = (result.stderr || "").trim();
+                    if (result.hex?.trim()) {
+                        okCount += 1;
+                        if (err) errors.push(`${name}: ${err}`);
+                    } else {
+                        failCount += 1;
+                        errors.push(`${name}: ${err || t("web.simCompileFailed")}`);
+                    }
+                } catch (e) {
+                    failCount += 1;
+                    errors.push(`${name}: ${e instanceof Error ? e.message : t("web.simCompileFailed")}`);
+                }
+            }
+
+            if (okCount === 0) {
+                setStatusRaw(errors.join(" · ") || t("web.simCompileFailed"), true);
+            } else if (failCount === 0) {
+                setStatusKey("web.simCompileOkMulti", { count: okCount });
+            } else {
+                const partial = t("web.simCompilePartial", { ok: okCount, fail: failCount });
+                setStatusRaw(
+                    errors.length ? `${partial} — ${errors[0]}` : partial,
+                    true,
+                );
+            }
+            compileBtn.removeAttribute("disabled");
+            refreshButtons();
+        })();
+    }, { signal });
+
+    runBtn.addEventListener("click", () => {
+        try {
+            hackCable.emulatorManager.run();
+            hackCable.simulationBridge.attach();
+            running = true;
+            const n = hackCable.emulatorManager.getActiveRunners().size;
+            setStatusKey("web.simRunningMulti", { count: n });
+        } catch (e) {
+            setStatusRaw(e instanceof Error ? e.message : t("web.simRunFailed"), true);
+            running = false;
+        }
+        refreshButtons();
+    }, { signal });
+
+    pauseBtn.addEventListener("click", () => {
+        if (!running) return;
+        const next = !hackCable.emulatorManager.isPaused();
+        hackCable.emulatorManager.setPaused(next);
+        setStatusKey(next ? "web.simPaused" : "web.simRunning");
+        refreshButtons();
+    }, { signal });
+
+    stopBtn.addEventListener("click", () => {
+        hackCable.emulatorManager.stop();
+        hackCable.simulationBridge.detach();
+        running = false;
+        setStatusKey("web.simStopped");
+        refreshButtons();
+    }, { signal });
+
+    signal.addEventListener("abort", () => {
+        hackCable.emulatorManager.stop();
+        hackCable.simulationBridge.detach();
+        hackCable.editor.canvas.off("figure:editCode", onEditCodeDraw2d);
+        document.removeEventListener("hackcable:edit-mcu-code", onEditCodeDom);
+        codeDialog.destroy();
+    });
+
+    refreshButtons();
+    return () => {
+        codeDialog.refreshI18n();
+        paintStatus();
+        refreshButtons();
+    };
 }
 
 export type { HackCableLanguage };

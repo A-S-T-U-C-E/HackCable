@@ -65,6 +65,33 @@
                     <span class="hackCable-btn-label">Rétablir</span>
                 </button>
             </div>
+            <div class="hackCable-app-toolbar-group" role="group" aria-label="Simulation">
+                <button type="button" id="sim-compile">
+                    <span class="hackCable-btn-icon" aria-hidden="true">
+                        <svg class="hackCable-btn-svg" viewBox="0 0 24 24" focusable="false"><path fill="currentColor" d="M9.4 16.6 4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0 1.4 1.4 6-6-6-6-1.4 1.4 4.6 4.6-4.6 4.6z"/></svg>
+                    </span>
+                    <span class="hackCable-btn-label">Compiler</span>
+                </button>
+                <button type="button" id="sim-run" disabled>
+                    <span class="hackCable-btn-icon" aria-hidden="true">
+                        <svg class="hackCable-btn-svg" viewBox="0 0 24 24" focusable="false"><path fill="currentColor" d="M8 5v14l11-7L8 5z"/></svg>
+                    </span>
+                    <span class="hackCable-btn-label">Exécuter</span>
+                </button>
+                <button type="button" id="sim-pause" disabled>
+                    <span class="hackCable-btn-icon" aria-hidden="true">
+                        <svg class="hackCable-btn-svg" viewBox="0 0 24 24" focusable="false"><path fill="currentColor" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                    </span>
+                    <span class="hackCable-btn-label">Pause</span>
+                </button>
+                <button type="button" id="sim-stop" disabled>
+                    <span class="hackCable-btn-icon" aria-hidden="true">
+                        <svg class="hackCable-btn-svg" viewBox="0 0 24 24" focusable="false"><path fill="currentColor" d="M6 6h12v12H6z"/></svg>
+                    </span>
+                    <span class="hackCable-btn-label">Stop</span>
+                </button>
+                <span id="sim-status" class="hackCable-sim-status-inline" aria-live="polite"></span>
+            </div>
             <div class="hackCable-app-toolbar-group hackCable-app-toolbar-group--end">
                 <button type="button" id="show-minimap" class="hackCable-app-minimap-btn" aria-pressed="true">
                     <span class="hackCable-btn-icon hackCable-minimap-icon" aria-hidden="true">

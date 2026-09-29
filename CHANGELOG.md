@@ -5,6 +5,19 @@ Tous les changements notables de ce fork sont documentés ici.
 Le format s’inspire de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/),
 et le projet suit le [versionnage sémantique](https://semver.org/lang/fr/).
 
+## [Unreleased]
+
+### Ajouté
+
+- Socle de **simulation AVR** (`src/emulator/`) : `avr8js`, compile Hexi, load HEX, run/pause/stop
+  exposé via `hackCable.emulatorManager` — **un runner par carte MCU** (exécution simultanée)
+- **Pont GPIO/ADC → overlays Wokwi** (`SimulationBridge`) : LED, LED13, RGB, buzzer, 7-seg,
+  barre LED, servo (approx.), boutons, slide switch, potentiomètre (ADC) ; mapping
+  D0–D13 / A0–A5 → PORTD/B/C + `AVRADC.channelValues`, routé par `figureId`
+- UI démo **Compiler / Exécuter / Pause / Stop** ; sketch **par carte MCU** (menu contextuel Code → modale)
+- **API hôte** simulation : `pushSketch`, `compileBoard`, `loadBoardHex`, `runSimulation` /
+  `stopSimulation` (intégration BlocklyDuino / µcBlockly) — voir `docs/simulation-api.md`
+
 ## [1.1.0] — 2026-09-27
 
 ### Ajouté

@@ -33,6 +33,7 @@ import {
     setupLanguageSelect,
     setupMinimapToggle,
     setupSaveRestore,
+    setupSimulation,
     setupUndoRedo,
 } from "./demo-handlers";
 import { parseUrlDemoOptions, writeUrlDemoOptions } from "./url-options";
@@ -104,10 +105,7 @@ export async function mountWebDemoApp(): Promise<() => void> {
     const restoreFileInput = setupSaveRestore(hackCable.editor, signal);
     setupExportImage(hackCable.editor, signal);
     setupExportSimCircuits(hackCable.editor, signal);
-    setupLanguageSelect(hackCable, signal);
-    setupMinimapToggle(hackCable, signal);
-    setupUndoRedo(hackCable.editor, signal);
-    setupCatalogUrlSync(hackCable);
+    const refreshSimI18n = setupSimulation(hackCable, signal);
 
     let lastWireRouter = a11y.wireRouter;
     const refreshA11yI18n = setupA11yPanel(signal, (settings) => {
@@ -119,14 +117,14 @@ export async function mountWebDemoApp(): Promise<() => void> {
     });
     const refreshAboutI18n = setupAboutPanel(signal);
 
-    const languageSelect = document.getElementById("language-select");
-    languageSelect?.addEventListener("change", () => {
-        window.setTimeout(() => {
-            applyWebDemoUiI18n();
-            refreshA11yI18n();
-            refreshAboutI18n();
-        }, 0);
-    }, { signal });
+    setupLanguageSelect(hackCable, signal, () => {
+        refreshA11yI18n();
+        refreshAboutI18n();
+        refreshSimI18n();
+    });
+    setupMinimapToggle(hackCable, signal);
+    setupUndoRedo(hackCable.editor, signal);
+    setupCatalogUrlSync(hackCable);
 
     return () => {
         ac.abort();
@@ -134,5 +132,6 @@ export async function mountWebDemoApp(): Promise<() => void> {
         restoreFileInput.remove();
         document.getElementById("a11y-dialog")?.remove();
         document.getElementById("about-dialog")?.remove();
+        document.getElementById("mcu-code-dialog")?.remove();
     };
 }

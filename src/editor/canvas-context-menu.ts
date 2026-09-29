@@ -26,6 +26,7 @@ import {
 } from "./connection-label";
 import { downloadWorkspaceSvg } from "./workspace-export";
 import { tr } from "../ui/i18n/translate";
+import { isMicrocontrollerBoard } from "../panels/component";
 
 /** Raccourcis Alt (lettres distinctes ; évite Alt+D / Alt+E réservés par Chrome). */
 export const CTX_SHORTCUTS = {
@@ -41,6 +42,7 @@ export const CTX_SHORTCUTS = {
     removeLabel: "u",
     addSegment: "g",
     removeSegment: "x",
+    code: "c",
 } as const;
 
 type Removable = { kind: "component"; target: ComponentFigure } | { kind: "connection"; target: unknown };
@@ -117,6 +119,7 @@ function buildContextActions(
         zoomReset: () => void;
         zoomToFit: () => void;
         setCurrentSelection?: (f: unknown) => void;
+        fireEvent?: (event: string, args?: unknown) => void;
     },
     figure: unknown,
     canvasX?: number,
@@ -129,6 +132,27 @@ function buildContextActions(
     const actions: CtxAction[] = [];
 
     if (onComponent) {
+        if (isMicrocontrollerBoard(onComponent.getComponentInfo())) {
+            actions.push({
+                id: "editCode",
+                label: tr("web.ctxCode"),
+                shortcut: CTX_SHORTCUTS.code,
+                run: () => {
+                    canvas.setCurrentSelection?.(onComponent);
+                    // draw2d : API = fireEvent (pas fire)
+                    const host = canvas as {
+                        fireEvent?: (event: string, args?: unknown) => void;
+                    };
+                    host.fireEvent?.("figure:editCode", { figure: onComponent });
+                    // Secours DOM (si l’écouteur draw2d n’est pas encore branché)
+                    document.dispatchEvent(
+                        new CustomEvent("hackcable:edit-mcu-code", {
+                            detail: { figure: onComponent },
+                        }),
+                    );
+                },
+            });
+        }
         actions.push({
             id: "delete",
             label: tr("web.ctxDelete"),

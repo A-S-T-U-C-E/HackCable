@@ -133,9 +133,18 @@ export function applyWebDemoUiI18n(): void {
     setBtn("export-velxio", "web.exportVelxio");
     setBtn("undo", "web.undo");
     setBtn("redo", "web.redo");
+    setBtn("sim-compile", "web.simCompile");
+    setBtn("sim-run", "web.simRun");
+    setBtn("sim-pause", "web.simPause");
+    setBtn("sim-stop", "web.simStop");
     setBtn("a11y-open", "a11y.open");
     setBtn("about-open", "about.open");
     setBtn("show-minimap", "web.showMinimap");
+
+    const simToolbar = document.getElementById("sim-compile")?.closest(".hackCable-app-toolbar-group");
+    if (simToolbar instanceof HTMLElement) {
+        simToolbar.setAttribute("aria-label", t("web.simGroup"));
+    }
 
     const withShortcut = (id: string, shortcut: string) => {
         const el = document.getElementById(id);
