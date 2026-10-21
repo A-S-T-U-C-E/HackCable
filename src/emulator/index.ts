@@ -23,6 +23,16 @@ export { parseAvrHex } from "./intel-hex";
 export type { ParsedAvrHex } from "./intel-hex";
 export { SimulationBridge } from "./simulation-bridge";
 export { DEFAULT_MCU_SKETCH } from "./default-sketch";
+export {
+    pinStateToLabel,
+    snapshotBoardPins,
+} from "./pin-snapshot";
+export type {
+    SimAdcChannelSnapshot,
+    SimBoardPinSnapshot,
+    SimDigitalPinSnapshot,
+    SimPinLevel,
+} from "./pin-snapshot";
 export type {
     CompileBoardOptions,
     PushSketchOptions,

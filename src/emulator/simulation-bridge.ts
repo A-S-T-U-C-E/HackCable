@@ -7,17 +7,25 @@
  *
  * Responsabilités :
  * - Netlist MCU → bindings par type de composant
- * - Sorties : LED, LED13, RGB, buzzer, 7-seg, barre LED, servo
- * - Entrées : boutons, slide switch, potentiomètre (ADC)
+ * - Sorties : LED, LED13, RGB, buzzer, 7-seg, barre LED, servo, NeoPixel (approx.)
+ * - Entrées : boutons, switch, DIP, joystick, pot, KY040 (SW), capteurs cliquables
  */
 import { PinState, type AVRIOPort } from "avr8js";
 import type { Editor } from "../editor/editor";
 import { ComponentFigure } from "../editor/component-figure";
 import { collectPeerConnections, type PortLike } from "../editor/mcu-pin/port-connections";
 import {
+    AnalogJoystickElement,
+    BigSoundSensorElement,
     BuzzerElement,
+    DipSwitch8Element,
+    FlameSensorElement,
+    GasSensorElement,
+    KY040Element,
     LEDElement,
     LedBarGraphElement,
+    NeoPixelElement,
+    PhotoresistorSensorElement,
     PotentiometerElement,
     Pushbutton6mmElement,
     PushbuttonElement,
@@ -27,6 +35,7 @@ import {
     SevenSegmentElement,
     SlidePotentiometerElement,
     SlideSwitchElement,
+    SmallSoundSensorElement,
 } from "@wokwi/elements";
 import {
     isMicrocontrollerBoard,
@@ -39,7 +48,7 @@ import type { AVRRunner } from "./avr-runner";
 type DigitalOutBinding = {
     kind: "digital-out";
     /** Propriété booléenne ou numérique (0/1) sur l’overlay. */
-    prop: "value" | "hasSignal" | "led13";
+    prop: string;
     mcuFigureId: string;
     port: AvrGpioPortName;
     bit: number;
@@ -75,22 +84,43 @@ type ServoBinding = {
     figureId: string;
 };
 
-type OutputBinding = DigitalOutBinding | RgbBinding | SegmentBinding | ServoBinding;
+type NeoPixelBinding = {
+    kind: "neopixel";
+    mcuFigureId: string;
+    port: AvrGpioPortName;
+    bit: number;
+    figureId: string;
+};
+
+type OutputBinding =
+    | DigitalOutBinding
+    | RgbBinding
+    | SegmentBinding
+    | ServoBinding
+    | NeoPixelBinding;
 
 type DigitalInBinding = {
     kind: "digital-in";
-    mode: "button" | "switch";
+    mode: "button" | "switch" | "dip" | "toggle" | "encoder-sw";
     mcuFigureId: string;
     port: AvrGpioPortName;
     bit: number;
     figureId: string;
     overlay: HTMLElement;
+    /** Index 0–7 pour DipSwitch8. */
+    dipIndex?: number;
+    /** État local pour capteurs cliquables. */
+    toggled?: boolean;
+    /** LED visuelle optionnelle sur le module capteur. */
+    ledProp?: string;
     onPress?: () => void;
     onRelease?: () => void;
+    onToggleClick?: (ev: Event) => void;
 };
 
 type AnalogInBinding = {
     kind: "analog-in";
+    mode: "pot" | "joystick-x" | "joystick-y";
     mcuFigureId: string;
     /** Canal ADC ATmega328P (0–5 pour A0–A5). */
     adcChannel: number;
@@ -140,6 +170,7 @@ export class SimulationBridge {
         });
         this.inputPollTimer = setInterval(() => this.syncInputsOnly(), 50);
         this.attached = true;
+        this.editor.canvas.setSimulationInteractionMode(true);
         this.syncAll();
     }
 
@@ -159,6 +190,7 @@ export class SimulationBridge {
         this.digitalIns = [];
         this.analogIns = [];
         this.attached = false;
+        this.editor.canvas.setSimulationInteractionMode(false);
     }
 
     /** Applique l’état courant de tous les runners actifs. */
@@ -228,6 +260,19 @@ export class SimulationBridge {
         }
 
         this.wireDigitalInListeners();
+        this.markHitTargets();
+    }
+
+    /** Active les clics uniquement sur les overlays d’entrée. */
+    private markHitTargets(): void {
+        const hitIds = new Set<string>();
+        for (const din of this.digitalIns) hitIds.add(din.figureId);
+        for (const ain of this.analogIns) hitIds.add(ain.figureId);
+        const figures = this.editor.canvas.getFigures?.()?.data ?? [];
+        for (const fig of figures) {
+            if (!(fig instanceof ComponentFigure)) continue;
+            fig.setSimulationHitTarget(hitIds.has(String(fig.getId())));
+        }
     }
 
     private collectEndpointBindings(
@@ -351,6 +396,21 @@ export class SimulationBridge {
             return;
         }
 
+        if (clasz === NeoPixelElement) {
+            if (pk !== "DIN" && pk !== "DI" && pk !== "IN") return;
+            const key = `${mcuFigureId}|${figureId}|neo`;
+            if (seen.has(key)) return;
+            seen.add(key);
+            this.outputBindings.push({
+                kind: "neopixel",
+                mcuFigureId,
+                port: avr.port,
+                bit: avr.bit,
+                figureId,
+            });
+            return;
+        }
+
         if (clasz === PushbuttonElement || clasz === Pushbutton6mmElement) {
             const key = `${mcuFigureId}|${figureId}|btn|${avr.port}${avr.bit}`;
             if (seen.has(key)) return;
@@ -385,20 +445,134 @@ export class SimulationBridge {
             return;
         }
 
-        if (clasz === PotentiometerElement || clasz === SlidePotentiometerElement) {
+        if (clasz === DipSwitch8Element) {
+            const dipIndex = dipIndexFromPort(pk);
+            if (dipIndex < 0) return;
+            const key = `${mcuFigureId}|${figureId}|dip|${dipIndex}|${avr.port}${avr.bit}`;
+            if (seen.has(key)) return;
+            seen.add(key);
+            this.digitalIns.push({
+                kind: "digital-in",
+                mode: "dip",
+                mcuFigureId,
+                port: avr.port,
+                bit: avr.bit,
+                figureId,
+                overlay,
+                dipIndex,
+            });
+            return;
+        }
+
+        if (clasz === KY040Element) {
+            if (pk !== "SW") return;
+            const key = `${mcuFigureId}|${figureId}|ky040sw|${avr.port}${avr.bit}`;
+            if (seen.has(key)) return;
+            seen.add(key);
+            this.digitalIns.push({
+                kind: "digital-in",
+                mode: "encoder-sw",
+                mcuFigureId,
+                port: avr.port,
+                bit: avr.bit,
+                figureId,
+                overlay,
+            });
+            return;
+        }
+
+        if (clasz === AnalogJoystickElement) {
+            if (pk === "SEL") {
+                const key = `${mcuFigureId}|${figureId}|joy-sel|${avr.port}${avr.bit}`;
+                if (seen.has(key)) return;
+                seen.add(key);
+                this.digitalIns.push({
+                    kind: "digital-in",
+                    mode: "button",
+                    mcuFigureId,
+                    port: avr.port,
+                    bit: avr.bit,
+                    figureId,
+                    overlay,
+                });
+                return;
+            }
             if (adcChannel === undefined) return;
-            // Broche signal (pas GND/VCC)
-            if (pk !== "SIG" && pk !== "OUT" && pk !== "WIPER") return;
-            const key = `${mcuFigureId}|${figureId}|pot|${adcChannel}`;
+            if (pk !== "VERT" && pk !== "HORZ" && pk !== "VRX" && pk !== "VRY") return;
+            const mode = pk === "HORZ" || pk === "VRX" ? "joystick-x" : "joystick-y";
+            const key = `${mcuFigureId}|${figureId}|joy|${mode}|${adcChannel}`;
             if (seen.has(key)) return;
             seen.add(key);
             this.analogIns.push({
                 kind: "analog-in",
+                mode,
                 mcuFigureId,
                 adcChannel,
                 figureId,
                 overlay,
             });
+            return;
+        }
+
+        if (clasz === PotentiometerElement || clasz === SlidePotentiometerElement) {
+            if (adcChannel === undefined) return;
+            // Broche signal (pas GND/VCC)
+            if (pk !== "SIG" && pk !== "OUT" && pk !== "WIPER" && pk !== "AO" && pk !== "AOUT") return;
+            const key = `${mcuFigureId}|${figureId}|pot|${adcChannel}`;
+            if (seen.has(key)) return;
+            seen.add(key);
+            this.analogIns.push({
+                kind: "analog-in",
+                mode: "pot",
+                mcuFigureId,
+                adcChannel,
+                figureId,
+                overlay,
+            });
+            return;
+        }
+
+        // Capteurs modules : clic = bascule DO/DOUT ; AO → ADC si câblé
+        const sensor = sensorProfile(clasz);
+        if (sensor) {
+            if (sensor.analogPins.includes(pk) && adcChannel !== undefined) {
+                const key = `${mcuFigureId}|${figureId}|sensor-ao|${adcChannel}`;
+                if (seen.has(key)) return;
+                seen.add(key);
+                this.analogIns.push({
+                    kind: "analog-in",
+                    mode: "pot",
+                    mcuFigureId,
+                    adcChannel,
+                    figureId,
+                    overlay,
+                });
+                // Capteur sans pot natif : on stocke un faux value 0–100 sur l’élément
+                const el = overlay as { value?: number; min?: number; max?: number };
+                if (el.value === undefined) {
+                    el.min = 0;
+                    el.max = 100;
+                    el.value = 50;
+                }
+                return;
+            }
+            if (sensor.digitalPins.includes(pk)) {
+                const key = `${mcuFigureId}|${figureId}|sensor-do|${avr.port}${avr.bit}`;
+                if (seen.has(key)) return;
+                seen.add(key);
+                this.digitalIns.push({
+                    kind: "digital-in",
+                    mode: "toggle",
+                    mcuFigureId,
+                    port: avr.port,
+                    bit: avr.bit,
+                    figureId,
+                    overlay,
+                    toggled: false,
+                    ledProp: sensor.ledProp,
+                });
+                return;
+            }
             return;
         }
 
@@ -433,10 +607,7 @@ export class SimulationBridge {
             if (binding.kind === "digital-out") {
                 const on = binding.activeLow ? !high : high;
                 const el = this.getOverlay(binding.figureId) as Record<string, unknown> | null;
-                if (!el) continue;
-                if (binding.prop === "led13" || binding.prop === "hasSignal" || binding.prop === "value") {
-                    el[binding.prop] = on;
-                }
+                if (el) el[binding.prop] = on;
                 continue;
             }
 
@@ -460,6 +631,17 @@ export class SimulationBridge {
                 const el = this.getOverlay(binding.figureId) as { angle?: number } | null;
                 // Approximation sans décodeur PWM : HIGH → 90°, LOW → 0°.
                 if (el) el.angle = high ? 90 : 0;
+                continue;
+            }
+
+            if (binding.kind === "neopixel") {
+                const el = this.getOverlay(binding.figureId) as { r?: number; g?: number; b?: number } | null;
+                // Approximation sans protocole WS2812 : DIN HIGH → blanc, LOW → off.
+                if (!el) continue;
+                const v = high ? 255 : 0;
+                el.r = v;
+                el.g = v;
+                el.b = v;
             }
         }
     }
@@ -473,21 +655,57 @@ export class SimulationBridge {
                 port.setPin(din.bit, !pressed);
                 continue;
             }
-            // Slide switch : value 0 = ouvert (HIGH), value ≠ 0 = fermé (LOW)
-            const value = Number((din.overlay as { value?: number }).value ?? 0);
-            port.setPin(din.bit, value === 0);
+            if (din.mode === "encoder-sw") {
+                const pressed = Boolean((din.overlay as { pressed?: boolean }).pressed);
+                port.setPin(din.bit, !pressed);
+                continue;
+            }
+            if (din.mode === "switch") {
+                const value = Number((din.overlay as { value?: number }).value ?? 0);
+                port.setPin(din.bit, value === 0);
+                continue;
+            }
+            if (din.mode === "dip") {
+                const values = (din.overlay as { values?: number[] }).values ?? [];
+                const on = Number(values[din.dipIndex ?? 0] ?? 0) !== 0;
+                port.setPin(din.bit, !on);
+                continue;
+            }
+            if (din.mode === "toggle") {
+                const active = Boolean(din.toggled);
+                port.setPin(din.bit, !active);
+                if (din.ledProp) {
+                    (din.overlay as unknown as Record<string, unknown>)[din.ledProp] = active;
+                }
+            }
         }
     }
 
     private syncAnalogIns(runner: AVRRunner, mcuFigureId: string): void {
         for (const ain of this.analogIns) {
             if (ain.mcuFigureId !== mcuFigureId) continue;
-            const pot = ain.overlay as { value?: number; min?: number; max?: number };
-            const min = Number(pot.min ?? 0);
-            const max = Number(pot.max ?? 100);
-            const value = Number(pot.value ?? min);
-            const span = max - min || 1;
-            const volts = Math.min(5, Math.max(0, ((value - min) / span) * 5));
+            const el = ain.overlay as {
+                value?: number;
+                min?: number;
+                max?: number;
+                xValue?: number;
+                yValue?: number;
+            };
+
+            let volts = 0;
+            if (ain.mode === "joystick-x") {
+                const x = Number(el.xValue ?? 0.5);
+                volts = Math.min(5, Math.max(0, x * 5));
+            } else if (ain.mode === "joystick-y") {
+                const y = Number(el.yValue ?? 0.5);
+                volts = Math.min(5, Math.max(0, y * 5));
+            } else {
+                const min = Number(el.min ?? 0);
+                const max = Number(el.max ?? 100);
+                const value = Number(el.value ?? min);
+                const span = max - min || 1;
+                volts = Math.min(5, Math.max(0, ((value - min) / span) * 5));
+            }
             runner.adc.channelValues[ain.adcChannel] = volts;
         }
     }
@@ -500,11 +718,26 @@ export class SimulationBridge {
 
     private wireDigitalInListeners(): void {
         for (const din of this.digitalIns) {
-            if (din.mode !== "button" || !din.onPress || !din.onRelease) continue;
-            din.overlay.addEventListener("button-press", din.onPress);
-            din.overlay.addEventListener("button-release", din.onRelease);
-            const pressed = Boolean((din.overlay as { pressed?: boolean }).pressed);
-            this.setExternalPin(din.mcuFigureId, { port: din.port, bit: din.bit }, !pressed);
+            if (din.mode === "button" && din.onPress && din.onRelease) {
+                din.overlay.addEventListener("button-press", din.onPress);
+                din.overlay.addEventListener("button-release", din.onRelease);
+                const pressed = Boolean((din.overlay as { pressed?: boolean }).pressed);
+                this.setExternalPin(din.mcuFigureId, { port: din.port, bit: din.bit }, !pressed);
+                continue;
+            }
+            if (din.mode === "toggle") {
+                din.onToggleClick = (ev: Event) => {
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                    din.toggled = !din.toggled;
+                    // Cycle aussi la valeur analogique stockée (capteurs AO).
+                    const el = din.overlay as { value?: number };
+                    if (typeof el.value === "number") {
+                        el.value = din.toggled ? 90 : 10;
+                    }
+                };
+                din.overlay.addEventListener("click", din.onToggleClick);
+            }
         }
     }
 
@@ -512,6 +745,7 @@ export class SimulationBridge {
         for (const din of this.digitalIns) {
             if (din.onPress) din.overlay.removeEventListener("button-press", din.onPress);
             if (din.onRelease) din.overlay.removeEventListener("button-release", din.onRelease);
+            if (din.onToggleClick) din.overlay.removeEventListener("click", din.onToggleClick);
         }
     }
 
@@ -531,7 +765,17 @@ export class SimulationBridge {
                 }
             } else if (binding.kind === "servo") {
                 el.angle = 0;
+            } else if (binding.kind === "neopixel") {
+                el.r = 0;
+                el.g = 0;
+                el.b = 0;
             }
+        }
+        for (const din of this.digitalIns) {
+            if (din.ledProp) {
+                (din.overlay as unknown as Record<string, unknown>)[din.ledProp] = false;
+            }
+            din.toggled = false;
         }
     }
 
@@ -587,5 +831,37 @@ function analogChannelFromPinKey(pinKey: string): number | undefined {
     if (!key) return undefined;
     const m = /^A([0-5])$/i.exec(key);
     if (m) return Number(m[1]);
+    return undefined;
+}
+
+function dipIndexFromPort(pk: string): number {
+    const m = /^([1-8])[AB]$/.exec(pk);
+    if (!m) return -1;
+    return Number(m[1]) - 1;
+}
+
+type SensorProfile = {
+    digitalPins: string[];
+    analogPins: string[];
+    ledProp?: string;
+};
+
+/** Profils des modules capteurs Wokwi (clic → DO, AO → ADC). */
+function sensorProfile(clasz: unknown): SensorProfile | undefined {
+    if (clasz === PhotoresistorSensorElement) {
+        return { digitalPins: ["DO"], analogPins: ["AO"], ledProp: "ledDO" };
+    }
+    if (clasz === FlameSensorElement) {
+        return { digitalPins: ["DO", "DOUT", "D0"], analogPins: ["AO", "AOUT", "A0"], ledProp: "ledSignal" };
+    }
+    if (clasz === GasSensorElement) {
+        return { digitalPins: ["DO", "DOUT", "D0"], analogPins: ["AO", "AOUT", "A0"], ledProp: "ledD0" };
+    }
+    if (clasz === BigSoundSensorElement) {
+        return { digitalPins: ["DOUT", "DO"], analogPins: ["AOUT", "AO"], ledProp: "led2" };
+    }
+    if (clasz === SmallSoundSensorElement) {
+        return { digitalPins: ["DO", "DOUT"], analogPins: ["AO", "AOUT"], ledProp: "ledSignal" };
+    }
     return undefined;
 }

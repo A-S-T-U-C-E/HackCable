@@ -39,6 +39,8 @@ export class Canvas extends draw2d.Canvas {
     private disposeMinimap: (() => void) | null = null;
     private disposeViewportWheel: (() => void) | null = null;
     private disposeLayoutSync: (() => void) | null = null;
+    /** Mode simu : overlays Wokwi interactifs, figures non déplaçables. */
+    private simulationInteraction = false;
 
     /**
      * Initialise le canvas draw2d avec overlay HTML, politiques et UI flottante.
@@ -258,9 +260,52 @@ export class Canvas extends draw2d.Canvas {
             width: `${zoom * 100}%`,
             height: `${zoom * 100}%`,
         });
-        if (this.overlayContainer instanceof HTMLElement) {
+        // En édition : overlays pass-through. En simu : géré par setSimulationInteractionMode.
+        if (!this.simulationInteraction && this.overlayContainer instanceof HTMLElement) {
             this.overlayContainer.style.pointerEvents = "none";
         }
+    }
+
+    /**
+     * Active / désactive le mode interaction simulation.
+     * - Overlays Wokwi au-dessus du SVG et cliquables (bouton, pot, switch…)
+     * - Figures non déplaçables / non sélectionnables
+     * @param enabled - `true` pendant run / pause / step ; `false` à l’arrêt.
+     */
+    public setSimulationInteractionMode(enabled: boolean): void {
+        this.simulationInteraction = enabled;
+        const root = this.getCanvasRootElement();
+        root?.classList.toggle("hackCable-sim-interactive", enabled);
+
+        if (enabled) {
+            this.clearSelection?.();
+            this.selected = null;
+        }
+
+        const figures = this.getFigures?.()?.data ?? [];
+        for (const fig of figures) {
+            if (fig instanceof ComponentFigure) {
+                fig.setSimulationInteraction(enabled);
+            }
+        }
+
+        if (this.overlayContainer instanceof HTMLElement) {
+            // Le CSS `.hackCable-sim-interactive` porte le vrai comportement ;
+            // on enlève le inline `none` forcé en mode édition.
+            this.overlayContainer.style.pointerEvents = enabled ? "" : "none";
+        }
+    }
+
+    /** `true` si les overlays Wokwi sont interactifs (simulation attachée). */
+    public isSimulationInteractionMode(): boolean {
+        return this.simulationInteraction;
+    }
+
+    private getCanvasRootElement(): HTMLElement | null {
+        const html = this.html as { 0?: HTMLElement } | HTMLElement;
+        if (html instanceof HTMLElement) return html;
+        if (html && typeof html === "object" && html[0] instanceof HTMLElement) return html[0];
+        return document.getElementById("hackCable-canvas");
     }
 
     private onZoomChange() {

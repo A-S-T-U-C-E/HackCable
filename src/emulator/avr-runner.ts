@@ -85,9 +85,9 @@ export class AVRRunner {
     }
 
     /**
-     * Lance (ou reprend) la boucle d’exécution.
-     * @param callback - Appelé après chaque tranche de `workUnitCycles`.
-     */
+ * Lance (ou reprend) la boucle d’exécution.
+ * @param callback - Appelé après chaque tranche de `workUnitCycles`.
+ */
     execute(callback: (cpu: CPU) => void): void {
         this.tickCallback = callback;
         if (this.taskScheduler.stopped) {
@@ -95,6 +95,51 @@ export class AVRRunner {
         }
         this.resetTimingSync();
         this.scheduleNext();
+    }
+
+    /**
+     * Exécute un nombre fixe d’instructions AVR, puis reste en pause.
+     * Utile pour le debug pas-à-pas (esprit ElectroBlocks).
+     * @param count - Nombre d’instructions (≥ 1).
+     */
+    stepInstructions(count = 1): void {
+        const n = Math.max(1, Math.floor(count));
+        this.freezeForStep();
+        for (let i = 0; i < n; i++) {
+            avrInstruction(this.cpu);
+            this.cpu.tick();
+        }
+    }
+
+    /**
+     * Avance d’environ `ms` de temps simulé (16 MHz), puis reste en pause.
+     * @param ms - Durée simulée en millisecondes (défaut 1).
+     */
+    stepMilliseconds(ms = 1): void {
+        const cycles = Math.max(1, Math.floor((this.speed * Math.max(0, ms)) / 1000));
+        this.stepCycles(cycles);
+    }
+
+    /**
+     * Exécute jusqu’à atteindre `cpu.cycles + cycles`, puis reste en pause.
+     * @param cycles - Budget de cycles CPU.
+     */
+    stepCycles(cycles: number): void {
+        const budget = Math.max(1, Math.floor(cycles));
+        this.freezeForStep();
+        const target = this.cpu.cycles + budget;
+        while (this.cpu.cycles < target) {
+            avrInstruction(this.cpu);
+            this.cpu.tick();
+        }
+    }
+
+    /** Stoppe la boucle continue avant un pas manuel. */
+    private freezeForStep(): void {
+        this.clearThrottleTimer();
+        if (!this.taskScheduler.stopped) {
+            this.taskScheduler.stop();
+        }
     }
 
     private resetTimingSync(): void {

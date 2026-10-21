@@ -305,24 +305,31 @@ header.hackCable-app-header
                 display inline-flex
                 align-items center
                 justify-content center
+                box-sizing border-box
                 line-height 1
                 font-size var(--hc-btn-icon-size)
                 width 1.25em
                 height 1.25em
+                // Toutes les icônes toolbar : même boîte (SVG, favicon, pinout…)
+                > .hackCable-btn-svg
+                > .hackCable-btn-favicon
+                > svg
+                > img
+                    display block
+                    box-sizing border-box
+                    width 100%
+                    height 100%
+                    max-width 100%
+                    max-height 100%
+                    object-fit contain
+                    pointer-events none
+                    user-select none
 
             .hackCable-btn-svg
-                display block
-                width 1.25em
-                height 1.25em
+                fill currentColor
 
             .hackCable-btn-favicon
-                display block
-                width 1.25em
-                height 1.25em
-                object-fit contain
                 border-radius 2px
-                pointer-events none
-                user-select none
 
             // Favicon Wokwi (PNG noir) : inverser sur thème sombre
             .hackCable-btn-favicon--wokwi
@@ -426,6 +433,146 @@ main
         min-height 0
         min-width 0
         overflow hidden
+
+// Modale flottante déplaçable — état des broches simu
+.hackCable-sim-pin-dialog
+    position fixed
+    z-index 1200
+    left 24px
+    top 72px
+    width unquote("min(460px, calc(100vw - 24px))")
+    max-height unquote("min(50vh, calc(100vh - 80px))")
+    display flex
+    flex-direction column
+    overflow hidden
+    border 1px solid var(--hc-divider)
+    border-radius 8px
+    background var(--hc-surface)
+    color var(--hc-text)
+    box-shadow var(--hc-shadow)
+    font-family var(--hc-ui-font)
+    font-size var(--hc-ui-font-size)
+    line-height var(--hc-ui-line-height)
+
+    &[hidden]
+        display none
+
+.hackCable-sim-pin-dialog-header
+    display flex
+    align-items center
+    gap 8px
+    padding 8px 10px 8px 12px
+    border-bottom 1px solid var(--hc-divider)
+    cursor grab
+    user-select none
+    touch-action none
+    flex-shrink 0
+
+    &:active
+        cursor grabbing
+
+.hackCable-sim-pin-dialog-title
+    margin 0
+    flex 1
+    font-size 1em
+    font-weight 600
+    color var(--hc-text-strong)
+    pointer-events none
+
+.hackCable-sim-pin-dialog-close
+    flex 0 0 auto
+    border none
+    border-radius 4px
+    width 28px
+    height 28px
+    padding 0
+    background transparent
+    color var(--hc-text)
+    font-size 1.25rem
+    line-height 1
+    cursor pointer
+
+    &:hover
+        background var(--hc-btn-bg)
+
+.hackCable-sim-pin-dialog-empty
+    margin 0
+    padding 10px 12px
+    color var(--hc-text-muted)
+
+.hackCable-sim-pin-dialog-body
+    flex 1
+    min-height 0
+    overflow auto
+    padding 8px 12px 12px
+
+.hackCable-sim-pin-board
+    margin-top 4px
+
+    & + &
+        border-top 1px solid var(--hc-divider)
+        margin-top 10px
+        padding-top 10px
+
+.hackCable-sim-pin-board-title
+    margin 0 0 6px
+    font-size 0.95em
+    font-weight 600
+    color var(--hc-text-muted)
+
+.hackCable-sim-pin-row
+    display flex
+    flex-wrap wrap
+    gap 4px
+    margin-bottom 4px
+
+.hackCable-sim-pin-chip
+    display inline-flex
+    align-items center
+    justify-content center
+    min-width 2.4em
+    padding 2px 6px
+    border-radius 3px
+    border 1px solid var(--hc-divider)
+    background var(--hc-btn-bg)
+    font-variant-numeric tabular-nums
+    font-size 0.9em
+
+    &.is-high
+        background #1f6b3a
+        border-color #2f9e57
+        color #e8fff0
+
+    &.is-low
+        background #3a3a3a
+        border-color #555
+        color #ccc
+
+    &.is-input
+        background transparent
+        color var(--hc-text-muted)
+
+    &.is-pullup
+        background #3a4a5a
+        border-color #5a7a9a
+        color #d0e4ff
+
+html[data-ui-theme="light"]
+    .hackCable-sim-pin-chip
+        &.is-high
+            background #c8f0d4
+            border-color #2f9e57
+            color #0d3d1c
+
+        &.is-low
+            background #e8e8e8
+            border-color #aaa
+            color #333
+
+        &.is-pullup
+            background #d6e6f5
+            border-color #5a7a9a
+            color #1a3350
 
 footer
     flex-shrink 0

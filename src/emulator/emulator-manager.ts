@@ -14,6 +14,7 @@
 import type { AVRIOPort } from "avr8js";
 import { AVRRunner } from "./avr-runner";
 import { compileToHex, type CompileResult } from "./compiler";
+import { snapshotBoardPins, type SimBoardPinSnapshot } from "./pin-snapshot";
 
 /** Nom logique d’un port GPIO ATmega328P exposé au canvas. */
 export type AvrGpioPortName = "B" | "C" | "D";
@@ -124,7 +125,7 @@ export class EmulatorManager {
         }
     }
 
-    /**
+        /**
      * Pause / reprise de toutes les cartes en cours.
      * @param pause - `true` pour geler les CPU.
      */
@@ -139,6 +140,41 @@ export class EmulatorManager {
         const active = [...this.boards.values()].filter((s) => s.runner);
         if (active.length === 0) return true;
         return active.every((s) => s.runner!.pause);
+    }
+
+    /**
+     * Avance toutes les cartes actives d’environ `ms` ms simulées, puis reste en pause.
+     * @param ms - Durée simulée (défaut 1 ms).
+     */
+    stepMilliseconds(ms = 1): void {
+        for (const slot of this.boards.values()) {
+            if (!slot.runner) continue;
+            slot.runner.stepMilliseconds(ms);
+        }
+    }
+
+    /**
+     * Avance toutes les cartes actives de `count` instructions AVR, puis reste en pause.
+     * @param count - Nombre d’instructions (défaut 1).
+     */
+    stepInstructions(count = 1): void {
+        for (const slot of this.boards.values()) {
+            if (!slot.runner) continue;
+            slot.runner.stepInstructions(count);
+        }
+    }
+
+    /**
+     * Instantanés GPIO/ADC de toutes les cartes avec runner actif.
+     * @returns Un snapshot par `figureId`.
+     */
+    getPinSnapshots(): SimBoardPinSnapshot[] {
+        const out: SimBoardPinSnapshot[] = [];
+        for (const [figureId, slot] of this.boards) {
+            if (!slot.runner) continue;
+            out.push(snapshotBoardPins(figureId, slot.runner));
+        }
+        return out;
     }
 
     /** Arrête toutes les boucles CPU (conserve les firmwares chargés). */

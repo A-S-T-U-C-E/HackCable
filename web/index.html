@@ -42,7 +42,7 @@
                 </button>
                 <button type="button" id="export-wokwi">
                     <span class="hackCable-btn-icon" aria-hidden="true">
-                        <img class="hackCable-btn-favicon hackCable-btn-favicon--wokwi" src="./assets/wokwi-favicon-dark.png" alt="" width="20" height="17" decoding="async" />
+                        <img class="hackCable-btn-favicon hackCable-btn-favicon--wokwi" src="./assets/wokwi-favicon-dark.png" alt="" width="20" height="20" decoding="async" />
                     </span>
                     <span class="hackCable-btn-label">Exporter Wokwi</span>
                 </button>
@@ -84,11 +84,24 @@
                     </span>
                     <span class="hackCable-btn-label">Pause</span>
                 </button>
+                <button type="button" id="sim-step" disabled title="Pas à pas">
+                    <span class="hackCable-btn-icon" aria-hidden="true">
+                        <!-- Skip / step : triangle + barre (avance d’un cran) -->
+                        <svg class="hackCable-btn-svg" viewBox="0 0 24 24" focusable="false"><path fill="currentColor" d="M6 18 14.5 12 6 6v12zm10-12v12h2V6h-2z"/></svg>
+                    </span>
+                    <span class="hackCable-btn-label">Pas à pas</span>
+                </button>
                 <button type="button" id="sim-stop" disabled>
                     <span class="hackCable-btn-icon" aria-hidden="true">
                         <svg class="hackCable-btn-svg" viewBox="0 0 24 24" focusable="false"><path fill="currentColor" d="M6 6h12v12H6z"/></svg>
                     </span>
                     <span class="hackCable-btn-label">Stop</span>
+                </button>
+                <button type="button" id="sim-pins" aria-pressed="false" title="Broches">
+                    <span class="hackCable-btn-icon" aria-hidden="true">
+                        <img class="hackCable-btn-favicon" src="./assets/pinout.svg" alt="" width="20" height="20" decoding="async" />
+                    </span>
+                    <span class="hackCable-btn-label">Broches</span>
                 </button>
                 <span id="sim-status" class="hackCable-sim-status-inline" aria-live="polite"></span>
             </div>
@@ -129,6 +142,7 @@
     <main>
         <div id="hackCable"></div>
     </main>
+
     <footer>
         <div></div>
     </footer>

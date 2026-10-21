@@ -146,7 +146,7 @@ export class ComponentFigure extends draw2d.shape.basic.Rectangle {
             ? this.createWokwiOverlay(component)
             : this.createFritzingOverlay(component);
 
-        this.on("added", (_emitter: unknown, event: { canvas: { overlayContainer: HTMLElement; getZoom?: () => number } }) => {
+        this.on("added", (_emitter: unknown, event: { canvas: { overlayContainer: HTMLElement; getZoom?: () => number; isSimulationInteractionMode?: () => boolean } }) => {
             event.canvas.overlayContainer.append(this.overlay);
             if (isWokwiComponent(this.component)) {
                 void this.syncWokwiOverlaySizeAsync();
@@ -155,6 +155,10 @@ export class ComponentFigure extends draw2d.shape.basic.Rectangle {
             }
             const zoom = typeof event.canvas.getZoom === "function" ? event.canvas.getZoom() : 1;
             syncFigurePortHitTargets(this, zoom);
+            // Si ajout pendant une simu déjà active, appliquer le mode interaction.
+            if (event.canvas.isSimulationInteractionMode?.()) {
+                this.setSimulationInteraction(true);
+            }
         });
 
         this.on("removed", () => this.overlay.remove());
@@ -339,6 +343,32 @@ export class ComponentFigure extends draw2d.shape.basic.Rectangle {
      */
     public getOverlayElement(): HTMLElement {
         return this.overlay;
+    }
+
+    /**
+     * Bascule édition ↔ interaction Wokwi pendant la simulation.
+     * @param enabled - `true` : figure gelée ; l’overlay n’est cliquable que s’il est
+     *   marqué `hackCable-sim-hit` par le bridge (bouton, pot…).
+     */
+    public setSimulationInteraction(enabled: boolean): void {
+        this.setDraggable(!enabled);
+        this.setSelectable(!enabled);
+        if (!enabled) {
+            this.overlay.classList.remove("hackCable-sim-hit");
+            this.overlay.style.pointerEvents = "none";
+            return;
+        }
+        // Par défaut non cliquable : le bridge active `hackCable-sim-hit` pour les entrées.
+        if (isWokwiComponent(this.component)) {
+            this.overlay.style.pointerEvents = "";
+        } else {
+            this.overlay.style.pointerEvents = "none";
+        }
+    }
+
+    /** Marque l’overlay comme cible de pointeur pendant la simu (entrées). */
+    public setSimulationHitTarget(hit: boolean): void {
+        this.overlay.classList.toggle("hackCable-sim-hit", hit);
     }
 
     /**

@@ -32,9 +32,9 @@ Module `src/emulator/` + façade hôte sur `HackCable` :
 
 1. **Socle** — Compile sketch → HEX (`hexi.wokwi.com`) ou `loadBoardHex` ; un `AVRRunner` **par carte** ; exécution simultanée entrelacée
 2. **Bridge** — `SimulationBridge` : GPIO/ADC → LED, RGB, buzzer, 7-seg, barre LED, servo,
-   boutons, switch, pot (Uno/Nano)
+   boutons, switch, pot (Uno/Nano) ; pendant la simu, overlays Wokwi interactifs et plan gelé
 3. **API hôte** — `pushSketch` / `runSimulation` / `stopSimulation` (voir [simulation-api.md](simulation-api.md)) pour BlocklyDuino / µcBlockly
-4. **UI démo** — Compiler / Exécuter / Pause / Stop ; sketch par carte (menu contextuel Code)
+4. **UI démo** — Compiler / Exécuter / Pause / **Pas** / Stop ; panneau **Broches** (GPIO/ADC) ; sketch par carte (menu contextuel Code)
 
 ## Persistance
 

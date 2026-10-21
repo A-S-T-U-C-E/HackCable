@@ -44,6 +44,9 @@ Sans `figureId` : première carte MCU du plan.
 | `runSimulation()` | `run` + attache le bridge overlays |
 | `stopSimulation()` | `stop` + détache le bridge |
 | `setSimulationPaused(bool)` | Pause / reprise |
+| `stepSimulation(ms?)` | Avance ~`ms` ms simulées puis reste en pause (défaut 1) |
+| `stepSimulationInstructions(n?)` | Avance `n` instructions AVR puis reste en pause |
+| `getSimulationPinSnapshots()` | Instantanés GPIO/ADC (D0–D13, A0–A5) par carte |
 | `isSimulationPaused()` | État pause |
 | `isSimulationRunning()` | Bridge attaché et CPU actif |
 

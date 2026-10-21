@@ -13,10 +13,14 @@ et le projet suit le [versionnage sémantique](https://semver.org/lang/fr/).
   exposé via `hackCable.emulatorManager` — **un runner par carte MCU** (exécution simultanée)
 - **Pont GPIO/ADC → overlays Wokwi** (`SimulationBridge`) : LED, LED13, RGB, buzzer, 7-seg,
   barre LED, servo (approx.), boutons, slide switch, potentiomètre (ADC) ; mapping
-  D0–D13 / A0–A5 → PORTD/B/C + `AVRADC.channelValues`, routé par `figureId`
-- UI démo **Compiler / Exécuter / Pause / Stop** ; sketch **par carte MCU** (menu contextuel Code → modale)
+  D0–D13 / A0–A5 → PORTD/B/C + `AVRADC.channelValues`, routé par `figureId` ;
+  **mode interaction** pendant la simu (overlays cliquables, figures gelées, fils visibles) ;
+  entrées étendues (joystick, DIP, KY040 SW, capteurs cliquables) + NeoPixel approximatif
+- UI démo **Compiler / Exécuter / Pause / Pas / Stop** ; panneau **Broches** (D0–D13, A0–A5) ;
+  sketch **par carte MCU** (menu contextuel Code → modale)
 - **API hôte** simulation : `pushSketch`, `compileBoard`, `loadBoardHex`, `runSimulation` /
-  `stopSimulation` (intégration BlocklyDuino / µcBlockly) — voir `docs/simulation-api.md`
+  `stopSimulation`, `stepSimulation`, `getSimulationPinSnapshots` (intégration BlocklyDuino / µcBlockly)
+  — voir `docs/simulation-api.md`
 
 ## [1.1.0] — 2026-09-27
 

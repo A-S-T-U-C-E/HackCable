@@ -23,6 +23,7 @@ import { exportWorkspacePngDataUrl } from "../src/editor/workspace-export";
 import { readA11ySettings } from "./a11y-settings";
 import { writeUrlDemoOptions } from "./url-options";
 import { createMcuCodeDialog } from "./mcu-code-dialog";
+import { setupSimPinPanel } from "./sim-pin-panel";
 import { ComponentFigure } from "../src/editor/component-figure";
 import { isMicrocontrollerBoard } from "../src/panels/component";
 
@@ -402,17 +403,19 @@ export function setupUndoRedo(editor: Editor, signal: AbortSignal): void {
 }
 
 /**
- * Branche Compile / Run / Pause / Stop + édition sketch via menu contextuel MCU.
+ * Branche Compile / Run / Pause / Step / Stop + édition sketch via menu contextuel MCU.
  * Compile et exécute **toutes** les cartes MCU du plan (runners en parallèle).
  * @param hackCable - Instance HackCable (émulateur + bridge).
  * @param signal - Signal d’annulation pour retirer les écouteurs.
- * @returns Fonction de refresh i18n de la modale Code.
+ * @returns Fonction de refresh i18n de la modale Code / panneau broches.
  */
 export function setupSimulation(hackCable: HackCable, signal: AbortSignal): () => void {
     const compileBtn = document.getElementById("sim-compile");
     const runBtn = document.getElementById("sim-run");
     const pauseBtn = document.getElementById("sim-pause");
+    const stepBtn = document.getElementById("sim-step");
     const stopBtn = document.getElementById("sim-stop");
+    const pinsBtn = document.getElementById("sim-pins");
     const statusEl = document.getElementById("sim-status");
 
     if (!(compileBtn && runBtn && pauseBtn && stopBtn)) {
@@ -422,10 +425,13 @@ export function setupSimulation(hackCable: HackCable, signal: AbortSignal): () =
     /** Dernière carte dont le Code a été ouvert (statut UI). */
     let lastEditedBoardName = "";
     let running = false;
+    let pinsVisible = false;
     let statusKey: string | null = null;
     let statusVars: Record<string, unknown> | undefined;
     let statusIsError = false;
     let statusRaw: string | null = null;
+
+    const pinPanel = setupSimPinPanel(hackCable, signal);
 
     const t = (k: string, vars?: Record<string, unknown>) =>
         i18next.t(k, { ns: "common", ...vars });
@@ -460,15 +466,25 @@ export function setupSimulation(hackCable: HackCable, signal: AbortSignal): () =
 
     const refreshButtons = () => {
         const firmwareReady = hackCable.emulatorManager.hasFirmware();
+        const paused = hackCable.emulatorManager.isPaused();
         runBtn.toggleAttribute("disabled", !firmwareReady);
         pauseBtn.toggleAttribute("disabled", !running);
         stopBtn.toggleAttribute("disabled", !running);
-        const paused = hackCable.emulatorManager.isPaused();
+        if (stepBtn) {
+            // Pas : firmware prêt (peut démarrer en pause) ou simu déjà lancée
+            stepBtn.toggleAttribute("disabled", !firmwareReady);
+        }
         setButtonLabelText(
             pauseBtn,
             paused && running ? t("web.simResume") : t("web.simPause"),
         );
         pauseBtn.setAttribute("aria-pressed", running && paused ? "true" : "false");
+        if (pinsBtn) {
+            setButtonLabelText(pinsBtn, t("web.simPins"));
+            pinsBtn.setAttribute("aria-pressed", pinsVisible ? "true" : "false");
+        }
+        if (stepBtn) setButtonLabelText(stepBtn, t("web.simStep"));
+        pinPanel.paint();
     };
 
     const listMcuFigures = (): ComponentFigure[] => {
@@ -584,6 +600,28 @@ export function setupSimulation(hackCable: HackCable, signal: AbortSignal): () =
         refreshButtons();
     }, { signal });
 
+    stepBtn?.addEventListener("click", () => {
+        try {
+            hackCable.stepSimulation(1);
+            running = true;
+            setStatusKey("web.simStepped", { ms: 1 });
+        } catch (e) {
+            setStatusRaw(e instanceof Error ? e.message : t("web.simRunFailed"), true);
+        }
+        refreshButtons();
+    }, { signal });
+
+    pinsBtn?.addEventListener("click", () => {
+        pinsVisible = !pinsVisible;
+        pinPanel.setVisible(pinsVisible);
+        refreshButtons();
+    }, { signal });
+
+    document.addEventListener("hackcable:sim-pins-closed", () => {
+        pinsVisible = false;
+        refreshButtons();
+    }, { signal });
+
     stopBtn.addEventListener("click", () => {
         hackCable.emulatorManager.stop();
         hackCable.simulationBridge.detach();
@@ -603,6 +641,7 @@ export function setupSimulation(hackCable: HackCable, signal: AbortSignal): () =
     refreshButtons();
     return () => {
         codeDialog.refreshI18n();
+        pinPanel.refreshI18n();
         paintStatus();
         refreshButtons();
     };

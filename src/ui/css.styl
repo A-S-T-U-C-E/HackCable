@@ -570,6 +570,39 @@ html[data-ui-theme="light"]
           transform-origin center center
           pointer-events none !important
 
+      // Simulation : le SVG (fils) reste AU-DESSUS pour rester visible.
+      // pointer-events:none sur le SVG → les clics traversent vers les overlays Wokwi.
+      &.hackCable-sim-interactive
+        > svg
+          z-index 2
+          pointer-events none !important
+
+          .draw2d_shape_basic_Rectangle
+          .draw2d_HybridPort
+          .draw2d_Connection
+          .draw2d_shape_basic_Label
+            pointer-events none !important
+            cursor default
+
+        .hackCable-canvas-overlay-container
+          z-index 1
+          pointer-events none !important
+
+          > *
+            position absolute
+            transform-origin center center
+            pointer-events none !important
+
+          // Uniquement les overlays marqués interactifs (bouton, pot, switch…)
+          > *.hackCable-sim-hit
+            pointer-events auto !important
+
+          > .hackCable-fritzing-overlay
+            pointer-events none !important
+
+            *
+              pointer-events none !important
+
 // Menu contextuel (clic droit) — rendu dans document.body
 .hackCable-ctx-menu
   position fixed

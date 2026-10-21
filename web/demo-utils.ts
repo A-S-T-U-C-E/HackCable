@@ -136,7 +136,9 @@ export function applyWebDemoUiI18n(): void {
     setBtn("sim-compile", "web.simCompile");
     setBtn("sim-run", "web.simRun");
     setBtn("sim-pause", "web.simPause");
+    setBtn("sim-step", "web.simStep");
     setBtn("sim-stop", "web.simStop");
+    setBtn("sim-pins", "web.simPins");
     setBtn("a11y-open", "a11y.open");
     setBtn("about-open", "about.open");
     setBtn("show-minimap", "web.showMinimap");

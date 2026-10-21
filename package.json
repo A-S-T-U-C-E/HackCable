@@ -37,10 +37,10 @@
     "xmldom": "npm:@xmldom/xmldom@^0.9.0"
   },
   "devDependencies": {
-    "@babel/core": "^8.0.6",
+    "@babel/core": "^8.0.7",
     "@babel/polyfill": "^7.12.1",
-    "@babel/preset-env": "^8.0.6",
-    "@babel/preset-typescript": "8.0.1",
+    "@babel/preset-env": "^8.0.7",
+    "@babel/preset-typescript": "8.0.7",
     "@types/jquery": "^4.0.1",
     "babel-loader": "^10.1.1",
     "buffer": "^6.0.3",
@@ -53,15 +53,15 @@
     "stylus": "^0.64.0",
     "stylus-loader": "^9.0.0",
     "typescript": "7.0.2",
-    "webpack": "5.111.1",
+    "webpack": "5.112.0",
     "webpack-cli": "^7.2.3",
-    "webpack-dev-server": "^6.0.0"
+    "webpack-dev-server": "^6.1.0"
   },
   "dependencies": {
     "@wokwi/elements": "^1.9.2",
     "avr8js": "^0.21.1",
     "draw2d": "^1.0.38",
-    "i18next": "^26.4.2",
+    "i18next": "^26.5.3",
     "intel-hex": "^0.2.0",
     "jquery": "^4.0.0",
     "jquery-ui": "^1.14.2"

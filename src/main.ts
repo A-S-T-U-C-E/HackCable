@@ -372,7 +372,7 @@ export class HackCable {
         this._simulationBridge.detach();
     }
 
-    /**
+        /**
      * Pause / reprise de toutes les cartes en cours.
      * @param paused - `true` pour geler.
      */
@@ -390,6 +390,58 @@ export class HackCable {
         return this._simulationBridge.isAttached
             && this._emulatorManager.hasFirmware()
             && !this._emulatorManager.isPaused();
+    }
+
+    /**
+     * Avance la simulation d’environ `ms` ms (reste en pause ensuite).
+     * Attache le bridge si besoin et resynchronise les overlays.
+     * @param ms - Durée simulée (défaut 1).
+     */
+    public stepSimulation(ms = 1): void {
+        if (!this._emulatorManager.hasFirmware()) {
+            throw new Error("Aucun firmware chargé. Compilez au moins une carte d’abord.");
+        }
+        // Si run() n’a jamais été appelé, démarrer une fois pour créer les runners.
+        if (this._emulatorManager.getActiveRunners().size === 0) {
+            this.runSimulation();
+            this._emulatorManager.setPaused(true);
+        }
+        this._emulatorManager.stepMilliseconds(ms);
+        if (this._simulationBridge.isAttached) {
+            this._simulationBridge.syncAll();
+        } else {
+            this._simulationBridge.attach();
+            this._simulationBridge.syncAll();
+        }
+    }
+
+    /**
+     * Avance de `count` instructions AVR (reste en pause).
+     * @param count - Nombre d’instructions (défaut 1).
+     */
+    public stepSimulationInstructions(count = 1): void {
+        if (!this._emulatorManager.hasFirmware()) {
+            throw new Error("Aucun firmware chargé. Compilez au moins une carte d’abord.");
+        }
+        if (this._emulatorManager.getActiveRunners().size === 0) {
+            this.runSimulation();
+            this._emulatorManager.setPaused(true);
+        }
+        this._emulatorManager.stepInstructions(count);
+        if (this._simulationBridge.isAttached) {
+            this._simulationBridge.syncAll();
+        } else {
+            this._simulationBridge.attach();
+            this._simulationBridge.syncAll();
+        }
+    }
+
+    /**
+     * Instantanés GPIO/ADC des cartes en simulation (panneau debug / API hôte).
+     * @returns Un snapshot par carte avec runner actif.
+     */
+    public getSimulationPinSnapshots() {
+        return this._emulatorManager.getPinSnapshots();
     }
 
     /**

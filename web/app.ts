@@ -133,5 +133,6 @@ export async function mountWebDemoApp(): Promise<() => void> {
         document.getElementById("a11y-dialog")?.remove();
         document.getElementById("about-dialog")?.remove();
         document.getElementById("mcu-code-dialog")?.remove();
+        document.getElementById("sim-pin-dialog")?.remove();
     };
 }
