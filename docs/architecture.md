@@ -1,15 +1,15 @@
 # Architecture HackCable (aperçu)
 
+HackCable est la **couche application** (éditeur draw2d + UI). Le **noyau de simulation** vit dans le dépôt voisin [LibreCircuit](https://github.com/A-S-T-U-C-E/LibreCircuit) (`librecircuit`).
+
 ```
+LibreCircuit (npm: librecircuit)
+        │
+        ▼
 ┌─────────────────────────────────────────────┐
-│  web/  (page démo)                          │
-│  app.ts → HackCable.create() + UI toolbar   │
-└───────────────────┬─────────────────────────┘
-                    │
-┌───────────────────▼─────────────────────────┐
-│  src/main.ts  — classe HackCable            │
-│  • catalog (panneau pièces)                 │
-│  • editor  (canvas + API MCU)               │
+│  HackCable (cette appli)                    │
+│  web/  → HackCable.create() + UI toolbar    │
+│  src/main.ts — catalogue + editor + bridge  │
 └───────┬─────────────────────┬───────────────┘
         │                     │
 ┌───────▼────────┐   ┌────────▼───────────────┐
@@ -17,6 +17,9 @@
 │ catalogue      │   │ canvas, figures, fils  │
 │ Wokwi/Fritzing │   │ mcu-pin/, routers…     │
 └────────────────┘   └────────────────────────┘
+        │
+        ▼
+   eBlockly / hôtes (dépendance sur HackCable)
 ```
 
 ## Flux câblage
@@ -28,13 +31,12 @@
 
 ## Simulation AVR
 
-Module `src/emulator/` + façade hôte sur `HackCable` :
+1. **Socle (LibreCircuit)** — `EmulatorManager`, `AVRRunner`, HEX via LibrEduc (`compileToHex`) **ou** injecté (`loadBoardHex`), snapshots GPIO
+2. **Bridge (HackCable)** — `SimulationBridge` : GPIO/ADC → overlays Wokwi sur le canvas draw2d
+3. **API hôte** — `pushSketch` / `runSimulation` / … (voir [simulation-api.md](simulation-api.md))
+4. **UI démo** — Compiler / Exécuter / Pause / Pas / Stop ; panneau Broches
 
-1. **Socle** — Compile sketch → HEX (`hexi.wokwi.com`) ou `loadBoardHex` ; un `AVRRunner` **par carte** ; exécution simultanée entrelacée
-2. **Bridge** — `SimulationBridge` : GPIO/ADC → LED, RGB, buzzer, 7-seg, barre LED, servo,
-   boutons, switch, pot (Uno/Nano) ; pendant la simu, overlays Wokwi interactifs et plan gelé
-3. **API hôte** — `pushSketch` / `runSimulation` / `stopSimulation` (voir [simulation-api.md](simulation-api.md)) pour BlocklyDuino / µcBlockly
-4. **UI démo** — Compiler / Exécuter / Pause / **Pas** / Stop ; panneau **Broches** (GPIO/ADC) ; sketch par carte (menu contextuel Code)
+**Compile offline / flash carte** : pas dans LibreCircuit ni HackCable — rôle de **BDuino** desktop (arduino-cli). L’hôte peut aussi injecter un HEX.
 
 ## Persistance
 
@@ -46,4 +48,5 @@ Fichier utilisateur : extension `.hackcable` (JSON).
 
 ## Licence
 
-AGPL-3.0-or-later — voir `LICENSE`, `NOTICE` et [COPYLEFT.md](COPYLEFT.md).
+AGPL-3.0-or-later — voir `LICENSE`, `NOTICE` et [COPYLEFT.md](COPYLEFT.md).  
+LibreCircuit est sous la même licence (dépôt séparé).

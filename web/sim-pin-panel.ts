@@ -11,7 +11,7 @@
  * - Rafraîchir sur GPIO, step, et intervalle pendant le run
  */
 import type { HackCable } from "../src/main";
-import type { SimBoardPinSnapshot, SimPinLevel } from "../src/emulator/pin-snapshot";
+import type { SimBoardPinSnapshot, SimPinLevel } from "librecircuit";
 import i18next from "i18next";
 
 const REFRESH_MS = 100;
@@ -105,7 +105,7 @@ export function setupSimPinPanel(
         }
 
         for (const snap of snaps) {
-            body.appendChild(renderBoard(snap, boardName(snap.figureId), t));
+            body.appendChild(renderBoard(snap, boardName(snap.figureId), t, snap.figureId));
         }
     };
 
@@ -222,6 +222,7 @@ function renderBoard(
     snap: SimBoardPinSnapshot,
     name: string,
     t: (k: string, vars?: Record<string, unknown>) => string,
+    figureId: string,
 ): HTMLElement {
     const section = document.createElement("section");
     section.className = "hackCable-sim-pin-board";
@@ -236,7 +237,7 @@ function renderBoard(
     digRow.className = "hackCable-sim-pin-row";
     digRow.setAttribute("role", "list");
     for (const pin of snap.digital) {
-        digRow.appendChild(pinChip(pin.label, pin.state, levelClass(pin.state)));
+        digRow.appendChild(pinChip(pin.label, pin.state, levelClass(pin.state), figureId, pin.label, t));
     }
     section.appendChild(digRow);
 
@@ -246,20 +247,37 @@ function renderBoard(
     for (const ch of snap.adc) {
         const label = `${ch.label} ${ch.volts.toFixed(2)}V`;
         const level: SimPinLevel = ch.volts >= 2.5 ? "High" : "Low";
-        adcRow.appendChild(pinChip(label, level, levelClass(level)));
+        adcRow.appendChild(pinChip(label, level, levelClass(level), figureId, ch.label, t));
     }
     section.appendChild(adcRow);
 
     return section;
 }
 
-function pinChip(label: string, state: SimPinLevel, cls: string): HTMLElement {
-    const el = document.createElement("span");
+function pinChip(
+    label: string,
+    state: SimPinLevel,
+    cls: string,
+    figureId: string,
+    pinKey: string,
+    t: (k: string, vars?: Record<string, unknown>) => string,
+): HTMLElement {
+    const el = document.createElement("button");
+    el.type = "button";
     el.className = `hackCable-sim-pin-chip ${cls}`;
     el.setAttribute("role", "listitem");
-    el.title = `${label}: ${state}`;
+    el.title = `${label}: ${state} — ${t("web.simProbeAttachHint") || "Clic = sonde oscillo"}`;
     el.textContent = label;
     el.dataset.state = state;
+    el.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        document.dispatchEvent(
+            new CustomEvent("hackcable:toggle-probe", {
+                bubbles: true,
+                detail: { boardId: figureId, pinKey },
+            }),
+        );
+    });
     return el;
 }
 

@@ -80,93 +80,118 @@ html[data-ui-theme="light"] .hackCable-sim-status-inline.is-error
     color #b00020
 
 // Modale sketch MCU
+// Éditeur de sketch MCU (fenêtres flottantes multi-cartes)
 .hackCable-mcu-code-dialog
-    border none
+    position fixed
+    z-index 1210
+    left 48px
+    top 72px
+    width 480px
+    height 420px
+    min-width 280px
+    min-height 200px
+    max-width unquote("calc(100vw - 16px)")
+    max-height unquote("calc(100vh - 16px)")
+    display flex
+    flex-direction column
+    overflow hidden
+    border 1px solid var(--hc-divider)
     border-radius 8px
-    padding 0
-    max-width unquote("min(640px, calc(100vw - 24px))")
-    width 100%
     background var(--hc-surface)
     color var(--hc-text)
     box-shadow var(--hc-shadow)
     font-family var(--hc-ui-font)
     font-size var(--hc-ui-font-size)
     line-height var(--hc-ui-line-height)
+    box-sizing border-box
 
-    &::backdrop
-        background var(--hc-backdrop)
+.hackCable-mcu-code-resize
+    position absolute
+    right 0
+    bottom 0
+    width 16px
+    height 16px
+    cursor nwse-resize
+    touch-action none
+    background linear-gradient(135deg, transparent 50%, var(--hc-divider) 50%, var(--hc-divider) 60%, transparent 60%, transparent 70%, var(--hc-divider) 70%, var(--hc-divider) 80%, transparent 80%)
+    border-radius 0 0 8px 0
 
-    .hackCable-mcu-code-dialog-title
-        margin 0
-        padding 14px 16px 4px
-        font-size 1.15em
-        font-weight 600
-        color var(--hc-text-strong)
+.hackCable-mcu-code-dialog-header
+    display flex
+    align-items center
+    gap 8px
+    padding 8px 10px 8px 12px
+    border-bottom 1px solid var(--hc-divider)
+    cursor grab
+    user-select none
+    flex-shrink 0
 
-    .hackCable-mcu-code-board
-        margin 0
-        padding 0 16px 8px
-        color var(--hc-text-muted)
-        font-size 0.95em
+.hackCable-mcu-code-dialog-title
+    margin 0
+    font-size 1em
+    font-weight 600
+    color var(--hc-text-strong)
+    white-space nowrap
 
-    .hackCable-mcu-code-label
-        display block
-        padding 0 16px 6px
-        color var(--hc-text-label)
+.hackCable-mcu-code-board
+    flex 1
+    min-width 0
+    overflow hidden
+    text-overflow ellipsis
+    white-space nowrap
+    color var(--hc-text-muted)
+    font-size 0.95em
 
-    .hackCable-mcu-code-textarea
-        display block
-        width calc(100% - 32px)
-        margin 0 16px
-        min-height 16rem
-        max-height 50vh
-        resize vertical
-        box-sizing border-box
-        padding 8px 10px
-        border 1px solid var(--hc-input-border)
-        border-radius 4px
-        background var(--hc-page-bg)
-        color var(--hc-page-fg)
-        font-family ui-monospace, SFMono-Regular, Menlo, Consolas, monospace
-        font-size var(--hc-ui-font-size)
-        line-height var(--hc-ui-line-height)
+.hackCable-mcu-code-dialog-close
+    border none
+    border-radius 4px
+    width 28px
+    height 28px
+    flex-shrink 0
+    background transparent
+    color var(--hc-text)
+    font-size 1.25rem
+    cursor pointer
 
-        &:focus-visible
-            outline var(--hc-focus-outline-width) solid var(--hc-accent)
-            outline-offset var(--hc-focus-outline-offset)
+.hackCable-mcu-code-textarea
+    flex 1
+    min-height 0
+    width 100%
+    box-sizing border-box
+    margin 0
+    padding 8px 10px
+    border none
+    resize none
+    background var(--hc-page-bg)
+    color var(--hc-page-fg)
+    font-family ui-monospace, SFMono-Regular, Menlo, Consolas, monospace
+    font-size var(--hc-ui-font-size)
+    line-height var(--hc-ui-line-height)
 
-    .hackCable-mcu-code-actions
-        display flex
-        justify-content flex-end
-        gap 8px
-        padding 12px 16px 16px
+    &:focus-visible
+        outline var(--hc-focus-outline-width) solid var(--hc-accent)
+        outline-offset calc(0px - var(--hc-focus-outline-offset))
 
-    .hackCable-mcu-code-btn
-        border none
-        border-radius 4px
-        padding 6px 14px
-        min-height 32px
-        cursor pointer
-        font-family var(--hc-ui-font)
-        font-size var(--hc-ui-font-size)
+.hackCable-mcu-code-btn
+    border none
+    border-radius 4px
+    padding 4px 12px
+    min-height 28px
+    flex-shrink 0
+    cursor pointer
+    font-family var(--hc-ui-font)
+    font-size 0.9em
 
-        &--secondary
-            background var(--hc-btn-bg)
-            color var(--hc-btn-fg)
+    &--primary
+        background var(--hc-accent)
+        color #fff
 
-            &:hover
-                background var(--hc-btn-bg-hover)
+        &:hover
+            filter brightness(1.08)
 
-        &--primary
-            background var(--hc-accent)
-            color #fff
-
-            &:hover
-                filter brightness(1.08)
-
-        &:focus-visible
-            outline var(--hc-focus-outline-width) solid var(--hc-accent)
-            outline-offset var(--hc-focus-outline-offset)
+    &:focus-visible
+        outline var(--hc-focus-outline-width) solid var(--hc-accent)
+        outline-offset var(--hc-focus-outline-offset)
 
 p, h1, h2, h3, h4, label, button, select, input
     font-family var(--hc-ui-font)
@@ -573,6 +598,244 @@ html[data-ui-theme="light"]
             background #d6e6f5
             border-color #5a7a9a
             color #1a3350
+
+.hackCable-sim-pin-chip
+    cursor pointer
+    font inherit
+
+    &:hover
+        outline 1px solid var(--hc-accent, #5ec8ff)
+
+// Mini-oscillo sondes
+.hackCable-sim-probe-dialog
+    position fixed
+    z-index 1200
+    left 40px
+    top 100px
+    width unquote("min(520px, calc(100vw - 24px))")
+    display flex
+    flex-direction column
+    overflow hidden
+    border 1px solid var(--hc-divider)
+    border-radius 8px
+    background var(--hc-surface)
+    color var(--hc-text)
+    box-shadow var(--hc-shadow)
+    font-family var(--hc-ui-font)
+    font-size var(--hc-ui-font-size)
+
+    &[hidden]
+        display none
+
+.hackCable-sim-probe-dialog-header
+    display flex
+    align-items center
+    gap 8px
+    padding 8px 10px 8px 12px
+    border-bottom 1px solid var(--hc-divider)
+    cursor grab
+    user-select none
+    touch-action none
+
+.hackCable-sim-probe-dialog-title
+    margin 0
+    flex 1
+    font-size 1em
+    font-weight 600
+
+.hackCable-sim-probe-tool
+    border 1px solid var(--hc-divider)
+    border-radius 4px
+    background var(--hc-btn-bg)
+    color var(--hc-text)
+    padding 2px 8px
+    cursor pointer
+    font inherit
+
+.hackCable-sim-probe-dialog-close
+    border none
+    background transparent
+    color var(--hc-text)
+    width 28px
+    height 28px
+    font-size 1.25rem
+    cursor pointer
+    border-radius 4px
+
+    &:hover
+        background var(--hc-btn-bg)
+
+.hackCable-sim-probe-toolbar
+    display flex
+    flex-wrap wrap
+    gap 12px
+    align-items center
+    padding 6px 12px
+    border-bottom 1px solid var(--hc-divider)
+    font-size 0.9em
+
+.hackCable-sim-probe-win
+    display inline-flex
+    align-items center
+    gap 6px
+
+    select
+        font inherit
+        background var(--hc-btn-bg)
+        color var(--hc-text)
+        border 1px solid var(--hc-divider)
+        border-radius 4px
+        padding 2px 4px
+
+.hackCable-sim-probe-auto
+    display inline-flex
+    align-items center
+    gap 4px
+    cursor pointer
+
+.hackCable-sim-probe-hint
+    margin 0
+    padding 6px 12px
+    color var(--hc-text-muted)
+    font-size 0.85em
+
+#sim-probe-canvas
+    display block
+    width 100%
+    height 200px
+    background #0d1117
+
+.hackCable-sim-probe-legend
+    list-style none
+    margin 0
+    padding 6px 12px 10px
+    display flex
+    flex-wrap wrap
+    gap 8px 14px
+    max-height 72px
+    overflow auto
+
+.hackCable-sim-probe-legend-item
+    display inline-flex
+    align-items center
+    gap 6px
+    font-size 0.85em
+    font-variant-numeric tabular-nums
+
+.hackCable-sim-probe-swatch
+    width 10px
+    height 10px
+    border-radius 2px
+    flex-shrink 0
+
+.hackCable-sim-probe-val
+    color var(--hc-text-muted)
+    min-width 3.5em
+
+.hackCable-sim-probe-detach
+    border none
+    background transparent
+    color var(--hc-text-muted)
+    cursor pointer
+    padding 0 2px
+    font-size 1em
+    line-height 1
+
+    &:hover
+        color var(--hc-text)
+
+// Moniteur série (USART)
+.hackCable-sim-serial-dialog
+    position fixed
+    z-index 1200
+    left 24px
+    top 320px
+    width unquote("min(420px, calc(100vw - 24px))")
+    max-height unquote("min(40vh, calc(100vh - 80px))")
+    display flex
+    flex-direction column
+    overflow hidden
+    border 1px solid var(--hc-divider)
+    border-radius 8px
+    background var(--hc-surface)
+    color var(--hc-text)
+    box-shadow var(--hc-shadow)
+    font-family var(--hc-ui-font)
+    font-size var(--hc-ui-font-size)
+
+    &[hidden]
+        display none
+
+.hackCable-sim-serial-dialog-header
+    display flex
+    align-items center
+    gap 8px
+    padding 8px 10px 8px 12px
+    border-bottom 1px solid var(--hc-divider)
+    cursor grab
+    user-select none
+    flex-shrink 0
+
+.hackCable-sim-serial-dialog-title
+    margin 0
+    flex 1
+    font-size 1em
+    font-weight 600
+
+.hackCable-sim-serial-tool
+    border 1px solid var(--hc-divider)
+    border-radius 4px
+    background var(--hc-btn-bg)
+    color var(--hc-text)
+    padding 2px 8px
+    cursor pointer
+    font-size 0.85em
+
+.hackCable-sim-serial-dialog-close
+    border none
+    border-radius 4px
+    width 28px
+    height 28px
+    background transparent
+    color var(--hc-text)
+    font-size 1.25rem
+    cursor pointer
+
+.hackCable-sim-serial-output
+    flex 1
+    min-height 120px
+    margin 0
+    padding 8px 12px
+    overflow auto
+    white-space pre-wrap
+    word-break break-word
+    font-family ui-monospace, SFMono-Regular, Menlo, Consolas, monospace
+    font-size 0.85em
+    background var(--hc-btn-bg)
+
+.hackCable-sim-serial-form
+    display flex
+    gap 6px
+    padding 8px 10px
+    border-top 1px solid var(--hc-divider)
+    flex-shrink 0
+
+    input
+        flex 1
+        min-width 0
+        border 1px solid var(--hc-divider)
+        border-radius 4px
+        padding 4px 8px
+        background transparent
+        color var(--hc-text)
+
+    button[type="submit"]
+        border 1px solid var(--hc-divider)
+        border-radius 4px
+        padding 4px 10px
+        background var(--hc-btn-bg)
+        color var(--hc-text)
+        cursor pointer
 
 footer
     flex-shrink 0

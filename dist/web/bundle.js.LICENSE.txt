@@ -2932,20 +2932,6 @@
  * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
  * https://github.com/A-S-T-U-C-E/HackCable
  *
- * @file API publique de simulation AVR (compile / load / run / pause / stop).
- *
- * Responsabilités :
- * - Un `AVRRunner` par carte MCU (`figureId`)
- * - Exécution simultanée entrelacée (boucle d’événements)
- * - Listeners GPIO tagués par `figureId` pour le bridge overlays
- */
-
-/**
- * @license AGPL-3.0-or-later
- * Copyright (c) 2021, Clément Grennerat
- * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
- * https://github.com/A-S-T-U-C-E/HackCable
- *
  * @file Boot de la démo web (HMR webpack) et montage de `HackCable`.
  *
  * Responsabilités :
@@ -3029,19 +3015,6 @@
  * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
  * https://github.com/A-S-T-U-C-E/HackCable
  *
- * @file Planification asynchrone des tranches CPU AVR (MessageChannel).
- *
- * Responsabilités :
- * - File de micro-tâches pour `AVRRunner.execute`
- * - Démarrer / arrêter la boucle sans bloquer le thread UI
- */
-
-/**
- * @license AGPL-3.0-or-later
- * Copyright (c) 2021, Clément Grennerat
- * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
- * https://github.com/A-S-T-U-C-E/HackCable
- *
  * @file Point d’entrée bibliothèque HackCable : montage UI, catalogue et éditeur.
  *
  * Responsabilités :
@@ -3095,6 +3068,20 @@
 
 /**
  * @license AGPL-3.0-or-later
+ * Copyright (c) 2021, Clément Grennerat
+ * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
+ * https://github.com/A-S-T-U-C-E/LibreCircuit
+ *
+ * @file API publique de simulation multi-MCU (AVR + RP2040).
+ *
+ * Responsabilités :
+ * - Un runner par carte MCU (`figureId`) — AVR ou RP2040
+ * - Exécution simultanée entrelacée (boucle d’événements)
+ * - Listeners GPIO / série tagués + sondes (`ProbeRegistry`)
+ */
+
+/**
+ * @license AGPL-3.0-or-later
  * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
  * https://github.com/A-S-T-U-C-E/HackCable
  *
@@ -3115,6 +3102,16 @@
  * Responsabilités :
  * - Boutons zoom + / − / 100 % / ajuster à la fenêtre
  * - Branchement i18n et accessibilité
+ */
+
+/**
+ * @license AGPL-3.0-or-later
+ * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
+ * https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Branche optionnelle `SimWorkerClient` (`?worker=1`).
+ *
+ * Miroir firmware + snapshots GPIO + devices I²C/SPI builtins → overlays.
  */
 
 /**
@@ -3195,17 +3192,6 @@
  * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
  * https://github.com/A-S-T-U-C-E/HackCable
  *
- * @file Correspondance broches Arduino Uno/Nano (Wokwi) → ports ATmega328P.
- *
- * Responsabilités :
- * - Résoudre `"0"`…`"13"`, `"A0"`…`"A5"` (et aliases `D13`, `13.2`) vers port+bit
- */
-
-/**
- * @license AGPL-3.0-or-later
- * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
- * https://github.com/A-S-T-U-C-E/HackCable
- *
  * @file Dialogue de fusion à l’ouverture d’un fichier (remplacer / ajouter / annuler).
  *
  * Responsabilités :
@@ -3237,6 +3223,18 @@
  * - Réappliquer le routeur à toutes les connexions existantes
  *
  * @see docs/wire-routers.md
+ */
+
+/**
+ * @license AGPL-3.0-or-later
+ * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
+ * https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Façade simulation HackCable : noyau LibreCircuit + pont overlays draw2d.
+ *
+ * Responsabilités :
+ * - Ré-exporter l’API LibreCircuit pour les intégrateurs existants
+ * - Exposer `SimulationBridge` (GPIO, I²C LCD/OLED, HC-SR04, servo, NeoPixel)
  */
 
 /**
@@ -3329,6 +3327,14 @@
  * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
  * https://github.com/A-S-T-U-C-E/HackCable
  *
+ * @file Mini-oscillo : plotter tension × temps sur les sondes LibreCircuit.
+ */
+
+/**
+ * @license AGPL-3.0-or-later
+ * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
+ * https://github.com/A-S-T-U-C-E/HackCable
+ *
  * @file Minicarte du plan (aperçu, rectangle de vue, navigation clic/glisser).
  *
  * Responsabilités :
@@ -3343,11 +3349,36 @@
  * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
  * https://github.com/A-S-T-U-C-E/HackCable
  *
+ * @file Modale déplaçable d’état GPIO/ADC (esprit ElectroBlocks).
+ *
+ * Responsabilités :
+ * - Afficher D0–D13 / A0–A5 par carte MCU active
+ * - Fenêtre flottante non bloquante, déplaçable par la barre de titre
+ * - Rafraîchir sur GPIO, step, et intervalle pendant le run
+ */
+
+/**
+ * @license AGPL-3.0-or-later
+ * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
+ * https://github.com/A-S-T-U-C-E/HackCable
+ *
  * @file Modale d’édition du sketch Arduino d’une carte MCU.
  *
  * Responsabilités :
  * - Afficher / enregistrer le code d’une `ComponentFigure`
  * - i18n des libellés
+ */
+
+/**
+ * @license AGPL-3.0-or-later
+ * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
+ * https://github.com/A-S-T-U-C-E/HackCable
+ *
+ * @file Moniteur série (USART0) branché sur LibreCircuit.
+ *
+ * Responsabilités :
+ * - Afficher la sortie `Serial.print` / TX MCU
+ * - Envoyer une ligne vers le MCU (`writeSerial`)
  */
 
 /**
@@ -3392,6 +3423,14 @@
  * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
  * https://github.com/A-S-T-U-C-E/HackCable
  *
+ * @file Overlay catalogue PCA9685 (I²C) — pas d’élément Wokwi officiel.
+ */
+
+/**
+ * @license AGPL-3.0-or-later
+ * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
+ * https://github.com/A-S-T-U-C-E/HackCable
+ *
  * @file Overlay de progression au démarrage (chargement catalogue par lots).
  *
  * Responsabilités :
@@ -3428,18 +3467,6 @@
  * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
  * https://github.com/A-S-T-U-C-E/HackCable
  *
- * @file Parsing / validation Intel HEX pour le chargement firmware AVR.
- *
- * Responsabilités :
- * - Wrapper `intel-hex` avec messages d’erreur lisibles
- * - Rejeter un hex vide ou sans enregistrement EOF
- */
-
-/**
- * @license AGPL-3.0-or-later
- * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
- * https://github.com/A-S-T-U-C-E/HackCable
- *
  * @file Parsing des fichiers FZP Fritzing et extraction des connecteurs / broches.
  *
  * Responsabilités :
@@ -3464,23 +3491,16 @@
  * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
  * https://github.com/A-S-T-U-C-E/HackCable
  *
- * @file Point d’entrée du module de simulation AVR.
+ * @file Pont GPIO/ADC avr8js ↔ overlays Wokwi (LED, boutons, buzzer, RGB…).
  *
  * Responsabilités :
- * - Ré-exporter l’API publique (`EmulatorManager`, `AVRRunner`, compile, bridge)
- */
-
-/**
- * @license AGPL-3.0-or-later
- * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
- * https://github.com/A-S-T-U-C-E/HackCable
- *
- * @file Pont GPIO avr8js ↔ overlays Wokwi (LED, bouton, LED13 carte).
- *
- * Responsabilités :
- * - Lire la netlist MCU (`getMcuPinConnectionTable`)
- * - Router chaque runner (`figureId`) vers ses overlays
- * - Injecter les boutons dans le bon `AVRIOPort.setPin`
+ * - Netlist MCU → bindings par type de composant
+ * - Sorties : LED, LED13, RGB, buzzer, 7-seg, barre LED, servo (PWM), NeoPixel / ring / matrix
+ * - I²C : LCD1602 / LCD2004 / SSD1306 (adresse configurable) → bus TWI LibreCircuit
+ * - HC-SR04 / DHT22 : timing clock-events ; PIR clic
+ * - Stepper / keypad / ILI9341 SPI
+ * - Entrées : boutons, switch, DIP, joystick, pot, KY040 (SW), capteurs (curseur / molette)
+ * - Tilt / HeartBeat / relais / MPU6050 / HX711 / LCD parallèle
  */
 
 /**
@@ -3547,4 +3567,261 @@
  * Responsabilités :
  * - Téléchargement / lecture de fichiers schéma
  * - Rafraîchir libellés i18n de la toolbar
+ */
+
+/**
+ * @license AGPL-3.0-or-later
+ * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
+ * https://github.com/A-S-T-U-C-E/LibreCircuit
+ *
+ * @file Adaptateur depuis la table MCU style HackCable → {@link Diagram}.
+ */
+
+/**
+ * @license AGPL-3.0-or-later
+ * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
+ * https://github.com/A-S-T-U-C-E/LibreCircuit
+ *
+ * @file Budget courant rail pédagogique (surcharge / chute de tension).
+ */
+
+/**
+ * @license AGPL-3.0-or-later
+ * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
+ * https://github.com/A-S-T-U-C-E/LibreCircuit
+ *
+ * @file Chargeur Intel HEX vers buffer flash (adresses absolues, type 00/04).
+ * Inspiré du demo wokwi/rp2040js (MIT).
+ */
+
+/**
+ * @license AGPL-3.0-or-later
+ * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
+ * https://github.com/A-S-T-U-C-E/LibreCircuit
+ *
+ * @file Configs périphériques ATmega2560 (vecteurs d’IRQ ≠ 328P).
+ *
+ * Registres Timer0–2 / USART0 / ADC partagent souvent les mêmes adresses que le 328P ;
+ * Timer3–5 / USART1–3 / MUX5 (A8–A15) sont propres au Mega.
+ */
+
+/**
+ * @license AGPL-3.0-or-later
+ * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
+ * https://github.com/A-S-T-U-C-E/LibreCircuit
+ *
+ * @file Construction de la netlist électrique depuis un {@link Diagram}.
+ */
+
+/**
+ * @license AGPL-3.0-or-later
+ * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
+ * https://github.com/A-S-T-U-C-E/LibreCircuit
+ *
+ * @file Cœur texte HD44780 (LCD 16×2 / 20×4), indépendant du transport.
+ */
+
+/**
+ * @license AGPL-3.0-or-later
+ * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
+ * https://github.com/A-S-T-U-C-E/LibreCircuit
+ *
+ * @file Décodeur WS2812 / NeoPixel (protocole 800 kHz, ordre GRB par défaut).
+ *
+ * Module pur, alimenté par les fronts DIN + horodatage en cycles CPU.
+ * Inspiré des pratiques Wokwi / ateliers open-source (MIT) ; réécriture LC.
+ */
+
+/**
+ * @license AGPL-3.0-or-later
+ * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
+ * https://github.com/A-S-T-U-C-E/LibreCircuit
+ *
+ * @file Détection pédagogique de court-circuits (GPIO ↔ rails, rail↔rail).
+ */
+
+/**
+ * @license AGPL-3.0-or-later
+ * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
+ * https://github.com/A-S-T-U-C-E/LibreCircuit
+ *
+ * @file Encodage NEC IR + simulateur récepteur (broche DAT, idle haut).
+ */
+
+/**
+ * @license AGPL-3.0-or-later
+ * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
+ * https://github.com/A-S-T-U-C-E/LibreCircuit
+ *
+ * @file Fusible pédagogique (calibre vs courant de défaut estimé).
+ */
+
+/**
+ * @license AGPL-3.0-or-later
+ * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
+ * https://github.com/A-S-T-U-C-E/LibreCircuit
+ *
+ * @file Helper adresse I²C pour les hôtes (overlays DOM / props).
+ */
+
+/**
+ * @license AGPL-3.0-or-later
+ * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
+ * https://github.com/A-S-T-U-C-E/LibreCircuit
+ *
+ * @file Helpers capteurs paramétriques (ADC volts, ultrason HC-SR04).
+ */
+
+/**
+ * @license AGPL-3.0-or-later
+ * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
+ * https://github.com/A-S-T-U-C-E/LibreCircuit
+ *
+ * @file Heuristique : résistance série sur le net d’une LED.
+ */
+
+/**
+ * @license AGPL-3.0-or-later
+ * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
+ * https://github.com/A-S-T-U-C-E/LibreCircuit
+ *
+ * @file Heuristique : une extrémité est-elle sur un net d’alimentation ?
+ */
+
+/**
+ * @license AGPL-3.0-or-later
+ * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
+ * https://github.com/A-S-T-U-C-E/LibreCircuit
+ *
+ * @file Image FAT16 minimale (MBRless) pour seed microSD pédagogique.
+ *
+ * Layout : boot (1) + FAT (n) + root (32 entrées) + data.
+ * Suffisant pour `SD.open("NAME.TXT")` en lecture après seed.
+ */
+
+/**
+ * @license AGPL-3.0-or-later
+ * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
+ * https://github.com/A-S-T-U-C-E/LibreCircuit
+ *
+ * @file Instantané des broches GPIO / ADC d’un runner AVR (panneau debug).
+ *
+ * Responsabilités :
+ * - Mapper ports → libellés Arduino (Uno / Mega)
+ * - Exposer l’état PinState + canaux ADC en volts
+ */
+
+/**
+ * @license AGPL-3.0-or-later
+ * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
+ * https://github.com/A-S-T-U-C-E/LibreCircuit
+ *
+ * @file Physique LED simplifiée (luminosité ∝ courant, brûlage sans R).
+ */
+
+/**
+ * @license AGPL-3.0-or-later
+ * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
+ * https://github.com/A-S-T-U-C-E/LibreCircuit
+ *
+ * @file Physique servo pédagogique (alimentation / angle).
+ */
+
+/**
+ * @license AGPL-3.0-or-later
+ * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
+ * https://github.com/A-S-T-U-C-E/LibreCircuit
+ *
+ * @file Point d’entrée public de LibreCircuit (noyau simulation AVR).
+ *
+ * Responsabilités :
+ * - Ré-exporter l’API stable consommée par HackCable, Kablix, eBlockly, etc.
+ */
+
+/**
+ * @license AGPL-3.0-or-later
+ * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
+ * https://github.com/A-S-T-U-C-E/LibreCircuit
+ *
+ * @file Requêtes sur une {@link Netlist} (peers, nets MCU…).
+ */
+
+/**
+ * @license AGPL-3.0-or-later
+ * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
+ * https://github.com/A-S-T-U-C-E/LibreCircuit
+ *
+ * @file Routeur RPI2C (rp2040js) → périphériques {@link I2cDevice}.
+ */
+
+/**
+ * @license AGPL-3.0-or-later
+ * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
+ * https://github.com/A-S-T-U-C-E/LibreCircuit
+ *
+ * @file Silk Arduino Nano RP2040 Connect (Wokwi) → index GPIO RP2040.
+ */
+
+/**
+ * @license AGPL-3.0-or-later
+ * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
+ * https://github.com/A-S-T-U-C-E/LibreCircuit
+ *
+ * @file Simulateur DHT22 / AM2302 (1-wire bit-bang) via clock events CPU.
+ */
+
+/**
+ * @license AGPL-3.0-or-later
+ * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
+ * https://github.com/A-S-T-U-C-E/LibreCircuit
+ *
+ * @file Simulateur HC-SR04 : pulse TRIG → ECHO proportionnel à la distance.
+ */
+
+/**
+ * @license AGPL-3.0-or-later
+ * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
+ * https://github.com/A-S-T-U-C-E/LibreCircuit
+ *
+ * @file Simulateur HX711 (DT/SCK) — 24 bits signés, MSB d’abord.
+ */
+
+/**
+ * @license AGPL-3.0-or-later
+ * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
+ * https://github.com/A-S-T-U-C-E/LibreCircuit
+ *
+ * @file Simulateur moteur pas-à-pas bipolaire (bobines A+/A-/B+/B-).
+ */
+
+/**
+ * @license AGPL-3.0-or-later
+ * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
+ * https://github.com/A-S-T-U-C-E/LibreCircuit
+ *
+ * @file Sondes de tension (ring buffer) pour plotter hôte type Kablix.
+ */
+
+/**
+ * @license AGPL-3.0-or-later
+ * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
+ * https://github.com/A-S-T-U-C-E/LibreCircuit
+ *
+ * @file Types du modèle de schéma pur (sans DOM / draw2d).
+ */
+
+/**
+ * @license AGPL-3.0-or-later
+ * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
+ * https://github.com/A-S-T-U-C-E/LibreCircuit
+ *
+ * @file Union-find paresseux pour regrouper les extrémités connectées.
+ */
+
+/**
+ * @license MIT (binary dump) — vendored from wokwi/rp2040js demo/bootrom.ts
+ * Built from https://github.com/raspberrypi/pico-bootrom revision B1
+ * (00a4a19114195e20fb817bdfbca1165e157eef37)
+ *
+ * Re-exported by LibreCircuit for RP2040Runner (AGPL host code elsewhere).
  */

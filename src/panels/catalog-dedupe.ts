@@ -41,6 +41,7 @@ const WOKWI_DEDUPE_KEYS: Record<string, string[]> = {
     ILI9341Element: ["ili9341", "ili9341 display"],
     BuzzerElement: ["buzzer"],
     ServoElement: ["servo motor", "servo"],
+    Pca9685Element: ["pca9685", "pca 9685", "pwm driver"],
     StepperMotorElement: ["stepper motor"],
     BiaxialStepperElement: ["biaxial stepper"],
     KS2EMDC5Element: ["ks2e m dc5", "ks2e m dc5 relay"],

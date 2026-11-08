@@ -1,15 +1,21 @@
 {
   "name": "hackcable",
   "version": "1.1.0",
-  "description": "Arduino and ESP32 components wiring editor",
+  "description": "Arduino and ESP32 components wiring editor (application layer on LibreCircuit)",
   "main": "dist/src/bundle.js",
   "types": "dist/types/src/main.d.ts",
   "scripts": {
+    "sync:librecircuit": "node scripts/sync-librecircuit.mjs",
+    "build:librecircuit": "npm run build --prefix ../LibreCircuit",
+    "pretype-check": "npm run build:librecircuit",
     "type-check": "tsc --noEmit",
     "type-check:watch": "npm run type-check -- --watch",
     "build:types": "tsc --emitDeclarationOnly",
+    "prebuild:src": "npm run build:librecircuit",
     "build:src": "webpack --mode=production",
+    "prebuild:web": "npm run build:librecircuit",
     "build:web": "webpack --mode=production --config ./webpack.config.web.js",
+    "preserve:web": "npm run build:librecircuit",
     "serve:web": "npx webpack serve --mode=development --config ./webpack.config.web.js",
     "docs": "node scripts/generate-docs.mjs",
     "docs:watch": "node --watch-path=src scripts/generate-docs.mjs"
@@ -37,7 +43,7 @@
     "xmldom": "npm:@xmldom/xmldom@^0.9.0"
   },
   "devDependencies": {
-    "@babel/core": "^8.0.7",
+    "@babel/core": "^8.1.0",
     "@babel/polyfill": "^7.12.1",
     "@babel/preset-env": "^8.0.7",
     "@babel/preset-typescript": "8.0.7",
@@ -51,19 +57,20 @@
     "html-webpack-plugin": "^5.6.8",
     "style-loader": "^4.0.0",
     "stylus": "^0.64.0",
-    "stylus-loader": "^9.0.0",
+    "stylus-loader": "^9.1.0",
     "typescript": "7.0.2",
-    "webpack": "5.112.0",
-    "webpack-cli": "^7.2.3",
+    "webpack": "5.112.2",
+    "webpack-cli": "^7.3.1",
     "webpack-dev-server": "^6.1.0"
   },
   "dependencies": {
     "@wokwi/elements": "^1.9.2",
     "avr8js": "^0.21.1",
     "draw2d": "^1.0.38",
-    "i18next": "^26.5.3",
+    "i18next": "^26.7.1",
     "intel-hex": "^0.2.0",
     "jquery": "^4.0.0",
-    "jquery-ui": "^1.14.2"
+    "jquery-ui": "^1.14.2",
+    "librecircuit": "file:../LibreCircuit"
   }
 }

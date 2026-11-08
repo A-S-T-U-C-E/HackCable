@@ -16,6 +16,7 @@ HackCable is licensed under the GNU Affero General Public License v3.0 or later
 
 Third-party components (examples; not exhaustive)
 -------------------------------------------------
+- LibreCircuit (librecircuit) — AGPL-3.0-or-later (A-S-T-U-C-E simulation core)
 - Draw2D — its own license terms
 - @wokwi/elements — MIT (Wokwi)
 - Fritzing breadboard parts — GPL (Fritzing project and contributors)

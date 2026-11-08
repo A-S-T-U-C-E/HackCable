@@ -3,11 +3,11 @@
  * Copyright (c) 2024-2026 Sébastien Canet / A-S-T-U-C-E
  * https://github.com/A-S-T-U-C-E/HackCable
  *
- * @file Dialogue « À propos » (style µcBlockly) : projet, icônes, crédits Fritzing.
+ * @file Dialogue « À propos » (style µcBlockly) : projet, icônes, crédits LibreCircuit / Fritzing.
  *
  * Responsabilités :
  * - Construire le `<dialog>` et les rangées logo + texte
- * - Liens fork / upstream / Fritzing / Wokwi
+ * - Liens fork / upstream / LibreCircuit / Fritzing / Wokwi
  */
 import i18next from "i18next";
 import pkg from "../package.json";
@@ -15,6 +15,7 @@ import pkg from "../package.json";
 const HACKCABLE_UPSTREAM = "https://github.com/ClementGre/HackCable";
 const HACKCABLE_FORK = "https://github.com/A-S-T-U-C-E/HackCable";
 const HACKCABLE_NOTICE = `${HACKCABLE_FORK}/blob/main/NOTICE`;
+const LIBRECIRCUIT_REPO = "https://github.com/A-S-T-U-C-E/LibreCircuit";
 const FRITZING_SITE = "https://fritzing.org/";
 const FRITZING_GITHUB = "https://github.com/fritzing/fritzing-app";
 const WOKWI_SITE = "https://wokwi.com/";
@@ -99,7 +100,7 @@ export function setupAboutPanel(signal: AbortSignal): () => void {
             img.addEventListener("error", () => {
                 if (img.dataset.fallback === "1") return;
                 img.dataset.fallback = "1";
-                img.src = assetUrl("icon.png");
+                img.src = assetUrl("hackcable_logo.png");
                 img.classList.remove("hackCable-about-logo--wide");
                 img.width = 64;
             });
@@ -121,7 +122,13 @@ export function setupAboutPanel(signal: AbortSignal): () => void {
         const body = document.createElement("div");
         body.className = "hackCable-about-body";
         body.append(
-            makeIconRow(assetUrl("icon.png"), "HackCable", HACKCABLE_FORK, t("about.blurb")),
+            makeIconRow(assetUrl("hackcable_logo.png"), "HackCable", HACKCABLE_FORK, t("about.blurb")),
+            makeIconRow(
+                assetUrl("librecircuit_logo.png"),
+                "LibreCircuit",
+                LIBRECIRCUIT_REPO,
+                t("about.librecircuitCredit"),
+            ),
             makeIconRow(assetUrl("fritzing.png"), "Fritzing", FRITZING_SITE, t("about.fritzingCredit"), true),
         );
 
@@ -143,6 +150,7 @@ export function setupAboutPanel(signal: AbortSignal): () => void {
         addLink("about.linkSource", HACKCABLE_FORK);
         addLink("about.linkNotice", HACKCABLE_NOTICE);
         addLink("about.linkUpstream", HACKCABLE_UPSTREAM);
+        addLink("about.linkLibreCircuit", LIBRECIRCUIT_REPO);
         addLink("about.linkFritzing", FRITZING_SITE);
         addLink("about.linkFritzingGitHub", FRITZING_GITHUB);
         addLink("about.linkWokwi", WOKWI_SITE);

@@ -1,7 +1,10 @@
 # API simulation (hôte externe)
 
-HackCable expose une API pour qu’un logiciel tiers (**µcBlockly**, **BlocklyDuino**, etc.)
-envoie un sketch Arduino à une carte du plan, le compile et lance la simulation.
+HackCable expose une API pour qu’un logiciel tiers (**µcBlockly**, **BlocklyDuino / BDuino**, **eBlockly**, etc.)
+envoie un sketch (ou un HEX) à une carte du plan et lance la simulation.
+
+Le moteur AVR sous-jacent est le paquet **[librecircuit](https://github.com/A-S-T-U-C-E/LibreCircuit)** ;
+HackCable y ajoute le pont overlays (canvas draw2d).
 
 Licence : AGPL-3.0-or-later.
 
@@ -9,7 +12,7 @@ Licence : AGPL-3.0-or-later.
 
 1. Une instance `HackCable` montée (`HackCable.create(...)`).
 2. Au moins une **carte MCU** sur le canvas (Uno / Nano Wokwi recommandés pour l’AVR).
-3. Réseau pour la compile Hexi (`hexi.wokwi.com`), sauf si vous injectez déjà un HEX.
+3. Soit le **réseau** (compile LibrEduc `https://compile.libreduc.cc`), soit un **HEX déjà compilé** (BDuino desktop / arduino-cli — pas de toolchain locale dans HackCable).
 
 ## Envoi rapide (cas nominal)
 
@@ -31,6 +34,17 @@ if (!result.compile?.hex) {
 
 Sans `figureId` : première carte MCU du plan.
 
+### Offline / BDuino (HEX déjà compilé)
+
+```ts
+// Côté BDuino (arduino-cli) → hexString
+hackCable.setBoardSketch(figureId, arduinoSource); // optionnel, pour la sauvegarde
+hackCable.loadBoardHex(figureId, hexString);
+hackCable.runSimulation();
+```
+
+Ne pas dupliquer arduino-cli dans HackCable / LibreCircuit.
+
 ## Méthodes
 
 | Méthode | Rôle |
@@ -47,6 +61,10 @@ Sans `figureId` : première carte MCU du plan.
 | `stepSimulation(ms?)` | Avance ~`ms` ms simulées puis reste en pause (défaut 1) |
 | `stepSimulationInstructions(n?)` | Avance `n` instructions AVR puis reste en pause |
 | `getSimulationPinSnapshots()` | Instantanés GPIO/ADC (D0–D13, A0–A5) par carte |
+| `writeSerial(text, figureId?)` | Envoi USART0 → MCU (LibreCircuit) |
+| `onSerial(listener)` | Réception TX MCU → hôte |
+| `getCircuitDiagram()` | Schéma pur LC (`Diagram`) depuis le câblage live |
+| `getCircuitNetlist()` | Nets électriques (`buildNetlist`) |
 | `isSimulationPaused()` | État pause |
 | `isSimulationRunning()` | Bridge attaché et CPU actif |
 

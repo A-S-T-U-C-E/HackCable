@@ -132,7 +132,7 @@ export async function mountWebDemoApp(): Promise<() => void> {
         restoreFileInput.remove();
         document.getElementById("a11y-dialog")?.remove();
         document.getElementById("about-dialog")?.remove();
-        document.getElementById("mcu-code-dialog")?.remove();
+        document.querySelectorAll(".hackCable-mcu-code-dialog").forEach((el) => el.remove());
         document.getElementById("sim-pin-dialog")?.remove();
     };
 }

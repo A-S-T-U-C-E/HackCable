@@ -63,6 +63,7 @@ import {
     StepperMotorElement,
     TiltSwitchElement,
 } from "@wokwi/elements";
+import { Pca9685Element } from "./pca9685-element";
 import { tr } from "../ui/i18n/translate";
 import { dedupeCatalogAgainstWokwi } from "./catalog-dedupe";
 import { getStoredFritzingComponents } from "./fritzing-catalog-storage";
@@ -76,6 +77,7 @@ import { measureWokwiSvgSize } from "../utils/dom";
 export type { FritzingComponentInfo } from "./fritzing-types";
 
 export declare type WokwiComponent =
+    | Pca9685Element
     | AnalogJoystickElement
     | ArduinoMegaElement
     | ArduinoNanoElement
@@ -222,6 +224,7 @@ export const wokwiComponents = (): WokwiComponents => [
     // Actionneurs / sortie
     wokwiEntry(9, BuzzerElement, "wokwiComponents.buzzer.name", "wokwiComponents.buzzer.description", ComponentType.TRANSMITTER, "Output"),
     wokwiEntry(21, ServoElement, "wokwiComponents.servo.name", "wokwiComponents.servo.description", ComponentType.MOTOR, "Output"),
+    wokwiEntry(50, Pca9685Element, "wokwiComponents.pca9685.name", "wokwiComponents.pca9685.description", ComponentType.MOTOR, "Output"),
     wokwiEntry(34, StepperMotorElement, "wokwiComponents.stepperMotor.name", "wokwiComponents.stepperMotor.description", ComponentType.MOTOR, "Output"),
     wokwiEntry(35, BiaxialStepperElement, "wokwiComponents.biaxialStepper.name", "wokwiComponents.biaxialStepper.description", ComponentType.MOTOR, "Output"),
     wokwiEntry(36, KS2EMDC5Element, "wokwiComponents.ks2eRelay.name", "wokwiComponents.ks2eRelay.description", ComponentType.OTHER, "Output"),

@@ -22,14 +22,18 @@ import {
 } from "./panels/catalog-boot";
 import { Editor } from "./editor/editor";
 import { ComponentFigure } from "./editor/component-figure";
-import { EmulatorManager } from "./emulator/emulator-manager";
+import {
+    EmulatorManager,
+    buildNetlist,
+    diagramFromMcuPinTable,
+    type CompileBoardOptions,
+    type Diagram,
+    type Netlist,
+    type PushSketchOptions,
+    type PushSketchResult,
+    type SimulatableBoardRef,
+} from "librecircuit";
 import { SimulationBridge } from "./emulator/simulation-bridge";
-import type {
-    CompileBoardOptions,
-    PushSketchOptions,
-    PushSketchResult,
-    SimulatableBoardRef,
-} from "./emulator/simulation-host-types";
 import i18next, { type TFunction } from "i18next";
 import { isMicrocontrollerBoard, refreshWokwiComponentMaps } from "./panels/component";
 import { syncFritzingCatalog } from "./panels/fritzing-sync";
@@ -233,7 +237,7 @@ export class HackCable {
         return this._editor;
     }
     /**
-     * Simulation AVR (compile Hexi / load HEX / run / pause).
+     * Simulation AVR (compile LibrEduc / load HEX / run / pause).
      */
     public get emulatorManager() {
         return this._emulatorManager;
@@ -321,7 +325,8 @@ export class HackCable {
             return { figureId, boardName, running: this.isSimulationRunning() };
         }
 
-        const compile = await this._emulatorManager.compileAndLoadBoard(figureId, code);
+        const mcu = boardName.toLowerCase().includes("mega") ? ("2560" as const) : ("328p" as const);
+        const compile = await this._emulatorManager.compileAndLoadBoard(figureId, code, { mcu });
         const ok = Boolean(compile.hex?.trim());
         if (!ok || !doRun) {
             if (!ok) this.stopSimulation();
@@ -343,18 +348,40 @@ export class HackCable {
         if (options.code !== undefined && options.saveSketch !== false) {
             figure.setSketch(options.code);
         }
-        const compile = await this._emulatorManager.compileAndLoadBoard(figureId, code);
-        return { figureId, boardName: figure.getComponentInfo().name, compile };
+        const boardName = figure.getComponentInfo().name;
+        const mcu = boardName.toLowerCase().includes("mega") ? ("2560" as const) : ("328p" as const);
+        const compile = await this._emulatorManager.compileAndLoadBoard(figureId, code, { mcu });
+        return { figureId, boardName, compile };
     }
 
     /**
-     * Charge un Intel HEX déjà compilé pour une carte (sans Hexi).
+     * Charge un Intel HEX déjà compilé pour une carte (sans appel réseau).
      * @param figureId - Id draw2d de la figure MCU.
      * @param hex - Firmware Intel HEX.
      */
     public loadBoardHex(figureId: string, hex: string): void {
+        const figure = this.resolveMcuFigure(figureId);
+        const name = (figure.getComponentInfo().name ?? "").toLowerCase();
+        const mcu = name.includes("mega") ? ("2560" as const) : ("328p" as const);
+        this._emulatorManager.loadCodeForBoard(figureId, hex, { mcu });
+    }
+
+    /**
+     * Charge un UF2 RP2040 / Pico pour une carte (Nano RP2040 Connect…).
+     * @param figureId - Id draw2d de la figure MCU.
+     * @param uf2 - Contenu binaire UF2.
+     */
+    public loadBoardUf2(figureId: string, uf2: Uint8Array): void {
         this.resolveMcuFigure(figureId);
-        this._emulatorManager.loadCodeForBoard(figureId, hex);
+        this._emulatorManager.loadUf2ForBoard(figureId, uf2);
+    }
+
+    /**
+     * Charge un Intel HEX dans la flash RP2040 (Pico / Nano RP2040 Connect).
+     */
+    public loadBoardRp2040Hex(figureId: string, hex: string): void {
+        this.resolveMcuFigure(figureId);
+        this._emulatorManager.loadRp2040HexForBoard(figureId, hex);
     }
 
     /**
@@ -442,6 +469,66 @@ export class HackCable {
      */
     public getSimulationPinSnapshots() {
         return this._emulatorManager.getPinSnapshots();
+    }
+
+    /**
+     * Envoie du texte vers l’USART0 d’une carte (ou toutes si `figureId` omis).
+     * @returns Nombre d’octets acceptés.
+     */
+    public writeSerial(text: string, figureId?: string): number {
+        return this._emulatorManager.writeSerial(text, figureId);
+    }
+
+    /**
+     * S’abonne à la sortie série (MCU → hôte).
+     * @returns Fonction de désabonnement.
+     */
+    /** Registre de sondes plotter (`boardId:pinKey`, ex. `fig:D13`). */
+    public get probes() {
+        return this._emulatorManager.probes;
+    }
+
+    /** Attache une sonde de tension sur une broche (plotter). */
+    public attachProbe(boardId: string, pinKey: string, label?: string) {
+        const id = `${boardId}:${pinKey}`;
+        return this._emulatorManager.probes.attach(id, label ?? pinKey);
+    }
+
+    public onSerial(listener: (chunk: string, figureId: string) => void): () => void {
+        return this._emulatorManager.onSerial(listener);
+    }
+
+    /** Charge une image disque raw dans la microSD du figure donné. */
+    public loadSdDiskImage(figureId: string, image: Uint8Array): boolean {
+        return this._simulationBridge.loadSdDiskImage(figureId, image);
+    }
+
+    /** Exporte l’image disque de la microSD (copie), ou `undefined` si absente. */
+    public exportSdDiskImage(figureId: string): Uint8Array | undefined {
+        return this._simulationBridge.exportSdDiskImage(figureId);
+    }
+
+    /**
+     * Schéma pur LibreCircuit dérivé de la table MCU live (sans draw2d).
+     * Utile pour export, analyse, ou futurs bridges basés sur la netlist LC.
+     */
+    public getCircuitDiagram(): Diagram {
+        const figures = this._editor.canvas.getFigures?.()?.data ?? [];
+        const componentHints: Record<string, { type: string }> = {};
+        for (const fig of figures) {
+            if (fig instanceof ComponentFigure) {
+                const info = fig.getComponentInfo();
+                componentHints[String(fig.getId())] = { type: info.name };
+            }
+        }
+        return diagramFromMcuPinTable(this.getMcuPinConnectionTable(), {
+            partHints: componentHints,
+        });
+    }
+
+    /** Netlist électrique (union-find) du plan courant. */
+    public getCircuitNetlist(): Netlist {
+        return buildNetlist(this.getCircuitDiagram());
     }
 
     /**

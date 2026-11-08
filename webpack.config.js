@@ -16,14 +16,16 @@ module.exports = {
     resolve: {
         extensions: ['.ts', '.js', '.json'],
         alias: {
+            // Pin le build dist (évite un graphe webpack obsolète sur le src lié en file:)
+            librecircuit: path.resolve(__dirname, 'node_modules/librecircuit/dist/index.js'),
             'draw2d-types': false,
         },
     },
     module: {
         rules: [
-            { // TS loader
+            { // TS loader (transpile local file: librecircuit as well)
                 test: /\.(js|ts)$/,
-                exclude: /node_modules/,
+                exclude: /node_modules[\\/](?!librecircuit)/,
                 use: {
                     loader: 'babel-loader'
                 },

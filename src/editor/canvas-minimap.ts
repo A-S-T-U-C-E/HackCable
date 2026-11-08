@@ -447,12 +447,58 @@ export function setupCanvasMinimap(canvas: Canvas): () => void {
     if (viewport) resizeObserver.observe(viewport);
 
     const onCanvasEvent = () => scheduleRender();
+
+    /** draw2d n’émet pas `figure:move` sur le canvas — seulement `move` sur la figure. */
+    type FigureMoveHost = {
+        on?: (event: string, handler: () => void) => void;
+        off?: (event: string, handler: () => void) => void;
+    };
+    const figureMoveHandlers = new Map<object, () => void>();
+
+    const bindFigureMove = (figure: unknown) => {
+        if (!figure || typeof figure !== "object") return;
+        if (figureMoveHandlers.has(figure)) return;
+        const host = figure as FigureMoveHost;
+        if (typeof host.on !== "function") return;
+        const handler = () => scheduleRender();
+        figureMoveHandlers.set(figure, handler);
+        host.on("move", handler);
+    };
+
+    const unbindFigureMove = (figure: unknown) => {
+        if (!figure || typeof figure !== "object") return;
+        const handler = figureMoveHandlers.get(figure);
+        if (!handler) return;
+        (figure as FigureMoveHost).off?.("move", handler);
+        figureMoveHandlers.delete(figure);
+    };
+
+    const onFigureAdd = (_emitter: unknown, event: { figure?: unknown }) => {
+        bindFigureMove(event?.figure);
+        scheduleRender();
+    };
+    const onFigureRemove = (_emitter: unknown, event: { figure?: unknown }) => {
+        unbindFigureMove(event?.figure);
+        scheduleRender();
+    };
+
+    for (const figure of canvas.getFigures().data) {
+        bindFigureMove(figure);
+    }
+
     canvas.on("zoom", onCanvasEvent);
-    canvas.on("figure:add", onCanvasEvent);
-    canvas.on("figure:remove", onCanvasEvent);
-    canvas.on("figure:move", onCanvasEvent);
+    canvas.on("figure:add", onFigureAdd);
+    canvas.on("figure:remove", onFigureRemove);
     canvas.on("connect", onCanvasEvent);
     canvas.on("disconnect", onCanvasEvent);
+
+    // Undo / redo / exécution de commandes (déplacements, etc.)
+    const commandStack = canvas.getCommandStack() as {
+        on?: (event: string, listener: () => void) => void;
+        off?: (listener: () => void) => void;
+    } | undefined;
+    const onStackChange = () => scheduleRender();
+    commandStack?.on?.("change", onStackChange);
 
     const onA11yChanged = () => scheduleRender();
     document.addEventListener("hackcable:a11y-changed", onA11yChanged);
@@ -477,11 +523,15 @@ export function setupCanvasMinimap(canvas: Canvas): () => void {
         viewport?.removeEventListener("scroll", scheduleRender);
         resizeObserver.disconnect();
         canvas.off("zoom", onCanvasEvent);
-        canvas.off("figure:add", onCanvasEvent);
-        canvas.off("figure:remove", onCanvasEvent);
-        canvas.off("figure:move", onCanvasEvent);
+        canvas.off("figure:add", onFigureAdd);
+        canvas.off("figure:remove", onFigureRemove);
         canvas.off("connect", onCanvasEvent);
         canvas.off("disconnect", onCanvasEvent);
+        commandStack?.off?.(onStackChange);
+        for (const [figure, handler] of figureMoveHandlers) {
+            (figure as FigureMoveHost).off?.("move", handler);
+        }
+        figureMoveHandlers.clear();
         root.remove();
     };
 }

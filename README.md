@@ -3,7 +3,7 @@
 <table>
   <tr>
     <td width="148" valign="middle">
-      <img src="web/assets/icon.png" alt="Logo HackCable" width="128" height="128" />
+      <img src="web/assets/hackcable_logo.png" alt="Logo HackCable" width="128" height="128" />
     </td>
     <td valign="middle">
 
@@ -23,6 +23,34 @@ Les idées, l’architecture d’origine et la licence du projet amont restent l
 
 - Amont / upstream : <https://github.com/ClementGre/HackCable>  
 - Démo du projet d’origine : <https://clementgre.github.io/HackCable/>
+
+## Couches (LibreCircuit → HackCable → eBlockly)
+
+```
+LibreCircuit (librecircuit)   noyau simulation AVR / API moteur
+        ↓
+HackCable                     éditeur draw2d + catalogue + pont overlays
+        ↓
+eBlockly / hôtes              IDE / Blockly qui embarque HackCable
+```
+
+Le dépôt voisin **[LibreCircuit](https://github.com/A-S-T-U-C-E/LibreCircuit)** (`../LibreCircuit` en local, dépendance `file:` ou npm) fournit `EmulatorManager`, `AVRRunner`, HEX (LibrEduc ou injecté), etc.  
+HackCable conserve le canvas, le catalogue et `SimulationBridge`.  
+Compile navigateur : `https://compile.libreduc.cc` · offline / flash : **BDuino** desktop → `loadBoardHex`.
+
+```bash
+# install + build LibreCircuit + re-lier dans node_modules/
+npm run sync:librecircuit
+# autre emplacement :
+# $env:LIBRECIRCUIT_PATH="D:\chemin\LibreCircuit"; npm run sync:librecircuit
+```
+
+Avant `type-check` / `build:*` / `serve:web`, seul `build:librecircuit` (tsc LC) est relancé. Utilise `sync:librecircuit` après un clone ou un changement de chemins.
+
+**Oscillo sondes** : bouton toolbar « Oscillo » — cliquer une broche dans le panneau Broches pour attacher une sonde.  
+**Worker** (option) :
+- `?worker=1` — miroir dual (UI + worker) : snapshots GPIO + LCD/OLED/SD/ILI/NeoPixel
+- `?worker=exclusive` — CPU uniquement dans le worker (pas de HEX/runner UI) ; overlays via snapshots / `deviceState` ; entrées poussées vers le worker
 
 ## Objectifs
 

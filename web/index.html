@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>HackCable</title>
-    <link rel="icon" href="./assets/icon.png" />
+    <link rel="icon" href="./assets/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" href="./assets/favicon.png" sizes="32x32" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;600&display=swap" rel="stylesheet" />
@@ -72,6 +73,13 @@
                     </span>
                     <span class="hackCable-btn-label">Compiler</span>
                 </button>
+                <button type="button" id="sim-load-fw" title="Charger HEX ou UF2">
+                    <span class="hackCable-btn-icon" aria-hidden="true">
+                        <svg class="hackCable-btn-svg" viewBox="0 0 24 24" focusable="false"><path fill="currentColor" d="M5 20h14v-2H5v2zM12 2 6.5 8.5h3.5V16h4V8.5h3.5L12 2z"/></svg>
+                    </span>
+                    <span class="hackCable-btn-label">Firmware</span>
+                </button>
+                <input type="file" id="sim-load-fw-input" accept=".hex,.uf2,.HEX,.UF2" hidden />
                 <button type="button" id="sim-run" disabled>
                     <span class="hackCable-btn-icon" aria-hidden="true">
                         <svg class="hackCable-btn-svg" viewBox="0 0 24 24" focusable="false"><path fill="currentColor" d="M8 5v14l11-7L8 5z"/></svg>
@@ -102,6 +110,18 @@
                         <img class="hackCable-btn-favicon" src="./assets/pinout.svg" alt="" width="20" height="20" decoding="async" />
                     </span>
                     <span class="hackCable-btn-label">Broches</span>
+                </button>
+                <button type="button" id="sim-probe" aria-pressed="false" title="Sondes">
+                    <span class="hackCable-btn-icon" aria-hidden="true">
+                        <svg class="hackCable-btn-svg" viewBox="0 0 24 24" focusable="false"><path fill="currentColor" d="M3 17h2v-7H3v7zm4 0h2V7H7v10zm4 0h2v-4h-2v4zm4 0h2V4h-2v13zm4 0h2v-9h-2v9z"/></svg>
+                    </span>
+                    <span class="hackCable-btn-label">Sondes</span>
+                </button>
+                <button type="button" id="sim-serial" aria-pressed="false" title="Série">
+                    <span class="hackCable-btn-icon" aria-hidden="true">
+                        <svg class="hackCable-btn-svg" viewBox="0 0 24 24" focusable="false"><path fill="currentColor" d="M4 6h16v2H4V6zm0 5h16v2H4v-2zm0 5h10v2H4v-2z"/></svg>
+                    </span>
+                    <span class="hackCable-btn-label">Série</span>
                 </button>
                 <span id="sim-status" class="hackCable-sim-status-inline" aria-live="polite"></span>
             </div>

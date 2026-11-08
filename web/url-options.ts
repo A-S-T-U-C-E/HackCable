@@ -22,6 +22,8 @@ export interface UrlDemoOptions {
     lang?: HackCableLanguage;
     minimap?: boolean;
     autocollapse?: boolean;
+    /** Active le Web Worker LibreCircuit (`?worker=1` ou `?worker=exclusive`). */
+    worker?: boolean | "exclusive";
     a11y?: Partial<A11ySettings>;
 }
 
@@ -74,6 +76,15 @@ export function parseUrlDemoOptions(search = window.location.search): UrlDemoOpt
     } else if (params.has("autocollapse")) {
         const parsed = parseBoolParam(params.get("autocollapse"));
         options.autocollapse = parsed ?? true;
+    }
+
+    if (params.has("worker")) {
+        const raw = (params.get("worker") ?? "").trim().toLowerCase();
+        if (raw === "exclusive") options.worker = "exclusive";
+        else {
+            const parsed = parseBoolParam(params.get("worker"));
+            options.worker = parsed ?? true;
+        }
     }
 
     const a11y = parseA11yFromUrlParams(params);

@@ -24,8 +24,16 @@ import { readA11ySettings } from "./a11y-settings";
 import { writeUrlDemoOptions } from "./url-options";
 import { createMcuCodeDialog } from "./mcu-code-dialog";
 import { setupSimPinPanel } from "./sim-pin-panel";
+import { setupSimProbePanel } from "./sim-probe-panel";
+import { setupSimSerialPanel } from "./sim-serial-panel";
+import {
+    attachWorkerFirmwareMirror,
+    connectOptionalSimWorker,
+} from "./sim-worker-host";
 import { ComponentFigure } from "../src/editor/component-figure";
-import { isMicrocontrollerBoard } from "../src/panels/component";
+import { isMicrocontrollerBoard, isWokwiComponent } from "../src/panels/component";
+import { NanoRP2040ConnectElement } from "@wokwi/elements";
+import { parseUrlDemoOptions } from "./url-options";
 
 /**
  * Synchronise l’URL avec l’état courant de la démo.
@@ -411,11 +419,15 @@ export function setupUndoRedo(editor: Editor, signal: AbortSignal): void {
  */
 export function setupSimulation(hackCable: HackCable, signal: AbortSignal): () => void {
     const compileBtn = document.getElementById("sim-compile");
+    const loadFwBtn = document.getElementById("sim-load-fw");
+    const loadFwInput = document.getElementById("sim-load-fw-input");
     const runBtn = document.getElementById("sim-run");
     const pauseBtn = document.getElementById("sim-pause");
     const stepBtn = document.getElementById("sim-step");
     const stopBtn = document.getElementById("sim-stop");
     const pinsBtn = document.getElementById("sim-pins");
+    const probeBtn = document.getElementById("sim-probe");
+    const serialBtn = document.getElementById("sim-serial");
     const statusEl = document.getElementById("sim-status");
 
     if (!(compileBtn && runBtn && pauseBtn && stopBtn)) {
@@ -426,12 +438,16 @@ export function setupSimulation(hackCable: HackCable, signal: AbortSignal): () =
     let lastEditedBoardName = "";
     let running = false;
     let pinsVisible = false;
+    let probeVisible = false;
+    let serialVisible = false;
     let statusKey: string | null = null;
     let statusVars: Record<string, unknown> | undefined;
     let statusIsError = false;
     let statusRaw: string | null = null;
 
     const pinPanel = setupSimPinPanel(hackCable, signal);
+    const probePanel = setupSimProbePanel(hackCable, signal);
+    const serialPanel = setupSimSerialPanel(hackCable, signal);
 
     const t = (k: string, vars?: Record<string, unknown>) =>
         i18next.t(k, { ns: "common", ...vars });
@@ -483,6 +499,14 @@ export function setupSimulation(hackCable: HackCable, signal: AbortSignal): () =
             setButtonLabelText(pinsBtn, t("web.simPins"));
             pinsBtn.setAttribute("aria-pressed", pinsVisible ? "true" : "false");
         }
+        if (probeBtn) {
+            setButtonLabelText(probeBtn, t("web.simProbe") || "Sondes");
+            probeBtn.setAttribute("aria-pressed", probeVisible ? "true" : "false");
+        }
+        if (serialBtn) {
+            setButtonLabelText(serialBtn, t("web.simSerial"));
+            serialBtn.setAttribute("aria-pressed", serialVisible ? "true" : "false");
+        }
         if (stepBtn) setButtonLabelText(stepBtn, t("web.simStep"));
         pinPanel.paint();
     };
@@ -525,6 +549,61 @@ export function setupSimulation(hackCable: HackCable, signal: AbortSignal): () =
     hackCable.editor.canvas.on("figure:editCode", onEditCodeDraw2d);
     document.addEventListener("hackcable:edit-mcu-code", onEditCodeDom);
 
+    const isPicoBoard = (board: ComponentFigure): boolean => {
+        const info = board.getComponentInfo();
+        return isWokwiComponent(info) && info.clasz === NanoRP2040ConnectElement;
+    };
+
+    loadFwBtn?.addEventListener("click", () => {
+        if (loadFwInput instanceof HTMLInputElement) loadFwInput.click();
+    }, { signal });
+
+    loadFwInput?.addEventListener("change", () => {
+        void (async () => {
+            if (!(loadFwInput instanceof HTMLInputElement)) return;
+            const file = loadFwInput.files?.[0];
+            loadFwInput.value = "";
+            if (!file) return;
+            const boards = listMcuFigures();
+            if (boards.length === 0) {
+                setStatusKey("web.simNoMcu", undefined, true);
+                return;
+            }
+            // Une seule carte : elle ; sinon préférer Pico si UF2, sinon première
+            const lower = file.name.toLowerCase();
+            const isUf2 = lower.endsWith(".uf2");
+            const target =
+                boards.length === 1
+                    ? boards[0]!
+                    : (isUf2 ? boards.find(isPicoBoard) : boards.find((b) => !isPicoBoard(b))) ??
+                      boards[0]!;
+            const figureId = String(target.getId());
+            const name = target.getComponentInfo().name;
+            try {
+                if (isUf2) {
+                    const buf = new Uint8Array(await file.arrayBuffer());
+                    hackCable.loadBoardUf2(figureId, buf);
+                    setStatusKey("web.simFirmwareOk", { board: name, kind: "UF2" });
+                } else {
+                    const text = await file.text();
+                    if (isPicoBoard(target)) {
+                        hackCable.loadBoardRp2040Hex(figureId, text);
+                        setStatusKey("web.simFirmwareOk", { board: name, kind: "HEX (RP2040)" });
+                    } else {
+                        hackCable.loadBoardHex(figureId, text);
+                        setStatusKey("web.simFirmwareOk", { board: name, kind: "HEX" });
+                    }
+                }
+            } catch (e) {
+                setStatusRaw(
+                    e instanceof Error ? e.message : t("web.simFirmwareFailed"),
+                    true,
+                );
+            }
+            refreshButtons();
+        })();
+    }, { signal });
+
     compileBtn.addEventListener("click", () => {
         void (async () => {
             const boards = listMcuFigures();
@@ -537,11 +616,18 @@ export function setupSimulation(hackCable: HackCable, signal: AbortSignal): () =
             let failCount = 0;
             const errors: string[] = [];
 
-            for (let i = 0; i < boards.length; i++) {
-                const board = boards[i];
+            const avrBoards = boards.filter((b) => !isPicoBoard(b));
+            if (avrBoards.length === 0) {
+                setStatusKey("web.simCompilePicoHint", undefined, true);
+                compileBtn.removeAttribute("disabled");
+                refreshButtons();
+                return;
+            }
+            for (let i = 0; i < avrBoards.length; i++) {
+                const board = avrBoards[i]!;
                 const name = board.getComponentInfo().name;
                 setStatusKey("web.simCompilingBoard", {
-                    board: `${name} (${i + 1}/${boards.length})`,
+                    board: `${name} (${i + 1}/${avrBoards.length})`,
                 });
                 try {
                     const result = await hackCable.emulatorManager.compileAndLoadBoard(
@@ -583,7 +669,7 @@ export function setupSimulation(hackCable: HackCable, signal: AbortSignal): () =
             hackCable.emulatorManager.run();
             hackCable.simulationBridge.attach();
             running = true;
-            const n = hackCable.emulatorManager.getActiveRunners().size;
+            const n = hackCable.emulatorManager.activeBoardCount;
             setStatusKey("web.simRunningMulti", { count: n });
         } catch (e) {
             setStatusRaw(e instanceof Error ? e.message : t("web.simRunFailed"), true);
@@ -617,8 +703,30 @@ export function setupSimulation(hackCable: HackCable, signal: AbortSignal): () =
         refreshButtons();
     }, { signal });
 
+    probeBtn?.addEventListener("click", () => {
+        probeVisible = !probeVisible;
+        probePanel.setVisible(probeVisible);
+        refreshButtons();
+    }, { signal });
+
+    serialBtn?.addEventListener("click", () => {
+        serialVisible = !serialVisible;
+        serialPanel.setVisible(serialVisible);
+        refreshButtons();
+    }, { signal });
+
     document.addEventListener("hackcable:sim-pins-closed", () => {
         pinsVisible = false;
+        refreshButtons();
+    }, { signal });
+
+    document.addEventListener("hackcable:sim-probe-closed", () => {
+        probeVisible = false;
+        refreshButtons();
+    }, { signal });
+
+    document.addEventListener("hackcable:sim-serial-closed", () => {
+        serialVisible = false;
         refreshButtons();
     }, { signal });
 
@@ -638,10 +746,25 @@ export function setupSimulation(hackCable: HackCable, signal: AbortSignal): () =
         codeDialog.destroy();
     });
 
+    void (async () => {
+        const mode = parseUrlDemoOptions().worker ?? false;
+        if (!mode) return;
+        const host = await connectOptionalSimWorker(mode, signal);
+        if (!host) {
+            setStatusKey("web.simWorkerFailed", undefined, true);
+            return;
+        }
+        const unmirror = attachWorkerFirmwareMirror(hackCable, host);
+        signal.addEventListener("abort", unmirror, { once: true });
+        setStatusKey(host.exclusive ? "web.simWorkerExclusive" : "web.simWorkerReady");
+    })();
+
     refreshButtons();
     return () => {
         codeDialog.refreshI18n();
         pinPanel.refreshI18n();
+        probePanel.refreshI18n();
+        serialPanel.refreshI18n();
         paintStatus();
         refreshButtons();
     };

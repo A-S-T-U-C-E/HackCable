@@ -13,6 +13,7 @@
  */
 import draw2d from "draw2d";
 import type { ElementPin } from "@wokwi/elements";
+import { LCD1602Element, LCD2004Element } from "@wokwi/elements";
 import type { CatalogComponentInfo, WokwiComponent, WokwiComponentInfo } from "../panels/component";
 import { isMicrocontrollerBoard, isWokwiComponent } from "../panels/component";
 import type { FritzingComponentInfo } from "../panels/fritzing-types";
@@ -33,7 +34,7 @@ import { getConnectionWireLabelText } from "./connection-label";
 import { rotationAwareAntSelectionPolicy } from "./rotation-aware-selection-policy";
 import { css, measureWokwiSvgSize } from "../utils/dom";
 import type { Port } from "draw2d-types";
-import { DEFAULT_MCU_SKETCH } from "../emulator/default-sketch";
+import { DEFAULT_MCU_SKETCH } from "librecircuit";
 
 export type FigureData = {
     componentId: number;
@@ -170,6 +171,10 @@ export class ComponentFigure extends draw2d.shape.basic.Rectangle {
 
     private createWokwiOverlay(component: WokwiComponentInfo): HTMLElement {
         const element: WokwiComponent = new component.clasz();
+        // LCD : mode backpack I²C (SDA/SCL) pour Wire / LiquidCrystal_I2C.
+        if (component.clasz === LCD1602Element || component.clasz === LCD2004Element) {
+            (element as LCD1602Element).pins = "i2c";
+        }
         css(element, { pointerEvents: "none" });
         const pins = (element as { pinInfo?: ElementPin[] }).pinInfo ?? [];
         // Taille initiale dès la création — sinon le hit-test draw2d reste trop petit pour déplacer.
